@@ -1,9 +1,8 @@
 <?php
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
-session_start(); // ✅ أضف هذا السطر هنا
+session_start(); 
 require_once 'includes/db.php';
-
 
 if (!isset($_SESSION['user'])) {
     header("Location: index.php");
@@ -11,126 +10,101 @@ if (!isset($_SESSION['user'])) {
 }
 
 if ($_SESSION['user']['role'] === 'admin') {
-    // ✅ الأدمن: يشوف كل الطلاب
-     $group_id = isset($_GET['group_id']) ? intval($_GET['group_id']) : 0;
-
+    $group_id = isset($_GET['group_id']) ? intval($_GET['group_id']) : 0;
+    $students = ($group_id > 0) ? $conn->prepare("SELECT name, degree FROM students WHERE group_id = ?") : [];
     if ($group_id > 0) {
-        // ✅ الأدمن: يشوف بس طلاب الجروب اللي ضغط عليه
-        $stmt = $conn->prepare("SELECT s.name, s.degree 
-                                FROM students s 
-                                WHERE s.group_id = ?");
+        $stmt = $conn->prepare("SELECT name, degree FROM students WHERE group_id = ?");
         $stmt->execute([$group_id]);
         $students = $stmt->fetchAll();
     } else {
         $students = [];
     }
-} 
-else if ($_SESSION['user']['role'] === 'student') {
-    // ✅ الطالب: نجيب group_id الخاص بيه
+} else if ($_SESSION['user']['role'] === 'student') {
     $student_id = $_SESSION['user']['id'];
-
     $stmt = $conn->prepare("SELECT group_id FROM students WHERE id = ?");
     $stmt->execute([$student_id]);
     $group_id = $stmt->fetchColumn();
-
     if ($group_id > 0) {
-        $stmt = $conn->prepare("SELECT s.name, s.degree 
-                                FROM students s 
-                                WHERE s.group_id = ?");
+        $stmt = $conn->prepare("SELECT name, degree FROM students WHERE group_id = ?");
         $stmt->execute([$group_id]);
         $students = $stmt->fetchAll();
     } else {
         $students = [];
     }
-} 
-else {
+} else {
     echo "❌ غير مسموح لك بالدخول.";
     exit;
 }
 
-// الحصول على group_id من الرابط
-
-
-
-// تجهيز البيانات للجافاسكريبت
 $labels = [];
 $data = [];
-
 foreach ($students as $student) {
     $labels[] = $student['name'];
-    $data[]   = $student['degree'];
+    $data[] = $student['degree'];
 }
 ?>
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Student Degrees Dashboard</title>
+  <title>لوحة درجات الطلاب</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    body {
-      background: linear-gradient(to bottom, #fde047, #fb923c, #f97316);
-    }
-  </style>
 </head>
-<body class="bg-gray-100">
+<body class="bg-gradient-to-b from-yellow-300 via-orange-400 to-orange-600 min-h-screen font-sans">
 
   <!-- Navbar -->
-  <nav class="bg-white shadow-md px-6 py-3 flex justify-between items-center">
-      <div class="flex space-x-6">
-  <?php if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'admin'): ?>
-    <a href="admin.php" class="bg-blue-600 text-white px-4 py-2 rounded-lg">
-      لوحة التحكم
-    </a>
-  <?php endif; ?>
-</div>
+ <nav class="bg-white shadow-md px-6 py-3 flex justify-between items-center">
+  <!-- الشعار -->
+  <div class="flex items-center space-x-2">
+    <span class="text-blue-600 font-bold text-3xl">🎓 إبداع</span>
+  </div>
 
-      <div class="flex items-center space-x-2">
-        <span class="text-blue-600 font-bold text-3xl">🎓 إبداع</span>
-      </div>
-  </nav>
+  <!-- الروابط -->
+  <div class="flex space-x-8"> <!-- زودنا المسافة هنا -->
+    <!-- رابط لوحة التحكم للأدمن فقط -->
+    <?php if ($_SESSION['user']['role'] === 'admin'): ?>
+      <a href="admin.php" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+        لوحة التحكم
+      </a>
+    <?php endif; ?>
 
-  <!-- Page Content -->
-  <div class="p-8">
-    <!-- <div class="flex justify-center mt-20">
-      <h1 class="text-6xl font-bold text-blue-700"> <?php echo htmlspecialchars($_SESSION['user']['name']); ?> أهلا يا, 👋</h1>
-      <h1 class="text-6xl font-bold text-blue-700">الدرجات</h1>
-    </div> -->
+    <!-- رابط حسابي -->
+      <!-- <a href="profile.php" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+        حسابي
+      </a> -->
+  </div>
+</nav>
 
-    <div class="flex flex-col items-center mt-20 space-y-6">
-  <!-- الترحيب -->
-  <h1 class="text-6xl font-bold text-blue-700">
-    <span class="text-blue-600">
-      <?php echo htmlspecialchars($_SESSION['user']['name']); ?>
-    </span>
-  ,أهلاً يا 
-  </h1>
 
-  <!-- العنوان -->
-  <h2 class="text-6xl font-bold text-blue-700">
-     الدرجات
-  </h2>
-</div>
 
-    <!-- GPA Chart -->
-    <div class="flex justify-center mt-8">
-      <div class="bg-white shadow rounded-lg p-7 w-[1550px] flex justify-center" style="background: linear-gradient(90deg, #fff7ad, #ffa9f9);">
-        <div class="h-[650px] w-[1400px] flex justify-center p-4">
-          <canvas id="gpaChart" class="w-full h-full"></canvas>
-        </div>
+  <div class="container mx-auto p-8">
+    <!-- الترحيب -->
+    <div class="text-center mt-20 space-y-4">
+      <h2 class="text-4xl font-bold text-blue-700">
+        أهلاً يا <span class="text-blue-600"><?= htmlspecialchars($_SESSION['user']['name']); ?></span> 👋
+      </h2>
+      <h1 class="text-5xl font-bold text-blue-700">الدرجات</h1>
+    </div>
+
+    <!-- Chart Container -->
+    <div class="mt-12 flex justify-center">
+      <div class="bg-white shadow rounded-lg p-6 w-full max-w-6xl">
+        <canvas id="gpaChart" class="w-full h-96"></canvas>
       </div>
     </div>
 
-    <a href="logout.php" class="bg-blue-600 text-white px-4 py-2 rounded-lg mt-6 inline-block">Logout</a>
+    <!-- Logout -->
+    <div class="text-center mt-8">
+      <a href="logout.php" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">تسجيل الخروج</a>
+    </div>
   </div>
 
   <!-- Chart.js Script -->
   <script>
-    const gpaCtx = document.getElementById('gpaChart').getContext('2d');
-
-    new Chart(gpaCtx, {
+    const ctx = document.getElementById('gpaChart').getContext('2d');
+    new Chart(ctx, {
       type: 'bar',
       data: {
         labels: <?= json_encode($labels) ?>,
@@ -148,9 +122,16 @@ foreach ($students as $student) {
         maintainAspectRatio: false,
         scales: {
           y: { beginAtZero: true }
+        },
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top'
+          }
         }
       }
     });
   </script>
+
 </body>
 </html>

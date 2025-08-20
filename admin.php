@@ -5,7 +5,7 @@ ini_set('display_errors', 1);
 session_start();
 require_once "includes/db.php";
 
-// ✅ لازم تتأكد أن الأدمن مسجل دخول
+// التأكد أن الأدمن مسجل دخول
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
     header("Location: index.php");
     exit();
@@ -13,17 +13,16 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
 
 $admin_id = $_SESSION['user']['id']; 
 
-// ✅ البحث
+// البحث
 $search = isset($_GET['search']) ? trim($_GET['search']) : "";
 
-// ✅ جلب الجروبات اللي هذا الأدمن مشرف عليها
+// جلب الجروبات اللي هذا الأدمن مشرف عليها
 $sql = "
     SELECT g.id, g.name, g.numStudt
     FROM groups g
     INNER JOIN group_admins ga ON g.id = ga.group_id
     WHERE ga.admin_id = :admin_id
 ";
-
 
 if ($search !== "") {
     $sql .= " AND g.name LIKE :search";
@@ -41,67 +40,58 @@ $stmt->execute();
 $groups = $stmt->fetchAll();
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>Admin Panel</title>
-  <style>
-    body {
-        font-family: Arial, sans-serif;
-        margin: 20px;
-    }
-    .search-box {
-        margin-bottom: 20px;
-    }
-    .group-card {
-        border: 1px solid #ccc;
-        padding: 15px;
-        margin: 10px 0;
-        border-radius: 8px;
-        background: #f9f9f9;
-    }
-    .group-card h3 {
-        margin: 0;
-    }
-    .btn {
-        display: inline-block;
-        padding: 8px 12px;
-        background: #007bff;
-        color: white;
-        text-decoration: none;
-        border-radius: 4px;
-    }
-    .btn:hover {
-        background: #0056b3;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة درجات الطلاب</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body>
+<body class="bg-gray-100 min-h-screen font-sans">
 
-  <h1>Welcome, <?php echo htmlspecialchars($_SESSION['user']['name']); ?> 👋</h1>
-  <a href="logout.php" class="btn">Logout</a>
+  <!-- Navbar -->
+  <nav class="bg-white shadow-md px-6 py-4 flex justify-between items-center">
+    
+    <div class="text-2xl font-bold text-blue-600">🎓 إبداع</div>
+  </nav>
 
-  <div class="search-box">
-    <form method="get">
-      <input type="text" name="search" placeholder="Search group by name..." value="<?php echo htmlspecialchars($search); ?>">
-      <button type="submit" class="btn">Search</button>
+  <div class="container mx-auto mt-8 px-4">
+
+    <h1 class="text-3xl mb-4">أهلا, <?php echo htmlspecialchars($_SESSION['user']['name']); ?> 👋</h1>
+
+    <!-- Search Box -->
+    <form method="get" class="mb-6 flex gap-2">
+        <input type="text" name="search" placeholder="ابحث عن المجموعة..." 
+               value="<?php echo htmlspecialchars($search); ?>" 
+               class="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">بحث</button>
     </form>
-  </div>
 
-  <h2>Your Groups:</h2>
-  <?php if ($groups): ?>
-      <?php foreach ($groups as $group): ?>
-        <div class="group-card">
-          <h3><?php echo htmlspecialchars($group['name']); ?></h3>
-          <p>Students: <?php echo $group['numStudt']; ?></p>
-          <a href="manage_group.php?group_id=<?= $group['id'] ?>" class="btn">Manage Group</a>
-          <a href="dashboard.php?group_id=<?= $group['id'] ?>" class="btn">الدرجات</a>
+    <h2 class="text-xl mb-3 font-semibold">المجموعات:</h2>
 
+    <?php if ($groups): ?>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <?php foreach ($groups as $group): ?>
+            <div class="bg-white p-4 rounded-lg shadow hover:shadow-lg transition">
+                <h3 class="text-lg font-bold mb-2"><?php echo htmlspecialchars($group['name']); ?></h3>
+                <p class="mb-4">عدد الطلاب: <?php echo $group['numStudt']; ?></p>
+                <div class="flex gap-2">
+                    <a href="manage_group.php?group_id=<?= $group['id'] ?>" class="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 transition">إدارة المجموعة</a>
+                    <a href="dashboard.php?group_id=<?= $group['id'] ?>" class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition">الدرجات</a>
+                </div>
+            </div>
+        <?php endforeach; ?>
         </div>
-      <?php endforeach; ?>
-  <?php else: ?>
-      <p>No groups found.</p>
-  <?php endif; ?>
+    <?php else: ?>
+        <p class="text-gray-600">لا توجد مجموعات.</p>
+    <?php endif; ?>
+
+    <div class="mt-6">
+        <a href="logout.php" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition">تسجيل الخروج</a>
+    </div>
+
+  </div>
 
 </body>
 </html>
