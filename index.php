@@ -120,17 +120,7 @@ if (isset($_SESSION['user'])) {
 </head>
 <body class="bg-gradient-to-b from-yellow-300 via-orange-400 to-orange-600 min-h-screen font-sans">
 
-  <nav class="bg-white shadow-md px-6 py-3 flex justify-between items-center">
-    
-    <div>
-      <!-- <a href="admin.php" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">المجموعات</a> -->
-      <!-- <a href="profile.php" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">حسابي</a> -->
-      
-    </div>
-    
-    <span class="text-blue-600 font-bold text-2xl">🎓 إبداع </span>
-  
-</nav>
+ 
 
   <div class="login-box">
     <h2>تسجيل الدخول</h2>

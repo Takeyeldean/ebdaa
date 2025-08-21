@@ -38,6 +38,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_student'])) {
         $stmt = $conn->prepare("INSERT INTO students (name, email, password, group_id) VALUES (?, ?, ?, ?)");
         $stmt->execute([$name, $email, $password, $group_id]);
 
+        // تحديث عدد الطلاب في المجموعة +1
+        $update = $conn->prepare("UPDATE groups SET numStudt = numStudt + 1 WHERE id = ?");
+        $update->execute([$group_id]);
+
         $_SESSION['success'] = "✅ تم إضافة الطالب بنجاح";
         header("Location: manage_group.php?group_id=$group_id");
         exit;
@@ -48,3 +52,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_student'])) {
         exit;
     }
 }
+    

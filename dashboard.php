@@ -58,8 +58,7 @@ foreach ($students as $student) {
     $data[] = $student['degree'];
     $images[] = $student['profile_image'] ?? 'default.png';
 }
-?>
-<!DOCTYPE html>
+?><!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
@@ -69,46 +68,49 @@ foreach ($students as $student) {
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 </head>
-<body class="bg-gradient-to-b from-yellow-300 via-orange-400 to-orange-600 min-h-screen font-sans">
+<body class="bg-gradient-to-b from-blue-100 via-blue-200 to-blue-300 min-h-screen font-sans">
 
   <!-- Navbar -->
-  <nav class="bg-white shadow-md px-6 py-3 flex justify-between items-center">
-    <span class="text-blue-600 font-bold text-2xl">🎓 إبداع </span>
-    <div>
+  <nav class="bg-white shadow-lg px-6 py-3 flex justify-between items-center">
+    <span class="text-blue-700 font-bold text-3xl">🎓 إبداع</span>
+    <div class="space-x-2 space-x-reverse">
       
-<?php if ($_SESSION['user']['role'] === 'admin'): ?>
-            <a href="admin.php" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">المجموعات</a>
-        <?php endif; ?> 
-        <a href="profile.php" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">حسابي</a>
+<a href="profile.php" class="bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-blue-800 transition flex items-center gap-2">
+    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+        <path d="M10 10a4 4 0 100-8 4 4 0 000 8zm-7 8a7 7 0 1114 0H3z"/>
+    </svg>
+    حسابي
+</a>
     </div>
   </nav>
 
   <div class="container mx-auto p-8">
     <!-- صورة الحساب -->
     <?php if (isset($profile_image)): ?>
-      <div class="flex justify-center -mt-2">
+      <div class="flex justify-center -mt-4">
         <img src="uploads/<?= htmlspecialchars($profile_image); ?>" 
              alt="Profile Image" 
-             class="w-28 h-28 rounded-full border-4 border-white shadow-lg">
+             class="w-28 h-28 rounded-full border-4 border-blue-600 shadow-xl bg-white">
       </div>
     <?php endif; ?> 
 
     <!-- الترحيب -->
-    <div class="text-center mt-6 space-y-4">
-      <h2 class="text-4xl font-bold text-blue-700">
-        أهلاً يا <span class="text-blue-600"><?= htmlspecialchars($_SESSION['user']['name']); ?></span> 👋
-      </h2>
-      </div>
+        <?php if ($_SESSION['user']['role'] === 'student'): ?>
+          <div class="text-center mt-6 space-y-4">
+            <h2 class="text-4xl font-bold text-blue-900">
+              أهلاً يا <span class="text-indigo-700"><?= htmlspecialchars($_SESSION['user']['name']); ?></span> 👋
+            </h2>
+          </div>
+          <?php endif; ?> 
 
     <!-- Chart Container -->
     <div class="mt-12 flex justify-center">
-      <div class="bg-white shadow rounded-lg p-6 w-full max-w-6xl relative h-[500px]">
+      <div class="bg-white shadow-xl rounded-2xl p-6 w-full max-w-6xl relative h-[500px]">
         <canvas id="gpaChart"></canvas>
       </div>
     </div>
   </div>
-
-  <!-- Chart.js Script -->
+<!-- Chart.js Script -->
   <script>
     const ctx = document.getElementById('gpaChart').getContext('2d');
     new Chart(ctx, {

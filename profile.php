@@ -2,7 +2,6 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 session_start();
-error_reporting(E_ALL);
 require_once 'includes/db.php';
 
 // Redirect if not logged in
@@ -13,12 +12,11 @@ if (!isset($_SESSION['user'])) {
 
 $userId = $_SESSION['user']['id'];
 $role = $_SESSION['user']['role'];
-$success = $error = "";
 
 // Fetch current user info
 $table = ($role === 'student') ? 'students' : 'admins';
-if($role == 'student')
-$stmt = $conn->prepare("SELECT name, email, profile_image FROM $table WHERE id = ?");
+if ($role == 'student')
+    $stmt = $conn->prepare("SELECT name, email, profile_image FROM $table WHERE id = ?");
 else
     $stmt = $conn->prepare("SELECT name, email FROM $table WHERE id = ?");
 
@@ -70,18 +68,19 @@ $user = $stmt->fetch();
 </head>
 <body class="bg-gray-100 min-h-screen font-sans">
 
-<!-- Navbar -->
-<nav class="bg-white shadow-md px-6 py-3 flex justify-between items-center">
-    <span class="text-blue-600 font-bold text-2xl">🎓 إبداع</span>
-    <div class="flex items-center space-x-4">
+  <nav class="bg-white shadow-lg px-6 py-3 flex justify-between items-center">
+    <span class="text-blue-700 font-bold text-3xl">🎓 إبداع</span>
+    <div class="space-x-2 space-x-reverse">
+      <div class="flex items-center space-x-4">
         <?php if ($role === 'student'): ?>
-            <a href="dashboard.php" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">الدرجات</a>
+            <a href="dashboard.php" class="bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-blue-800 transition flex items-center gap-2">الدرجات</a>
         <?php endif; ?>
         <?php if ($role === 'admin'): ?>
-            <a href="admin.php" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">المجموعات</a>
+            <a href="admin.php" class="bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-blue-800 transition flex items-center gap-2">المجموعات</a>
         <?php endif; ?>
+      </div>
     </div>
-</nav>
+  </nav>
 
 <div class="container mx-auto p-8">
 
@@ -104,11 +103,17 @@ $user = $stmt->fetch();
 
     <h2 class="text-3xl font-bold text-blue-700 mb-6">حسابي</h2>
 
-    <?php if ($success): ?>
-        <div class="bg-green-200 text-green-800 p-3 rounded mb-4"><?= $success ?></div>
+    <!-- ✅ رسائل النجاح أو الخطأ -->
+    <?php if (isset($_SESSION['success'])): ?>
+        <div class="bg-green-200 text-green-800 p-3 rounded mb-4">
+            <?= $_SESSION['success']; unset($_SESSION['success']); ?>
+        </div>
     <?php endif; ?>
-    <?php if ($error): ?>
-        <div class="bg-red-200 text-red-800 p-3 rounded mb-4"><?= $error ?></div>
+
+    <?php if (isset($_SESSION['error'])): ?>
+        <div class="bg-red-200 text-red-800 p-3 rounded mb-4">
+            <?= $_SESSION['error']; unset($_SESSION['error']); ?>
+        </div>
     <?php endif; ?>
 
     <!-- Update Name & Email -->

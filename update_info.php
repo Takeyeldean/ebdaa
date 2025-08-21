@@ -1,7 +1,6 @@
-    <?php
-    session_start(); 
+<?php
+session_start(); 
 error_reporting(E_ALL);
-session_start();
 require_once 'includes/db.php';
 
 // Redirect if not logged in
@@ -19,60 +18,88 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['update_info'])) {
         $name = trim($_POST['name']);
         $email = trim($_POST['email']);
-        if($role == 'student')
-        $stmt = $conn->prepare("UPDATE students SET name = ?, email = ? WHERE id = ?");
-        else
-        $stmt = $conn->prepare("UPDATE admins SET name = ?, email = ? WHERE id = ?");
 
-        if ($stmt->execute([$name, $email, $userId])) {
-            $_SESSION['user']['name'] = $name;
-            $_SESSION['user']['email'] = $email;
-            $success = "تم تحديث المعلومات بنجاح!";
+        // ✅ تحقق من التكرار
+        if ($role == 'student') {
+            // Check email across all students
+            $stmt = $conn->prepare("SELECT id FROM students WHERE email = ? AND id != ?");
+            $stmt->execute([$email, $userId]);
+            if ($stmt->rowCount() > 0) {
+                $error = "⚠️ البريد الإلكتروني مستخدم من قبل.";
+            } else {
+                // Check name only inside the same group
+                $stmt = $conn->prepare("SELECT id FROM students WHERE name = ? AND group_id = (SELECT group_id FROM students WHERE id = ?) AND id != ?");
+                $stmt->execute([$name, $userId, $userId]);
+                if ($stmt->rowCount() > 0) {
+                    $error = "⚠️ الاسم مستخدم بالفعل داخل .";
+                }
+            }
         } else {
-            $error = "حدث خطأ أثناء تحديث البيانات.";
+            // For admins: both name and email must be unique globally
+            $stmt = $conn->prepare("SELECT id FROM admins WHERE (name = ? OR email = ?) AND id != ?");
+            $stmt->execute([$name, $email, $userId]);
+            if ($stmt->rowCount() > 0) {
+                $error = "⚠️ الاسم أو البريد الإلكتروني مستخدم من قبل.";
+            }
+        }
+
+        // ✅ لو مفيش خطأ يعمل التحديث
+        if (empty($error)) {
+            if($role == 'student')
+                $stmt = $conn->prepare("UPDATE students SET name = ?, email = ? WHERE id = ?");
+            else
+                $stmt = $conn->prepare("UPDATE admins SET name = ?, email = ? WHERE id = ?");
+
+            if ($stmt->execute([$name, $email, $userId])) {
+                $_SESSION['user']['name'] = $name;
+                $_SESSION['user']['email'] = $email;
+                $success = "✅ تم تحديث المعلومات بنجاح!";
+            } else {
+                $error = "❌ حدث خطأ أثناء تحديث البيانات.";
+            }
         }
     }
 
-   if (isset($_POST['update_pass'])) {
-    $current = $_POST['current_password'];
-    $new = $_POST['new_password'];
-    $confirm = $_POST['confirm_password'];
+    if (isset($_POST['update_pass'])) {
+        $current = $_POST['current_password'];
+        $new = $_POST['new_password'];
+        $confirm = $_POST['confirm_password'];
 
-    // Fetch current password (plain text)
-            if($role == 'studen')
-    $stmt = $conn->prepare("SELECT password FROM students WHERE id = ?");
-            else 
-    $stmt = $conn->prepare("SELECT password FROM admins WHERE id = ?");
-
-    $stmt->execute([$userId]);
-    $currentPassword = $stmt->fetchColumn();
-
-    if ($current !== $currentPassword) {
-        $error = "كلمة المرور الحالية غير صحيحة.";
-    } elseif ($new !== $confirm) {
-        $error = "كلمة المرور الجديدة غير متطابقة.";
-    } else {
-        // Update plain text password directly
         if($role == 'student')
-            $stmt = $conn->prepare("UPDATE students SET password = ? WHERE id = ?");
-        else
-            $stmt = $conn->prepare("UPDATE admins SET password = ? WHERE id = ?");
+            $stmt = $conn->prepare("SELECT password FROM students WHERE id = ?");
+        else 
+            $stmt = $conn->prepare("SELECT password FROM admins WHERE id = ?");
 
-        if ($stmt->execute([$new, $userId])) {
-            $success = "تم تحديث كلمة المرور بنجاح!";
+        $stmt->execute([$userId]);
+        $currentPassword = $stmt->fetchColumn();
+
+        if ($current !== $currentPassword) {
+            $error = "❌ كلمة المرور الحالية غير صحيحة.";
+        } elseif ($new !== $confirm) {
+            $error = "⚠️ كلمة المرور الجديدة غير متطابقة.";
         } else {
-            $error = "حدث خطأ أثناء تحديث كلمة المرور.";
+            if($role == 'student')
+                $stmt = $conn->prepare("UPDATE students SET password = ? WHERE id = ?");
+            else
+                $stmt = $conn->prepare("UPDATE admins SET password = ? WHERE id = ?");
+
+            if ($stmt->execute([$new, $userId])) {
+                $success = "✅ تم تحديث كلمة المرور بنجاح!";
+            } else {
+                $error = "❌ حدث خطأ أثناء تحديث كلمة المرور.";
+            }
         }
     }
 }
 
+// ✅ لو فيه خطأ أو نجاح يفضل يعرضه في profile.php
+
+if ($error) {
+    $_SESSION['error'] = $error;
+} elseif ($success) {
+    $_SESSION['success'] = $success;
 }
-// Fetch current user info
-        if($role == 'student')
-$stmt = $conn->prepare("SELECT name, email FROM students WHERE id = ?");
-        else
-            $stmt = $conn->prepare("SELECT name, email FROM admins WHERE id = ?");
-$stmt->execute([$userId]);
-$user = $stmt->fetch();
+
 
 header("Location: profile.php");
+exit;

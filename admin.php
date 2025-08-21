@@ -44,59 +44,76 @@ $groups = $stmt->fetchAll();
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>لوحة درجات الطلاب</title>
+  <title>لوحة تحكم الأدمن</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="bg-gray-100 min-h-screen font-sans">
 
   <!-- Navbar -->
-    <nav class="bg-white shadow-md px-6 py-3 flex justify-between items-center">
-    <span class="text-blue-600 font-bold text-2xl">🎓 إبداع</span>
-    
-    <div>
-        <!-- <a href="admin.php" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">المجموعات</a> -->
-        <a href="profile.php" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">حسابي</a>
-
+   <nav class="bg-white shadow-lg px-6 py-3 flex justify-between items-center">
+    <span class="text-blue-700 font-bold text-3xl">🎓 إبداع</span>
+    <div class="space-x-2 space-x-reverse">
+      
+<a href="profile.php" class="bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-blue-800 transition flex items-center gap-2">
+    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+        <path d="M10 10a4 4 0 100-8 4 4 0 000 8zm-7 8a7 7 0 1114 0H3z"/>
+    </svg>
+    حسابي
+</a>
     </div>
-
-  
-</nav>
+  </nav>
 
   <div class="container mx-auto mt-8 px-4">
 
-    <h1 class="text-3xl mb-4">أهلا, <?php echo htmlspecialchars($_SESSION['user']['name']); ?> 👋</h1>
+    <h1 class="text-3xl mb-6 font-bold text-gray-800">أهلا, <?php echo htmlspecialchars($_SESSION['user']['name']); ?> 👋</h1>
 
     <!-- Search Box -->
     <form method="get" class="mb-6 flex gap-2">
-        <input type="text" name="search" placeholder="ابحث عن المجموعة..." 
+        <input type="text" name="search" placeholder="🔍 ابحث عن المجموعة..." 
                value="<?php echo htmlspecialchars($search); ?>" 
                class="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
         <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">بحث</button>
     </form>
 
-    <h2 class="text-xl mb-3 font-semibold">المجموعات:</h2>
-
-    <?php if ($groups): ?>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <?php foreach ($groups as $group): ?>
-            <div class="bg-white p-4 rounded-lg shadow hover:shadow-lg transition">
-                <h3 class="text-lg font-bold mb-2"><?php echo htmlspecialchars($group['name']); ?></h3>
-                <p class="mb-4">عدد الطلاب: <?php echo $group['numStudt']; ?></p>
-                <div class="flex gap-2">
-                    <a href="manage_group.php?group_id=<?= $group['id'] ?>" class="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 transition">إدارة المجموعة</a>
-                    <a href="dashboard.php?group_id=<?= $group['id'] ?>" class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition">الدرجات</a>
-                </div>
+    <h2 class="text-xl mb-4 font-semibold text-gray-700">مجموعاتك:</h2>
+<?php if ($groups): ?>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <?php foreach ($groups as $group): ?>
+        <div class="bg-white p-6 rounded-xl shadow hover:shadow-lg transition border border-gray-100">
+            <h3 class="text-lg font-bold text-gray-800 mb-3"> <?php echo htmlspecialchars($group['name']); ?></h3>
+            <p class="mb-4 text-gray-600"> عدد الطلاب: <span class="font-semibold"><?php echo $group['numStudt']; ?></span></p>
+            <div class="flex gap-2">
+                <a href="manage_group.php?group_id=<?= $group['id'] ?>" class="bg-green-500 text-white px-3 py-2 rounded-lg hover:bg-green-600 transition"> إدارة</a>
+                <a href="dashboard.php?group_id=<?= $group['id'] ?>" class="bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 transition">عرض الدرجات</a>
             </div>
-        <?php endforeach; ?>
         </div>
-    <?php else: ?>
-        <p class="text-gray-600">لا توجد مجموعات.</p>
-    <?php endif; ?>
+    <?php endforeach; ?>
 
-    <!-- <div class="mt-6">
-        <a href="logout.php" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition">تسجيل الخروج</a>
-    </div> -->
+        <!-- زر إضافة مجموعة (أيقونة فقط) -->
+        <div class="bg-white p-6 rounded-xl shadow hover:shadow-lg flex flex-col justify-center items-center border border-dashed border-blue-400 ">
+            <a href="add_group.php" 
+               class="bg-blue-600 text-white p-4 rounded-full hover:bg-blue-700 transition flex items-center justify-center">
+                <!-- أيقونة Plus -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+            </a>
+        </div>
+    </div>
+
+<?php else: ?>
+    <p class="text-gray-600">❌ لا توجد مجموعات مرتبطة بك.</p>
+    <!-- زر إضافة مجموعة لو مفيش جروبات -->
+    <div class="mt-4">
+        <a href="add_group.php" 
+           class="bg-blue-600 text-white p-4 rounded-full hover:bg-blue-700 transition flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+        </a>
+    </div>
+<?php endif; ?>
+
 
   </div>
 
