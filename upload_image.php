@@ -24,7 +24,20 @@ if (isset($_FILES['profile_image']) && $_FILES['profile_image']['error'] === 0) 
         if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
 
         $destPath = $uploadDir . $newFileName;
+
+        // جلب الصورة القديمة
+        $stmt = $conn->prepare("SELECT profile_image FROM students WHERE id = ?");
+        $stmt->execute([$userId]);
+        $oldImage = $stmt->fetchColumn();
+
+        // رفع الجديدة
         if (move_uploaded_file($fileTmpPath, $destPath)) {
+            // حذف القديمة لو موجودة وليست الصورة الافتراضية
+            if ($oldImage && $oldImage !== "default.jpeg" && file_exists($uploadDir . $oldImage)) {
+                unlink($uploadDir . $oldImage);
+            }
+
+            // تحديث قاعدة البيانات
             $stmt = $conn->prepare("UPDATE students SET profile_image = ? WHERE id = ?");
             $stmt->execute([$newFileName, $userId]);
 
