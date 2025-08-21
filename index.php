@@ -128,7 +128,7 @@ if (isset($_SESSION['user'])) {
       
     </div>
     
-    <span class="text-blue-600 font-bold text-2xl">🎓 إبداع - إدارة المجموعة</span>
+    <span class="text-blue-600 font-bold text-2xl">🎓 إبداع </span>
   
 </nav>
 
