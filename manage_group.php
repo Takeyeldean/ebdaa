@@ -27,8 +27,15 @@ $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
   <!-- Navbar -->
   <nav class="bg-white shadow-md px-6 py-3 flex justify-between items-center">
     <span class="text-blue-600 font-bold text-2xl">🎓 إبداع - إدارة المجموعة</span>
-    <a href="admin.php" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">المجموعات</a>
-  </nav>
+    
+    <div>
+        <a href="admin.php" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">المجموعات</a>
+        <a href="profile.php" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">حسابي</a>
+
+    </div>
+
+  
+</nav>
 
   <div class="container mx-auto p-8">
 

@@ -51,10 +51,17 @@ $groups = $stmt->fetchAll();
 <body class="bg-gray-100 min-h-screen font-sans">
 
   <!-- Navbar -->
-  <nav class="bg-white shadow-md px-6 py-4 flex justify-between items-center">
+    <nav class="bg-white shadow-md px-6 py-3 flex justify-between items-center">
+    <span class="text-blue-600 font-bold text-2xl">🎓 إبداع - إدارة المجموعة</span>
     
-    <div class="text-2xl font-bold text-blue-600">🎓 إبداع</div>
-  </nav>
+    <div>
+        <!-- <a href="admin.php" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">المجموعات</a> -->
+        <a href="profile.php" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">حسابي</a>
+
+    </div>
+
+  
+</nav>
 
   <div class="container mx-auto mt-8 px-4">
 
@@ -87,9 +94,9 @@ $groups = $stmt->fetchAll();
         <p class="text-gray-600">لا توجد مجموعات.</p>
     <?php endif; ?>
 
-    <div class="mt-6">
+    <!-- <div class="mt-6">
         <a href="logout.php" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition">تسجيل الخروج</a>
-    </div>
+    </div> -->
 
   </div>
 
