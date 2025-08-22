@@ -94,29 +94,32 @@ $group_admins = $conn->query("
         </tbody>
     </table>
 
-    <!-- الجروبات -->
-    <h2 class="text-xl font-semibold mb-3"> Groups</h2>
-    <table class="table-auto border-collapse border border-gray-400 mb-6 w-full bg-white shadow rounded">
-        <thead class="bg-gray-200">
+            <!-- الجروبات-->
+   <h2 class="text-xl font-semibold mb-3"> Groups</h2>
+<table class="table-auto border-collapse border border-gray-400 mb-6 w-full bg-white shadow rounded">
+    <thead class="bg-gray-200">
+        <tr>
+            <th class="p-2 border">ID</th>
+            <th class="p-2 border">Name</th>
+            <th class="p-2 border">Number of Students</th>
+            <th class="p-2 border">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <?php foreach ($groups as $g): ?>
             <tr>
-                <th class="p-2 border">ID</th>
-                <th class="p-2 border">Name</th>
-                <th class="p-2 border">Actions</th>
+                <td class="p-2 border"><?= $g['id'] ?></td>
+                <td class="p-2 border"><?= htmlspecialchars($g['name']) ?></td>
+                <td class="p-2 border"><?= htmlspecialchars($g['numStudt']) ?></td> <!-- ✅ تأكد من الاسم في قاعدة البيانات -->
+                <td class="p-2 border">
+                    <a href="group_edit.php?id=<?= $g['id'] ?>" class="text-blue-500">Edit</a> | 
+                    <a href="group_delete.php?id=<?= $g['id'] ?>" class="text-red-500" onclick="return confirm('Delete group?')">Delete</a>
+                </td>
             </tr>
-        </thead>
-        <tbody>
-            <?php foreach ($groups as $g): ?>
-                <tr>
-                    <td class="p-2 border"><?= $g['id'] ?></td>
-                    <td class="p-2 border"><?= htmlspecialchars($g['name']) ?></td>
-                    <td class="p-2 border">
-                        <a href="group_edit.php?id=<?= $g['id'] ?>" class="text-blue-500">Edit</a> | 
-                        <a href="group_delete.php?id=<?= $g['id'] ?>" class="text-red-500" onclick="return confirm('Delete group?')">Delete</a>
-                    </td>
-                </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
+        <?php endforeach; ?>
+    </tbody>
+</table>
+
 
     <!-- الربط بين الأدمن والجروبات -->
     <h2 class="text-xl font-semibold mb-3"> Group Admins</h2>

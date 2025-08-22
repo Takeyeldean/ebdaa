@@ -28,12 +28,15 @@ if (!$group) {
 // ✅ لو تم الإرسال
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = trim($_POST['name']);
+    $numStudt = (int)$_POST['numStudt'];
 
     if (empty($name)) {
         $error = "❌ من فضلك أدخل اسم المجموعة";
+    } elseif ($numStudt < 0) {
+        $error = "❌ عدد الطلاب يجب أن يكون رقم موجب";
     } else {
-        $stmt = $conn->prepare("UPDATE groups SET name = ? WHERE id = ?");
-        $updated = $stmt->execute([$name, $groupId]);
+        $stmt = $conn->prepare("UPDATE groups SET name = ?, numStudt = ? WHERE id = ?");
+        $updated = $stmt->execute([$name, $numStudt, $groupId]);
 
         if ($updated) {
             $_SESSION['success'] = "✅ تم تعديل المجموعة بنجاح";
@@ -68,6 +71,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                        class="w-full border rounded p-2" required>
             </div>
 
+            <div>
+                <label class="block font-medium">عدد الطلاب</label>
+                <input type="number" name="numStudt" value="<?= htmlspecialchars($group['numStudt']) ?>" 
+                       class="w-full border rounded p-2" min="0" required>
+            </div>
+
             <div class="flex justify-between">
                 <a href="db_manager.php" class="bg-gray-500 text-white px-4 py-2 rounded">رجوع</a>
                 <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">حفظ</button>
@@ -76,3 +85,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 </body>
 </html>
+            

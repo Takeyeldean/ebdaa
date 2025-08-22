@@ -16,20 +16,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_student'])) {
     $name = trim($_POST['name']);
     $email = trim($_POST['email']);
     $password = trim($_POST['password']);
+    $confirm_password = trim($_POST['confirm_password']);
 
-    if (empty($name) || empty($email) || empty($_POST['password'])) {
+    // التحقق من الحقول الفارغة
+    if (empty($name) || empty($email) || empty($password) || empty($confirm_password)) {
         $_SESSION['error'] = "⚠️ كل الحقول مطلوبة.";
+        header("Location: manage_group.php?group_id=$group_id");
+        exit;
+    }
+
+    // التحقق من تطابق كلمة المرور مع التأكيد
+    if ($password !== $confirm_password) {
+        $_SESSION['error'] = "⚠️ كلمة المرور وتأكيدها غير متطابقين.";
         header("Location: manage_group.php?group_id=$group_id");
         exit;
     }
 
     try {
         // تحقق هل الإيميل موجود قبل كده
-        $check = $conn->prepare("SELECT id FROM students WHERE email = ?");
-        $check->execute([$email]);
+        $checkEmail = $conn->prepare("SELECT id FROM students WHERE email = ?");
+        $checkEmail->execute([$email]);
 
-        if ($check->rowCount() > 0) {
+        if ($checkEmail->rowCount() > 0) {
             $_SESSION['error'] = "⚠️ البريد الإلكتروني مستخدم من قبل.";
+            header("Location: manage_group.php?group_id=$group_id");
+            exit;
+        }
+
+        // تحقق هل الاسم موجود قبل كده
+        $checkName = $conn->prepare("SELECT id FROM students WHERE name = ?");
+        $checkName->execute([$name]);
+
+        if ($checkName->rowCount() > 0) {
+            $_SESSION['error'] = "⚠️ الاسم مستخدم من قبل. اختر اسم آخر.";
             header("Location: manage_group.php?group_id=$group_id");
             exit;
         }
@@ -52,4 +71,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_student'])) {
         exit;
     }
 }
-    

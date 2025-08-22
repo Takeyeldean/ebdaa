@@ -88,39 +88,45 @@ $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
       <!-- إضافة طالب جديد -->
       <div class="bg-white shadow-md rounded-2xl p-8">
-        <h2 class="text-2xl font-bold text-blue-800 mb-6">➕ إضافة طالب جديد</h2>
+  <h2 class="text-2xl font-bold text-blue-800 mb-6">➕ إضافة طالب جديد</h2>
 
-        <!-- رسائل التنبيه -->
-        <?php if (!empty($_SESSION['error'])): ?>
-          <p class="text-red-600 mb-4 font-semibold"><?= $_SESSION['error']; unset($_SESSION['error']); ?></p>
-        <?php endif; ?>
-        <?php if (!empty($_SESSION['success'])): ?>
-          <p class="text-green-600 mb-4 font-semibold"><?= $_SESSION['success']; unset($_SESSION['success']); ?></p>
-        <?php endif; ?>
+  <!-- رسائل التنبيه -->
+  <?php if (!empty($_SESSION['error'])): ?>
+    <p class="text-red-600 mb-4 font-semibold"><?= $_SESSION['error']; unset($_SESSION['error']); ?></p>
+  <?php endif; ?>
+  <?php if (!empty($_SESSION['success'])): ?>
+    <p class="text-green-600 mb-4 font-semibold"><?= $_SESSION['success']; unset($_SESSION['success']); ?></p>
+  <?php endif; ?>
 
-        <form method="post" action="add.php" class="space-y-5">
-          <input type="hidden" name="group_id" value="<?= $group_id ?>">
-          
-          <div>
-            <label class="block mb-1 font-medium text-gray-700"> اسم الطالب:</label>
-            <input type="text" placeholder="الإسم" name="name" class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400" required>
-          </div>
+  <form method="post" action="add.php" class="space-y-5">
+    <input type="hidden" name="group_id" value="<?= $group_id ?>">
+    
+    <div>
+      <label class="block mb-1 font-medium text-gray-700">اسم الطالب:</label>
+      <input type="text" placeholder="الإسم" name="name" class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400" required>
+    </div>
 
-          <div>
-            <label class="block mb-1 font-medium text-gray-700">البريد الإلكتروني:</label>
-            <input type="email" placeholder="البريد الإلكتروني" name="email" class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400" required>
-          </div>
+    <div>
+      <label class="block mb-1 font-medium text-gray-700">البريد الإلكتروني:</label>
+      <input type="email" placeholder="البريد الإلكتروني" name="email" class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400" required>
+    </div>
 
-          <div>
-            <label class="block mb-1 font-medium text-gray-700"> كلمة المرور:</label>
-            <input type="text" name="password" placeholder="كلمة المرور" class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400" required>
-          </div>
+    <div>
+      <label class="block mb-1 font-medium text-gray-700">كلمة المرور:</label>
+      <input type="password" name="password" placeholder="كلمة المرور" class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400" required>
+    </div>
 
-          <button type="submit" name="add_student" class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition shadow-md">
-            إضافة الطالب
-          </button>
-        </form>
-      </div>
+    <div>
+      <label class="block mb-1 font-medium text-gray-700">تأكيد كلمة المرور:</label>
+      <input type="password" name="confirm_password" placeholder="أعد كتابة كلمة المرور" class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400" required>
+    </div>
+
+    <button type="submit" name="add_student" class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition shadow-md">
+      إضافة الطالب
+    </button>
+  </form>
+</div>
+
 
   </div>
 </body>
