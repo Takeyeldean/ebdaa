@@ -172,7 +172,7 @@ foreach ($students as $student) {
       responsive: true,
       maintainAspectRatio: false,
       animation: {
-        duration: 19  00,
+        duration: 1900,
         easing: 'easeOutBounce'
       },
       scales: {
