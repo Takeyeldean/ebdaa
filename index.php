@@ -10,7 +10,7 @@ if (isset($_SESSION['user'])) {
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Login | Student Portal</title>
+  <title>تسجيل الدخول</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
    <style>
     body {
@@ -142,7 +142,7 @@ if (isset($_SESSION['user'])) {
         <i class="fas fa-lock"></i>
         <input type="password" name="password" placeholder="كلمة المرور" required>
       </div>
-      <button type="submit" class="login-btn">Login</button>
+      <button type="submit" class="login-btn Bo ld">دخول</button>
     </form>
     
   </div>
