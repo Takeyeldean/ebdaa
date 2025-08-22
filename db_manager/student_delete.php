@@ -40,7 +40,7 @@ if ($deleted) {
 
     // ✅ تقليل عدد الطلاب في الجدول groups
     if (!empty($student['group_id'])) {
-        $stmt = $conn->prepare("UPDATE groups SET numstudt = numstudt - 1 WHERE id = ? AND numstud  t > 0");
+        $stmt = $conn->prepare("UPDATE groups SET numstudt = numstudt - 1 WHERE id = ? AND numstudt > 0");
         $stmt->execute([$student['group_id']]);
     }
 
