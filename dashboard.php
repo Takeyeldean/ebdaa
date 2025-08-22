@@ -110,48 +110,106 @@ foreach ($students as $student) {
       </div>
     </div>
   </div>
-<!-- Chart.js Script -->
-  <script>
-    const ctx = document.getElementById('gpaChart').getContext('2d');
-    new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: <?= json_encode($labels) ?>,
-        datasets: [{
-          label: 'عدد الدرجات',
-          data: <?= json_encode($data) ?>,
-          backgroundColor: [
-            '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6','#14b8a6', '#f97316'
-          ],
-          borderRadius: 8
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          y: { beginAtZero: true }
-        },
-        plugins: {
-          legend: {
-            display: true,
-            position: 'top'
-          },
-          datalabels: {
-            anchor: 'end',
-            align: 'start',
-            color: '#ffffffff',
-            font: {
-              weight: 'bold',
-              size: 14
-            },
-            formatter: value => value
-          }
+  <!-- Chart.js Script -->
+<script>
+  const ctx = document.getElementById('gpaChart').getContext('2d');
+
+  const labels = <?= json_encode($labels) ?>; // أسماء الطلاب
+  const data = <?= json_encode($data) ?>;     // درجات الطلاب
+
+  // 🥇🥈🥉 الميداليات
+  const medalEmojis = ["🥇", "🥈", "🥉"];
+  const topTitles = ["البطل الذهبي", "البطل الفضي", "البطل البرونزي"];
+
+  // نعمل Gradient لأول 3 فقط
+  const gradients = [
+    ctx.createLinearGradient(0, 0, 0, 400), // ذهبي
+    ctx.createLinearGradient(0, 0, 0, 400), // فضي
+    ctx.createLinearGradient(0, 0, 0, 400)  // برونزي
+  ];
+
+  // 🟡 ذهبي
+  gradients[0].addColorStop(0, "#fde047"); 
+  gradients[0].addColorStop(1, "#facc15");
+
+  // ⚪ فضي
+  gradients[1].addColorStop(0, "#d1d5db"); 
+  gradients[1].addColorStop(1, "#9ca3af");
+
+  // 🟠 برونزي
+  gradients[2].addColorStop(0, "#fbbf24"); 
+  gradients[2].addColorStop(1, "#b45309");
+
+  // باقي الألوان العادية
+  const normalColors = ['#22c55e', '#3b82f6', '#f97316', '#a855f7', '#ef4444'];
+
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels.map((name, i) => {
+        if (i < 3) {
+          return medalEmojis[i] + " " + topTitles[i] + " - " + name;  
+          // مثال: 🥇 البطل الذهبي - أحمد
         }
+        return name;
+      }),
+      datasets: [{
+        label: 'درجات الطلاب',
+        data: data,
+        backgroundColor: data.map((_, i) => {
+          if (i < 3) return gradients[i]; // أول 3 بـ Gradient
+          return normalColors[(i - 3) % normalColors.length]; // الباقي ألوان ثابتة
+        }),
+        borderRadius: 14
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: {
+        duration: 1500,
+        easing: 'easeOutBounce'
       },
-      plugins: [ChartDataLabels]
-    });
-  </script>
+     scales: {
+  y: { beginAtZero: true },
+  x: {
+    ticks: {
+      callback: function(value, index, ticks) {
+        if (index < 3) {
+          return labels[index] + " 🔥"; // نخليهم مميزين
+        }
+        return labels[index];
+      },
+      font: function(context) {
+        if (context.index < 3) {
+          return { size: 18, weight: 'bold' }; // أول 3 أكبر
+        }
+        return { size: 12, weight: 'bold' };   // الباقي عادي
+      }
+    }
+  }
+},
+
+      plugins: {
+        title: {
+          display: true,
+          text: '🏆 سباق الأبطال',
+          font: { size: 26, weight: 'bold' },
+          color: '#1f2937'
+        },
+        legend: { display: false },
+        datalabels: {
+          anchor: 'end',
+          align: 'start',
+          color: '#ffffff',
+          font: { weight: 'bold', size: 16 },
+          formatter: (value) => value // ❌ مفيش إيموجي جوه البار
+        }
+      }
+    },
+    plugins: [ChartDataLabels]
+  });
+</script>
 
 </body>
 </html>
