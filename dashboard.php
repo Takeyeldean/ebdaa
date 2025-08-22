@@ -54,7 +54,7 @@ $labels = [];
 $data = [];
 $images = [];
 foreach ($students as $student) {
-    $labels[] = $student['name'] . " " . $ranks[$student['id']] ;
+    $labels[] = $student['name'] . " #" . $ranks[$student['id']] ;
     $data[] = $student['degree'];
     $images[] = $student['profile_image'] ?? 'default.png';
 }
@@ -110,7 +110,6 @@ foreach ($students as $student) {
       </div>
     </div>
   </div>
-  <!-- Chart.js Script -->
 <script>
   const ctx = document.getElementById('gpaChart').getContext('2d');
 
@@ -121,27 +120,37 @@ foreach ($students as $student) {
   const medalEmojis = ["🥇", "🥈", "🥉"];
   const topTitles = ["البطل الذهبي", "البطل الفضي", "البطل البرونزي"];
 
-  // نعمل Gradient لأول 3 فقط
-  const gradients = [
-    ctx.createLinearGradient(0, 0, 0, 400), // ذهبي
-    ctx.createLinearGradient(0, 0, 0, 400), // فضي
-    ctx.createLinearGradient(0, 0, 0, 400)  // برونزي
+  // ألوان متدرجة لكل الأعمدة
+  function createGradient(color1, color2) {
+    const g = ctx.createLinearGradient(0, 0, 0, 400);
+    g.addColorStop(0, color1);
+    g.addColorStop(1, color2);
+    return g;
+  }
+
+  // أول 3 مميزين
+  const specialGradients = [
+    createGradient("#f1f57bff", "#ffae00ff"), // ذهبي
+    createGradient("#e5e6e8ff", "#696e75ff"), // فضي
+    createGradient("#f7c23bff", "#ff5900ff")  // برونزي
   ];
 
-  // 🟡 ذهبي
-  gradients[0].addColorStop(0, "#fde047"); 
-  gradients[0].addColorStop(1, "#facc15");
+  // باقي الأعمدة (ألوان زاهية للأطفال)
+  const funColors = [
+    ["#22c55e", "#16a34a"], // أخضر
+    ["#3b82f6", "#2563eb"], // أزرق
+    ["#f97316", "#ea580c"], // برتقالي
+    ["#a855f7", "#7e22ce"], // بنفسجي
+    ["#ef4444", "#dc2626"], // أحمر
+    ["#06b6d4", "#0891b2"], // سماوي
+    ["#f43f5e", "#be123c"]  // وردي
+  ];
 
-  // ⚪ فضي
-  gradients[1].addColorStop(0, "#d1d5db"); 
-  gradients[1].addColorStop(1, "#9ca3af");
-
-  // 🟠 برونزي
-  gradients[2].addColorStop(0, "#fbbf24"); 
-  gradients[2].addColorStop(1, "#b45309");
-
-  // باقي الألوان العادية
-  const normalColors = ['#22c55e', '#3b82f6', '#f97316', '#a855f7', '#ef4444'];
+  const barColors = data.map((_, i) => {
+    if (i < 3) return specialGradients[i]; // أول 3 مميزين
+    const colorPair = funColors[(i - 3) % funColors.length];
+    return createGradient(colorPair[0], colorPair[1]);
+  });
 
   new Chart(ctx, {
     type: 'bar',
@@ -149,17 +158,13 @@ foreach ($students as $student) {
       labels: labels.map((name, i) => {
         if (i < 3) {
           return medalEmojis[i] + " " + topTitles[i] + " - " + name;  
-          // مثال: 🥇 البطل الذهبي - أحمد
         }
         return name;
       }),
       datasets: [{
         label: 'درجات الطلاب',
         data: data,
-        backgroundColor: data.map((_, i) => {
-          if (i < 3) return gradients[i]; // أول 3 بـ Gradient
-          return normalColors[(i - 3) % normalColors.length]; // الباقي ألوان ثابتة
-        }),
+        backgroundColor: barColors,
         borderRadius: 14
       }]
     },
@@ -167,29 +172,28 @@ foreach ($students as $student) {
       responsive: true,
       maintainAspectRatio: false,
       animation: {
-        duration: 1500,
+        duration: 19  00,
         easing: 'easeOutBounce'
       },
-     scales: {
-  y: { beginAtZero: true },
-  x: {
-    ticks: {
-      callback: function(value, index, ticks) {
-        if (index < 3) {
-          return labels[index] + " 🔥"; // نخليهم مميزين
+      scales: {
+        y: { beginAtZero: true },
+        x: {
+          ticks: {
+            callback: function(value, index) {
+              if (index < 3) {
+                return labels[index] + " 🔥";
+              }
+              return labels[index];
+            },
+            font: function(context) {
+              if (context.index < 3) {
+                return { size: 18, weight: 'bold' }; 
+              }
+              return { size: 12, weight: 'bold' };   
+            }
+          }
         }
-        return labels[index];
       },
-      font: function(context) {
-        if (context.index < 3) {
-          return { size: 18, weight: 'bold' }; // أول 3 أكبر
-        }
-        return { size: 12, weight: 'bold' };   // الباقي عادي
-      }
-    }
-  }
-},
-
       plugins: {
         title: {
           display: true,
@@ -203,13 +207,14 @@ foreach ($students as $student) {
           align: 'start',
           color: '#ffffff',
           font: { weight: 'bold', size: 16 },
-          formatter: (value) => value // ❌ مفيش إيموجي جوه البار
+          formatter: (value) => value
         }
       }
     },
     plugins: [ChartDataLabels]
   });
 </script>
+
 
 </body>
 </html>
