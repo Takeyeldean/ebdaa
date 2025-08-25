@@ -13,7 +13,7 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
 if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
     die("❌ لم يتم تحديد الطالب");
 }
-
+// username
 $studentId = (int)$_GET['id'];
 
 // ✅ جلب بيانات الطالب
@@ -28,7 +28,7 @@ if (!$student) {
 // ✅ في حالة حفظ التعديلات
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name     = trim($_POST['name']);
-    $email    = trim($_POST['email']);
+    $username    = trim($_POST['username']);
     $group_id = (int)$_POST['group_id'];
 
     $profile_image = $student['profile_image']; // الصورة القديمة
@@ -56,8 +56,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // ✅ تحديث بيانات الطالب
-    $stmt = $conn->prepare("UPDATE students SET name=?, email=?, group_id=?, profile_image=? WHERE id=?");
-    $updated = $stmt->execute([$name, $email, $group_id, $profile_image, $studentId]);
+    $stmt = $conn->prepare("UPDATE students SET name=?, username=?, group_id=?, profile_image=? WHERE id=?");
+    $updated = $stmt->execute([$name, $username, $group_id, $profile_image, $studentId]);
 
     if ($updated) {
         $_SESSION['success'] = "✅ تم تعديل بيانات الطالب بنجاح";
@@ -85,8 +85,8 @@ $groups = $conn->query("SELECT * FROM groups")->fetchAll(PDO::FETCH_ASSOC);
         <label>الاسم:</label>
         <input type="text" name="name" value="<?= htmlspecialchars($student['name']) ?>" required><br><br>
 
-        <label>البريد:</label>
-        <input type="email" name="email" value="<?= htmlspecialchars($student['email']) ?>" required><br><br>
+        <label>اسم المستخدم:</label>
+        <input type="username" name="username" value="<?= htmlspecialchars($student['username']) ?>" required><br><br>
 
         <label>المجموعة:</label>
         <select name="group_id" required>

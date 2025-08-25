@@ -2,7 +2,7 @@
 session_start(); 
 error_reporting(E_ALL);
 require_once 'includes/db.php';
-
+// username
 // Redirect if not logged in
 if (!isset($_SESSION['user'])) {
     header("Location: index.php");
@@ -17,13 +17,13 @@ $success = $error = "";
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['update_info'])) {
         $name = trim($_POST['name']);
-        $email = trim($_POST['email']);
+        $username = trim($_POST['username']);
 
         // ✅ تحقق من التكرار
         if ($role == 'student') {
-            // Check email across all students
-            $stmt = $conn->prepare("SELECT id FROM students WHERE email = ? AND id != ?");
-            $stmt->execute([$email, $userId]);
+            // Check username across all students
+            $stmt = $conn->prepare("SELECT id FROM students WHERE username = ? AND id != ?");
+            $stmt->execute([$username, $userId]);
             if ($stmt->rowCount() > 0) {
                 $error = "⚠️ البريد الإلكتروني مستخدم من قبل.";
             } else {
@@ -35,9 +35,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
         } else {
-            // For admins: both name and email must be unique globally
-            $stmt = $conn->prepare("SELECT id FROM admins WHERE (name = ? OR email = ?) AND id != ?");
-            $stmt->execute([$name, $email, $userId]);
+            // For admins: both name and username must be unique globally
+            $stmt = $conn->prepare("SELECT id FROM admins WHERE (name = ? OR username = ?) AND id != ?");
+            $stmt->execute([$name, $username, $userId]);
             if ($stmt->rowCount() > 0) {
                 $error = "⚠️ الاسم أو البريد الإلكتروني مستخدم من قبل.";
             }
@@ -46,13 +46,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // ✅ لو مفيش خطأ يعمل التحديث
         if (empty($error)) {
             if($role == 'student')
-                $stmt = $conn->prepare("UPDATE students SET name = ?, email = ? WHERE id = ?");
+                $stmt = $conn->prepare("UPDATE students SET name = ?, username = ? WHERE id = ?");
             else
-                $stmt = $conn->prepare("UPDATE admins SET name = ?, email = ? WHERE id = ?");
+                $stmt = $conn->prepare("UPDATE admins SET name = ?, username = ? WHERE id = ?");
 
-            if ($stmt->execute([$name, $email, $userId])) {
+            if ($stmt->execute([$name, $username, $userId])) {
                 $_SESSION['user']['name'] = $name;
-                $_SESSION['user']['email'] = $email;
+                $_SESSION['user']['username'] = $username;
                 $success = "✅ تم تحديث المعلومات بنجاح!";
             } else {
                 $error = "❌ حدث خطأ أثناء تحديث البيانات.";

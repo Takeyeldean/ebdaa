@@ -3,7 +3,7 @@ session_start();
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 require_once "includes/db.php";
-
+// username
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
     die("❌ غير مسموح لك بالدخول");
 }
@@ -107,8 +107,8 @@ $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
     </div>
 
     <div>
-      <label class="block mb-1 font-medium text-gray-700">البريد الإلكتروني:</label>
-      <input type="email" placeholder="البريد الإلكتروني" name="email" class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400" required>
+      <label class="block mb-1 font-medium text-gray-700">اسم المستخدم:</label>
+      <input type="username" placeholder="البريد الإلكتروني" name="username" class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400" required>
     </div>
 
     <div>

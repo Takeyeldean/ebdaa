@@ -3,7 +3,7 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 session_start();
 require_once 'includes/db.php';
-
+// username
 // Redirect if not logged in
 if (!isset($_SESSION['user'])) {
     header("Location: index.php");
@@ -16,9 +16,9 @@ $role = $_SESSION['user']['role'];
 // Fetch current user info
 $table = ($role === 'student') ? 'students' : 'admins';
 if ($role == 'student')
-    $stmt = $conn->prepare("SELECT name, email, profile_image FROM $table WHERE id = ?");
+    $stmt = $conn->prepare("SELECT name, username, profile_image FROM $table WHERE id = ?");
 else
-    $stmt = $conn->prepare("SELECT name, email FROM $table WHERE id = ?");
+    $stmt = $conn->prepare("SELECT name, username FROM $table WHERE id = ?");
 
 $stmt->execute([$userId]);
 $user = $stmt->fetch();
@@ -116,7 +116,7 @@ $user = $stmt->fetch();
         </div>
     <?php endif; ?>
 
-    <!-- Update Name & Email -->
+    <!-- Update Name & username -->
     <div class="bg-white shadow rounded-lg p-6 mb-6">
         <h3 class="text-xl font-semibold mb-4">تحديث المعلومات</h3>
         <form method="POST" action="update_info.php">
@@ -126,8 +126,8 @@ $user = $stmt->fetch();
                 <input type="text" name="name" value="<?= htmlspecialchars($user['name']) ?>" class="w-full p-2 border rounded">
             </div>
             <div class="mb-4">
-                <label class="block mb-1 font-semibold">البريد الإلكتروني</label>
-                <input type="email" name="email" value="<?= htmlspecialchars($user['email']) ?>" class="w-full p-2 border rounded">
+                <label class="block mb-1 font-semibold">اسم المستخدم</label>
+                <input type="username" name="username" value="<?= htmlspecialchars($user['username']) ?>" class="w-full p-2 border rounded">
             </div>
             <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">تحديث</button>
         </form>

@@ -28,14 +28,13 @@ if (!$admin) {
 // ✅ لو الفورم اتبعت (تحديث البيانات)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name  = trim($_POST['name']);
-    $email = trim($_POST['email']);
-    $role  = trim($_POST['role']);
+    $username = trim($_POST['username']);
 
-    if (empty($name) || empty($email)) {
+    if (empty($name) || empty($username)) {
         $_SESSION['error'] = "❌ كل الحقول مطلوبة";
     } else {
-        $stmt = $conn->prepare("UPDATE admins SET name = ?, email = ?, role = ? WHERE id = ?");
-        $updated = $stmt->execute([$name, $email, $role, $adminId]);
+        $stmt = $conn->prepare("UPDATE admins SET name = ?, username = ? WHERE id = ?");
+        $updated = $stmt->execute([$name, $username, $adminId]);
 
         if ($updated) {
             $_SESSION['success'] = "✅ تم تحديث بيانات الأدمن بنجاح";
@@ -74,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <div>
                 <label class="block mb-1">البريد الإلكتروني</label>
-                <input type="email" name="email" value="<?= htmlspecialchars($admin['email']) ?>" class="w-full border p-2 rounded" required>
+                <input type="email" name="username" value="<?= htmlspecialchars($admin['username']) ?>" class="w-full border p-2 rounded" required>
             </div>
 
          

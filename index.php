@@ -5,7 +5,7 @@ if (isset($_SESSION['user'])) {
   exit();
 }
 ?>
-
+// username
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -136,7 +136,7 @@ if (isset($_SESSION['user'])) {
       </div>
       <div class="form-group">
         <i class="fas fa-envelope"></i>
-        <input type="email" name="email" placeholder="البريد لإلكتروني" required>
+        <input type="username" name="username" placeholder="اسم المستخدم" required>
       </div>
       <div class="form-group">
         <i class="fas fa-lock"></i>

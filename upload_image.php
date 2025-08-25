@@ -8,7 +8,7 @@ if (!isset($_SESSION['user'])) {
     header("Location: index.php");
     exit();
 }
-
+// email
 $userId = $_SESSION['user']['id'];
 
 // رفع الصورة للطلاب فقط

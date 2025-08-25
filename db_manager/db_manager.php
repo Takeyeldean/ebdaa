@@ -8,7 +8,7 @@ require_once __DIR__ . '/../includes/db.php';
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
     die("❌ غير مسموح لك بالدخول");
 }
-
+// username
 // جلب البيانات من الجداول
 $stmt = $conn->prepare("
     SELECT students.*, groups.name AS group_name
@@ -46,7 +46,7 @@ $group_admins = $conn->query("
             <tr>
                 <th class="p-2 border">ID</th>
                 <th class="p-2 border">Name</th>
-                <th class="p-2 border">Email</th>
+                <th class="p-2 border">username</th>
                 <th class="p-2 border">Group</th>
                 <th class="p-2 border">Actions</th>
             </tr>
@@ -56,7 +56,7 @@ $group_admins = $conn->query("
     <tr>
         <td class="p-2 border"><?= $s['id'] ?></td>
         <td class="p-2 border"><?= htmlspecialchars($s['name']) ?></td>
-        <td class="p-2 border"><?= htmlspecialchars($s['email']) ?></td>
+        <td class="p-2 border"><?= htmlspecialchars($s['username']) ?></td>
         <td class="p-2 border"><?= htmlspecialchars($s['group_name']) ?></td> <!-- ✅ اسم المجموعة -->
         <td class="p-2 border">
             <a href="student_edit.php?id=<?= $s['id'] ?>" class="text-blue-500">Edit</a> | 
@@ -75,7 +75,7 @@ $group_admins = $conn->query("
             <tr>
                 <th class="p-2 border">ID</th>
                 <th class="p-2 border">Name</th>
-                <th class="p-2 border">Email</th>
+                <th class="p-2 border">username</th>
                 <th class="p-2 border">Actions</th>
             </tr>
         </thead>
@@ -84,7 +84,7 @@ $group_admins = $conn->query("
                 <tr>
                     <td class="p-2 border"><?= $a['id'] ?></td>
                     <td class="p-2 border"><?= htmlspecialchars($a['name']) ?></td>
-                    <td class="p-2 border"><?= htmlspecialchars($a['email']) ?></td>
+                    <td class="p-2 border"><?= htmlspecialchars($a['username']) ?></td>
                     <td class="p-2 border">
                         <a href="admin_edit.php?id=<?= $a['id'] ?>" class="text-blue-500">Edit</a> | 
                         <a href="admin_delete.php?id=<?= $a['id'] ?>" class="text-red-500" onclick="return confirm('Delete admin?')">Delete</a>
