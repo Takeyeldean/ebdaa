@@ -293,6 +293,10 @@ $groups = $stmt->fetchAll();
       ⚡ إبداع
     </span>
     <div class="space-x-2 space-x-reverse">
+      <a href="admin_questions.php" class="btn-primary">
+        <i class="fas fa-question-circle"></i>
+        الأسئلة
+      </a>
       <a href="profile.php" class="btn-primary">
         <i class="fas fa-user"></i>
         حسابي
