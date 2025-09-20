@@ -2,8 +2,8 @@
 session_start(); 
 error_reporting(E_ALL);
 require_once 'includes/db.php';
-// username
-// Redirect if not logged in
+
+// ✅ لو المستخدم مش مسجل دخول
 if (!isset($_SESSION['user'])) {
     header("Location: index.php");
     exit();
@@ -13,37 +13,48 @@ $userId = $_SESSION['user']['id'];
 $role = $_SESSION['user']['role'];
 $success = $error = "";
 
-// Handle form submission
+// ✅ التحقق من المدخلات
+function isEnglishUsername($username) {
+    return preg_match('/^[a-zA-Z0-9_]+$/', $username);
+}
+
+// ✅ لو تم إرسال فورم
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+    // --- تحديث البيانات الشخصية ---
     if (isset($_POST['update_info'])) {
         $name = trim($_POST['name']);
         $username = trim($_POST['username']);
 
-        // ✅ تحقق من التكرار
-        if ($role == 'student') {
-            // Check username across all students
-            $stmt = $conn->prepare("SELECT id FROM students WHERE username = ? AND id != ?");
-            $stmt->execute([$username, $userId]);
-            if ($stmt->rowCount() > 0) {
-                $error = "⚠️ البريد الإلكتروني مستخدم من قبل.";
-            } else {
-                // Check name only inside the same group
-                $stmt = $conn->prepare("SELECT id FROM students WHERE name = ? AND group_id = (SELECT group_id FROM students WHERE id = ?) AND id != ?");
-                $stmt->execute([$name, $userId, $userId]);
-                if ($stmt->rowCount() > 0) {
-                    $error = "⚠️ الاسم مستخدم بالفعل داخل .";
-                }
-            }
+        // تحقق أن اليوزرنيم إنجليزي فقط
+        if (!isEnglishUsername($username)) {
+            $error = "⚠️ اسم المستخدم يجب أن يحتوي على أحرف وأرقام إنجليزية فقط.";
         } else {
-            // For admins: both name and username must be unique globally
-            $stmt = $conn->prepare("SELECT id FROM admins WHERE (name = ? OR username = ?) AND id != ?");
-            $stmt->execute([$name, $username, $userId]);
-            if ($stmt->rowCount() > 0) {
-                $error = "⚠️ الاسم أو البريد الإلكتروني مستخدم من قبل.";
+            if ($role == 'student') {
+                // ✅ تحقق من username مكرر
+                $stmt = $conn->prepare("SELECT id FROM students WHERE username = ? AND id != ?");
+                $stmt->execute([$username, $userId]);
+                if ($stmt->rowCount() > 0) {
+                    $error = "⚠️ اسم المستخدم مستخدم بالفعل.";
+                } else {
+                    // ✅ تحقق من الاسم داخل نفس المجموعة
+                    $stmt = $conn->prepare("SELECT id FROM students WHERE name = ? AND group_id = (SELECT group_id FROM students WHERE id = ?) AND id != ?");
+                    $stmt->execute([$name, $userId, $userId]);
+                    if ($stmt->rowCount() > 0) {
+                        $error = "⚠️ الاسم مستخدم بالفعل داخل نفس المجموعة.";
+                    }
+                }
+            } else {
+                // ✅ الأدمن: الاسم و اليوزرنيم لازم يكونوا فريدين
+                $stmt = $conn->prepare("SELECT id FROM admins WHERE (name = ? OR username = ?) AND id != ?");
+                $stmt->execute([$name, $username, $userId]);
+                if ($stmt->rowCount() > 0) {
+                    $error = "⚠️ الاسم أو اسم المستخدم مستخدم من قبل.";
+                }
             }
         }
 
-        // ✅ لو مفيش خطأ يعمل التحديث
+        // ✅ لو مفيش أخطاء → تحديث
         if (empty($error)) {
             if($role == 'student')
                 $stmt = $conn->prepare("UPDATE students SET name = ?, username = ? WHERE id = ?");
@@ -60,6 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
+    // --- تحديث كلمة المرور ---
     if (isset($_POST['update_pass'])) {
         $current = $_POST['current_password'];
         $new = $_POST['new_password'];
@@ -73,6 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute([$userId]);
         $currentPassword = $stmt->fetchColumn();
 
+        // ⚠️ لو لسه بتخزن plain text
         if ($current !== $currentPassword) {
             $error = "❌ كلمة المرور الحالية غير صحيحة.";
         } elseif ($new !== $confirm) {
@@ -92,14 +105,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// ✅ لو فيه خطأ أو نجاح يفضل يعرضه في profile.php
-
+// ✅ إعادة التوجيه مع رسائل
 if ($error) {
     $_SESSION['error'] = $error;
 } elseif ($success) {
     $_SESSION['success'] = $success;
 }
-
-
 header("Location: profile.php");
 exit;
+    

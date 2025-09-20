@@ -23,7 +23,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $_SESSION['user'] = [
             "id" => $user['id'],
             "name" => $user['name'],
-            "role" => $role
+            "role" => $role     
         ];
          $redirect = ($_SESSION['user']['role'] === 'admin') ? 'admin.php' : 'dashboard.php';
     header("Location: $redirect");

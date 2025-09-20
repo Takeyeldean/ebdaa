@@ -11,7 +11,8 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
 
 // ✅ جلب المجموعات والمديرين
 $groups = $conn->query("SELECT * FROM groups")->fetchAll(PDO::FETCH_ASSOC);
-$admins = $conn->query("SELECT * FROM admins")->fetchAll(PDO::FETCH_ASSOC);
+$admins = $conn->query("SELECT id, username FROM admins")->fetchAll(PDO::FETCH_ASSOC);
+
 
 // ✅ عند إضافة علاقة جديدة
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'add') {
@@ -87,11 +88,12 @@ $groupAdmins = $conn->query("
         </select>
 
         <label class="block mb-2">اختر الأدمن:</label>
-        <select name="admin_id" class="p-2 border rounded w-full mb-4">
-            <?php foreach ($admins as $a): ?>
-                <option value="<?= $a['id'] ?>"><?= htmlspecialchars($a['name']) ?></option>
-            <?php endforeach; ?>
-        </select>
+<select name="admin_id" class="p-2 border rounded w-full mb-4">
+    <?php foreach ($admins as $a): ?>
+        <option value="<?= $a['id'] ?>"><?= htmlspecialchars($a['username']) ?></option>
+    <?php endforeach; ?>
+</select>
+
 
         <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">➕ إضافة علاقة</button>
     </form>

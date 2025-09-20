@@ -29,64 +29,274 @@ $user = $stmt->fetch();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>حسابي</title>
+    <title>حسابي - إبداع 👤</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Cairo', Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 25%, #3b82f6 50%, #06b6d4 75%, #10b981 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 12s ease infinite;
+            min-height: 100vh;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+
+        @keyframes floating {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .bounce-in {
+            animation: bounceIn 0.8s ease-out;
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.05); }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .nav-glass {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 0 0 25px 25px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+
         .profile-container {
             position: relative;
-            width: 160px;
-            height: 160px;
-            margin: 0 auto 1.5rem auto;
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 2rem auto;
         }
+
         .profile-container img {
             width: 100%;
             height: 100%;
             border-radius: 50%;
             object-fit: cover;
-            border: 2px solid #2563eb;
+            border: 6px solid #fff;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
         }
+
+        .profile-container img:hover {
+            transform: scale(1.05);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+        }
+
         .upload-btn {
             position: absolute;
-            bottom: 0;
-            right: 0;
-            background-color: #2563eb;
+            bottom: 10px;
+            right: 10px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
             color: white;
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
+            width: 50px;
+            height: 50px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            border: 2px solid white;
-            font-size: 20px;
+            border: 4px solid white;
+            font-size: 24px;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+            transition: all 0.3s ease;
         }
+
+        .upload-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
+        }
+
         .upload-btn input[type="file"] {
             display: none;
         }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 25px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #1e40af, #3b82f6);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(30, 64, 175, 0.3);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(30, 64, 175, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(45deg, #ef4444, #dc2626);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(239, 68, 68, 0.4);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e1e5e9;
+            border-radius: 15px;
+            outline: none;
+            font-size: 16px;
+            font-family: 'Cairo', sans-serif;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .form-input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+            font-size: 16px;
+        }
+
+        .success-message {
+            background: linear-gradient(45deg, #10b981, #059669);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            font-weight: 600;
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+        }
+
+        .error-message {
+            background: linear-gradient(45deg, #ef4444, #dc2626);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            font-weight: 600;
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
+        }
+
+        .decoration {
+            position: absolute;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .decoration-icon {
+            color: #f59e0b;
+            font-size: 1.5rem;
+            animation: twinkle 2s ease-in-out infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        .decoration-1 { top: 5%; left: 5%; }
+        .decoration-2 { top: 10%; right: 8%; }
+        .decoration-3 { bottom: 15%; left: 10%; }
+        .decoration-4 { bottom: 8%; right: 5%; }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen font-sans">
+<body>
 
-  <nav class="bg-white shadow-lg px-6 py-3 flex justify-between items-center">
-    <span class="text-blue-700 font-bold text-3xl">🎓 إبداع</span>
+  <!-- Decorative elements for boys -->
+  <div class="decoration decoration-1">
+    <span class="decoration-icon">⚡</span>
+  </div>
+  <div class="decoration decoration-2">
+    <span class="decoration-icon">🔥</span>
+  </div>
+  <div class="decoration decoration-3">
+    <span class="decoration-icon">⚽</span>
+  </div>
+  <div class="decoration decoration-4">
+    <span class="decoration-icon">🎮</span>
+  </div>
+
+  <nav class="nav-glass px-6 py-4 flex justify-between items-center">
+    <span class="text-4xl font-bold" style="background: linear-gradient(45deg, #1e40af, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+      ⚡ إبداع
+    </span>
     <div class="space-x-2 space-x-reverse">
       <div class="flex items-center space-x-4">
         <?php if ($role === 'student'): ?>
-            <a href="dashboard.php" class="bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-blue-800 transition flex items-center gap-2">الدرجات</a>
+            <a href="dashboard.php" class="btn-primary">
+              <i class="fas fa-chart-bar"></i>
+              الدرجات
+            </a>
         <?php endif; ?>
         <?php if ($role === 'admin'): ?>
-            <a href="admin.php" class="bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-blue-800 transition flex items-center gap-2">المجموعات</a>
+            <a href="admin.php" class="btn-primary">
+              <i class="fas fa-users"></i>
+              المجموعات
+            </a>
         <?php endif; ?>
       </div>
     </div>
   </nav>
 
-<div class="container mx-auto p-8">
+<div class="container mx-auto p-8 relative z-10">
 
     <!-- Profile Image with Upload Button -->
     <?php if ($role === 'student'): ?>
-    <div class="profile-container">
+    <div class="profile-container floating">
         <?php if (!empty($user['profile_image'])): ?>
             <img src="uploads/<?= htmlspecialchars($user['profile_image']) ?>" alt="صورة الملف الشخصي">
         <?php else: ?>
@@ -95,68 +305,110 @@ $user = $stmt->fetch();
         <form action="upload_image.php" method="POST" enctype="multipart/form-data" class="upload-btn">
             <label>
                 <input type="file" name="profile_image" accept="image/*" onchange="this.form.submit()">
-                ✎
+                <i class="fas fa-camera"></i>
             </label>
         </form>
     </div>
     <?php endif; ?>
 
-    <h2 class="text-3xl font-bold text-blue-700 mb-6">حسابي</h2>
+    <!-- Welcome Section -->
+    <div class="text-center mb-8 bounce-in">
+        <h2 class="text-5xl font-bold mb-4 text-white">
+            حسابي الشخصي ⚡
+        </h2>
+        <p class="text-xl text-white">دعنا نحدث معلوماتك! 🚀</p>
+    </div>
 
     <!-- ✅ رسائل النجاح أو الخطأ -->
     <?php if (isset($_SESSION['success'])): ?>
-        <div class="bg-green-200 text-green-800 p-3 rounded mb-4">
+        <div class="success-message">
+            <i class="fas fa-check-circle"></i>
             <?= $_SESSION['success']; unset($_SESSION['success']); ?>
         </div>
     <?php endif; ?>
 
     <?php if (isset($_SESSION['error'])): ?>
-        <div class="bg-red-200 text-red-800 p-3 rounded mb-4">
+        <div class="error-message">
+            <i class="fas fa-exclamation-circle"></i>
             <?= $_SESSION['error']; unset($_SESSION['error']); ?>
         </div>
     <?php endif; ?>
 
     <!-- Update Name & username -->
-    <div class="bg-white shadow rounded-lg p-6 mb-6">
-        <h3 class="text-xl font-semibold mb-4">تحديث المعلومات</h3>
+    <div class="card p-8 mb-8 floating">
+        <div class="text-center mb-6">
+            <div class="text-4xl mb-4">⚡</div>
+            <h3 class="text-2xl font-bold text-gray-800">تحديث المعلومات الشخصية</h3>
+            <p class="text-gray-600">دعنا نحدث اسمك واسم المستخدم</p>
+        </div>
+        
         <form method="POST" action="update_info.php">
             <input type="hidden" name="update_info">
-            <div class="mb-4">
-                <label class="block mb-1 font-semibold">الاسم</label>
-                <input type="text" name="name" value="<?= htmlspecialchars($user['name']) ?>" class="w-full p-2 border rounded">
+            <div class="mb-6">
+                <label class="form-label">
+                    <i class="fas fa-user"></i>
+                    الاسم الكامل
+                </label>
+                <input type="text" name="name" value="<?= htmlspecialchars($user['name']) ?>" class="form-input" placeholder="أدخل اسمك الكامل">
             </div>
-            <div class="mb-4">
-                <label class="block mb-1 font-semibold">اسم المستخدم</label>
-                <input type="username" name="username" value="<?= htmlspecialchars($user['username']) ?>" class="w-full p-2 border rounded">
+            <div class="mb-6">
+                <label class="form-label">
+                    <i class="fas fa-at"></i>
+                    اسم المستخدم
+                </label>
+                <input type="text" name="username" value="<?= htmlspecialchars($user['username']) ?>" class="form-input" placeholder="أدخل اسم المستخدم">
             </div>
-            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">تحديث</button>
+            <button type="submit" class="btn-primary w-full">
+                <i class="fas fa-save"></i>
+                حفظ التغييرات
+            </button>
         </form>
     </div>
 
     <!-- Update Password -->
-    <div class="bg-white shadow rounded-lg p-6 mb-6">
-        <h3 class="text-xl font-semibold mb-4">تغيير كلمة المرور</h3>
+    <div class="card p-8 mb-8 floating">
+        <div class="text-center mb-6">
+            <div class="text-4xl mb-4">🛡️</div>
+            <h3 class="text-2xl font-bold text-gray-800">تغيير كلمة المرور</h3>
+            <p class="text-gray-600">لحماية حسابك، تأكد من استخدام كلمة مرور قوية</p>
+        </div>
+        
         <form method="POST" action="update_info.php">
             <input type="hidden" name="update_pass">
-            <div class="mb-4">
-                <label class="block mb-1 font-semibold">كلمة المرور الحالية</label>
-                <input type="password" name="current_password" class="w-full p-2 border rounded">
+            <div class="mb-6">
+                <label class="form-label">
+                    <i class="fas fa-lock"></i>
+                    كلمة المرور الحالية
+                </label>
+                <input type="password" name="current_password" class="form-input" placeholder="أدخل كلمة المرور الحالية">
             </div>
-            <div class="mb-4">
-                <label class="block mb-1 font-semibold">كلمة المرور الجديدة</label>
-                <input type="password" name="new_password" class="w-full p-2 border rounded">
+            <div class="mb-6">
+                <label class="form-label">
+                    <i class="fas fa-key"></i>
+                    كلمة المرور الجديدة
+                </label>
+                <input type="password" name="new_password" class="form-input" placeholder="أدخل كلمة المرور الجديدة">
             </div>
-            <div class="mb-4">
-                <label class="block mb-1 font-semibold">تأكيد كلمة المرور الجديدة</label>
-                <input type="password" name="confirm_password" class="w-full p-2 border rounded">
+            <div class="mb-6">
+                <label class="form-label">
+                    <i class="fas fa-check-circle"></i>
+                    تأكيد كلمة المرور الجديدة
+                </label>
+                <input type="password" name="confirm_password" class="form-input" placeholder="أعد إدخال كلمة المرور الجديدة">
             </div>
-            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">تغيير كلمة المرور</button>
+            <button type="submit" class="btn-primary w-full">
+                <i class="fas fa-shield-alt"></i>
+                تحديث كلمة المرور
+            </button>
         </form>
     </div>
 
-    <!-- Logout Button at the Bottom -->
-    <div class="flex justify-end mt-6">
-        <a href="logout.php" class="bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-600 transition">تسجيل الخروج</a>
+    <!-- Logout Button -->
+    <div class="text-center">
+        <a href="logout.php" class="btn-danger">
+            <i class="fas fa-sign-out-alt"></i>
+            تسجيل الخروج
+        </a>
     </div>
 
 </div>
