@@ -20,15 +20,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_question'])) {
     
     if ($group_id > 0 && !empty($question_text)) {
         try {
-            $stmt = $conn->prepare("INSERT INTO questions (group_id, admin_id, question_text, is_public) VALUES (?, ?, ?, ?)");
-            $stmt->execute([$group_id, $admin_id, $question_text, $is_public]);
-            $question_id = $conn->lastInsertId();
+            // Verify that the admin has access to this group
+            $stmt = $conn->prepare("SELECT 1 FROM group_admins WHERE group_id = ? AND admin_id = ?");
+            $stmt->execute([$group_id, $admin_id]);
             
-            // Create notifications for all students in this group
-            $stmt = $conn->prepare("INSERT INTO notifications (student_id, question_id) SELECT id, ? FROM students WHERE group_id = ?");
-            $stmt->execute([$question_id, $group_id]);
-            
-            $_SESSION['success'] = "تم إنشاء السؤال بنجاح!";
+            if ($stmt->fetch()) {
+                $stmt = $conn->prepare("INSERT INTO questions (group_id, admin_id, question_text, is_public) VALUES (?, ?, ?, ?)");
+                $stmt->execute([$group_id, $admin_id, $question_text, $is_public]);
+                $question_id = $conn->lastInsertId();
+                
+                // Create notifications for all students in this group
+                $stmt = $conn->prepare("INSERT INTO notifications (student_id, question_id) SELECT id, ? FROM students WHERE group_id = ?");
+                $stmt->execute([$question_id, $group_id]);
+                
+                $_SESSION['success'] = "تم إنشاء السؤال بنجاح!";
+            } else {
+                $_SESSION['error'] = "ليس لديك صلاحية للوصول إلى هذه المجموعة";
+            }
         } catch (PDOException $e) {
             $_SESSION['error'] = "حدث خطأ في إنشاء السؤال: " . $e->getMessage();
         }
@@ -89,17 +97,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_question'])) {
     }
 }
 
-// Get all groups
-$groups = $conn->query("SELECT * FROM groups ORDER BY name")->fetchAll();
+// Get groups that this admin has access to
+$groups = $conn->prepare("
+    SELECT g.* 
+    FROM groups g 
+    INNER JOIN group_admins ga ON g.id = ga.group_id 
+    WHERE ga.admin_id = ? 
+    ORDER BY g.name
+");
+$groups->execute([$admin_id]);
+$groups = $groups->fetchAll();
 
-// Get all questions grouped by group
-$questions_by_group = $conn->query("
+// Get questions from groups that this admin has access to
+$questions_by_group = $conn->prepare("
     SELECT q.*, g.name as group_name, g.id as group_id, a.name as admin_name 
     FROM questions q 
     JOIN groups g ON q.group_id = g.id 
     JOIN admins a ON q.admin_id = a.id 
+    JOIN group_admins ga ON g.id = ga.group_id 
+    WHERE ga.admin_id = ?
     ORDER BY g.name ASC, q.created_at DESC
-")->fetchAll();
+");
+$questions_by_group->execute([$admin_id]);
+$questions_by_group = $questions_by_group->fetchAll();
 
 // Group questions by group
 $grouped_questions = [];
