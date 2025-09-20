@@ -15,8 +15,15 @@ if ($_SESSION['user']['role'] === 'admin') {
         $stmt = $conn->prepare("SELECT id, name, degree, profile_image FROM students WHERE group_id = ?");
         $stmt->execute([$group_id]);
         $students = $stmt->fetchAll();
+        
+        // Get group message
+        $stmt = $conn->prepare("SELECT message FROM groups WHERE id = ?");
+        $stmt->execute([$group_id]);
+        $group_data = $stmt->fetch(PDO::FETCH_ASSOC);
+        $group_message = $group_data['message'] ?? '';
     } else {
         $students = [];
+        $group_message = '';
     }
 } else if ($_SESSION['user']['role'] === 'student') {
     $student_id = $_SESSION['user']['id'];
@@ -30,8 +37,15 @@ if ($_SESSION['user']['role'] === 'admin') {
         $stmt = $conn->prepare("SELECT id, name, degree, profile_image FROM students WHERE group_id = ?");
         $stmt->execute([$group_id]);
         $students = $stmt->fetchAll();
+        
+        // Get group message
+        $stmt = $conn->prepare("SELECT message FROM groups WHERE id = ?");
+        $stmt->execute([$group_id]);
+        $group_data = $stmt->fetch(PDO::FETCH_ASSOC);
+        $group_message = $group_data['message'] ?? '';
     } else {
         $students = [];
+        $group_message = '';
     }
 } else {
     echo "❌ غير مسموح لك بالدخول.";
@@ -325,9 +339,13 @@ foreach ($students as $student) {
       <!-- Character behind chart -->
       <div class="character-behind absolute left-8 top-0 z-0">
         <div class="character-bubble bg-white bg-opacity-90 rounded-2xl p-4 shadow-lg mb-4 max-w-xs">
-          <p class="text-sm font-bold text-blue-600 text-center mb-1">عمو </p>
-          <p class="text-lg font-bold text-gray-800 text-center">أنا أتابع تقدمكم! 🔥</p>
-          <p class="text-sm text-gray-600 text-center">استمروا في التميز! ⚡</p>
+          <p class="text-sm font-bold text-blue-600 text-center mb-1">عمو 🤖</p>
+          <?php if (!empty($group_message)): ?>
+            <p class="text-sm text-gray-800 text-center"><?= htmlspecialchars($group_message) ?></p>
+          <?php else: ?>
+            <p class="text-lg font-bold text-gray-800 text-center">أنا أتابع تقدمكم! 🔥</p>
+            <p class="text-sm text-gray-600 text-center">استمروا في التميز! ⚡</p>
+          <?php endif; ?>
         </div>
         <div class="character-emoji text-8xl">🤖</div>
       </div>
@@ -556,7 +574,7 @@ foreach ($students as $student) {
         },
         legend: { 
           display: false 
-        },
+        },  
         tooltip: {
           backgroundColor: 'rgba(0, 0, 0, 0.8)',
           titleColor: '#fff',

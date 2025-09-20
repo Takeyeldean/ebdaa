@@ -86,6 +86,44 @@ $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
       <?php endif; ?>
     </div>
 
+    <!-- Group Message Section -->
+    <div class="bg-white shadow-md rounded-2xl p-8 mb-8">
+      <h2 class="text-2xl font-bold text-blue-800 mb-6">💬 رسالة المجموعة</h2>
+      
+      <?php
+      // Get current group message
+      $stmt = $conn->prepare("SELECT message FROM groups WHERE id = ?");
+      $stmt->execute([$group_id]);
+      $group = $stmt->fetch(PDO::FETCH_ASSOC);
+      $current_message = $group['message'] ?? '';
+      ?>
+      
+      <form method="post" action="update_group_message.php" class="space-y-4">
+        <input type="hidden" name="group_id" value="<?= $group_id ?>">
+        
+        <div>
+          <label class="block mb-2 font-medium text-gray-700">اكتب رسالة للمجموعة:</label>
+          <textarea name="message" rows="4" class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400 resize-none" placeholder="اكتب رسالة تحفيزية أو تعليمية للمجموعة..."><?= htmlspecialchars($current_message) ?></textarea>
+        </div>
+        
+        <div class="flex gap-3">
+          <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition shadow-md">
+            💾 حفظ الرسالة
+          </button>
+          <button type="button" onclick="clearMessage()" class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition shadow-md">
+            🗑️ مسح الرسالة
+          </button>
+        </div>
+      </form>
+      
+      <?php if (!empty($current_message)): ?>
+        <div class="mt-4 p-4 bg-blue-50 rounded-lg border-r-4 border-blue-500">
+          <h3 class="font-bold text-blue-800 mb-2">الرسالة الحالية:</h3>
+          <p class="text-gray-700"><?= htmlspecialchars($current_message) ?></p>
+        </div>
+      <?php endif; ?>
+    </div>
+
       <!-- إضافة طالب جديد -->
       <div class="bg-white shadow-md rounded-2xl p-8">
   <h2 class="text-2xl font-bold text-blue-800 mb-6">➕ إضافة طالب جديد</h2>
@@ -129,5 +167,14 @@ $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 
   </div>
+
+<script>
+function clearMessage() {
+    if (confirm('هل أنت متأكد من مسح الرسالة؟')) {
+        document.querySelector('textarea[name="message"]').value = '';
+    }
+}
+</script>
+
 </body>
 </html>
