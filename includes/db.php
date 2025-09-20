@@ -6,7 +6,7 @@ $password = "";           // الباسورد (افتراضي في XAMPP = فا�
 
 // الاتصال باستخدام PDO
 try {
-    $conn = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
+    $conn = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);
     // تفعيل وضع الأخطاء
     $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     // استخدام associative arrays بدل من الأرقام

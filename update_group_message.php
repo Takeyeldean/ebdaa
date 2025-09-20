@@ -14,19 +14,25 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $group_id = isset($_POST['group_id']) ? intval($_POST['group_id']) : 0;
     $message = isset($_POST['message']) ? trim($_POST['message']) : '';
+    $emoji = isset($_POST['emoji']) ? trim($_POST['emoji']) : '🤖';
+    
     
     if ($group_id > 0) {
         try {
-            $stmt = $conn->prepare("UPDATE groups SET message = ? WHERE id = ?");
-            $stmt->execute([$message, $group_id]);
+            $stmt = $conn->prepare("UPDATE groups SET message = ?, emoji = ? WHERE id = ?");
+            $result = $stmt->execute([$message, $emoji, $group_id]);
             
-            if ($message) {
-                $_SESSION['success'] = "تم حفظ الرسالة بنجاح!";
+            if ($result) {
+                if ($message) {
+                    $_SESSION['success'] = "تم حفظ الرسالة والإيموجي بنجاح!";
+                } else {
+                    $_SESSION['success'] = "تم مسح الرسالة وحفظ الإيموجي بنجاح!";
+                }
             } else {
-                $_SESSION['success'] = "تم مسح الرسالة بنجاح!";
+                $_SESSION['error'] = "فشل في تحديث البيانات";
             }
         } catch (PDOException $e) {
-            $_SESSION['error'] = "حدث خطأ في حفظ الرسالة: " . $e->getMessage();
+            $_SESSION['error'] = "حدث خطأ في حفظ البيانات: " . $e->getMessage();
         }
     } else {
         $_SESSION['error'] = "معرف المجموعة غير صحيح";

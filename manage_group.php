@@ -91,11 +91,13 @@ $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
       <h2 class="text-2xl font-bold text-blue-800 mb-6">💬 رسالة المجموعة</h2>
       
       <?php
-      // Get current group message
-      $stmt = $conn->prepare("SELECT message FROM groups WHERE id = ?");
+      // Get current group message and emoji
+      $stmt = $conn->prepare("SELECT message, emoji FROM groups WHERE id = ?");
       $stmt->execute([$group_id]);
       $group = $stmt->fetch(PDO::FETCH_ASSOC);
       $current_message = $group['message'] ?? '';
+      $current_emoji = $group['emoji'] ?? '🤖';
+      
       ?>
       
       <form method="post" action="update_group_message.php" class="space-y-4">
@@ -106,13 +108,25 @@ $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
           <textarea name="message" rows="4" class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400 resize-none" placeholder="اكتب رسالة تحفيزية أو تعليمية للمجموعة..."><?= htmlspecialchars($current_message) ?></textarea>
         </div>
         
+        <div>
+          <label class="block mb-2 font-medium text-gray-700">اختر إيموجي للشخصية:</label>
+          <div class="emoji-selector grid grid-cols-8 gap-2 p-4 border rounded-lg bg-gray-50">
+            <?php
+            $emojis = ['🤖', '👨‍🏫', '👩‍🏫', '🎓', '⚡', '🔥', '💪', '🎯', '🏆', '⭐', '🚀', '💡', '🎮', '⚽', '🏀', '🎨', '🎵', '📚', '🔬', '🎪', '🎭', '👨‍💻', '👩‍💻', '🧑‍🎓', '👨‍🎓', '👩‍🎓', '🧑‍🏫', '👨‍🔬', '👩‍🔬', '🧑‍💼', '👨‍💼', '👩‍💼'];
+            foreach ($emojis as $emoji): ?>
+              <button type="button" class="emoji-btn text-2xl p-2 rounded-lg hover:bg-blue-200 transition <?= $emoji === $current_emoji ? 'bg-blue-300 border-2 border-blue-500' : 'bg-white border border-gray-300' ?>" data-emoji="<?= $emoji ?>">
+                <?= $emoji ?>
+              </button>
+            <?php endforeach; ?>
+          </div>
+          <input type="hidden" name="emoji" id="selected_emoji" value="<?= htmlspecialchars($current_emoji) ?>">
+        </div>
+        
         <div class="flex gap-3">
           <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition shadow-md">
             💾 حفظ الرسالة
           </button>
-          <button type="button" onclick="clearMessage()" class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition shadow-md">
-            🗑️ مسح الرسالة
-          </button>
+         
         </div>
       </form>
       
@@ -172,8 +186,59 @@ $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
 function clearMessage() {
     if (confirm('هل أنت متأكد من مسح الرسالة؟')) {
         document.querySelector('textarea[name="message"]').value = '';
+        // Submit the form to save the empty message
+        document.querySelector('form').submit();
     }
 }
+
+function clearAll() {
+    if (confirm('هل أنت متأكد من مسح الرسالة والإيموجي؟')) {
+        document.querySelector('textarea[name="message"]').value = '';
+        document.getElementById('selected_emoji').value = '🤖';
+        
+        // Reset emoji selection visual
+        const emojiButtons = document.querySelectorAll('.emoji-btn');
+        emojiButtons.forEach(btn => {
+            btn.classList.remove('bg-blue-300', 'border-2', 'border-blue-500');
+            btn.classList.add('bg-white', 'border', 'border-gray-300');
+        });
+        
+        // Highlight the default emoji
+        const defaultBtn = document.querySelector('[data-emoji="🤖"]');
+        if (defaultBtn) {
+            defaultBtn.classList.remove('bg-white', 'border', 'border-gray-300');
+            defaultBtn.classList.add('bg-blue-300', 'border-2', 'border-blue-500');
+        }
+        
+        // Submit the form
+        document.querySelector('form').submit();
+    }
+}
+
+
+// Emoji selector functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const emojiButtons = document.querySelectorAll('.emoji-btn');
+    const selectedEmojiInput = document.getElementById('selected_emoji');
+    
+    emojiButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            // Remove active class from all buttons
+            emojiButtons.forEach(btn => {
+                btn.classList.remove('bg-blue-300', 'border-2', 'border-blue-500');
+                btn.classList.add('bg-white', 'border', 'border-gray-300');
+            });
+            
+            // Add active class to clicked button
+            this.classList.remove('bg-white', 'border', 'border-gray-300');
+            this.classList.add('bg-blue-300', 'border-2', 'border-blue-500');
+            
+            // Update hidden input value
+            const selectedEmoji = this.getAttribute('data-emoji');
+            selectedEmojiInput.value = selectedEmoji;
+        });
+    });
+});
 </script>
 
 </body>

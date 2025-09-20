@@ -16,14 +16,16 @@ if ($_SESSION['user']['role'] === 'admin') {
         $stmt->execute([$group_id]);
         $students = $stmt->fetchAll();
         
-        // Get group message
-        $stmt = $conn->prepare("SELECT message FROM groups WHERE id = ?");
+        // Get group message and emoji
+        $stmt = $conn->prepare("SELECT message, emoji FROM groups WHERE id = ?");
         $stmt->execute([$group_id]);
         $group_data = $stmt->fetch(PDO::FETCH_ASSOC);
         $group_message = $group_data['message'] ?? '';
+        $group_emoji = $group_data['emoji'] ?? '🤖';
     } else {
         $students = [];
         $group_message = '';
+        $group_emoji = '🤖';
     }
 } else if ($_SESSION['user']['role'] === 'student') {
     $student_id = $_SESSION['user']['id'];
@@ -38,14 +40,16 @@ if ($_SESSION['user']['role'] === 'admin') {
         $stmt->execute([$group_id]);
         $students = $stmt->fetchAll();
         
-        // Get group message
-        $stmt = $conn->prepare("SELECT message FROM groups WHERE id = ?");
+        // Get group message and emoji
+        $stmt = $conn->prepare("SELECT message, emoji FROM groups WHERE id = ?");
         $stmt->execute([$group_id]);
         $group_data = $stmt->fetch(PDO::FETCH_ASSOC);
         $group_message = $group_data['message'] ?? '';
+        $group_emoji = $group_data['emoji'] ?? '🤖';
     } else {
         $students = [];
         $group_message = '';
+        $group_emoji = '🤖';
     }
 } else {
     echo "❌ غير مسموح لك بالدخول.";
@@ -339,7 +343,7 @@ foreach ($students as $student) {
       <!-- Character behind chart -->
       <div class="character-behind absolute left-8 top-0 z-0">
         <div class="character-bubble bg-white bg-opacity-90 rounded-2xl p-4 shadow-lg mb-4 max-w-xs">
-          <p class="text-sm font-bold text-blue-600 text-center mb-1">عمو 🤖</p>
+          <p class="text-sm font-bold text-blue-600 text-center mb-1">عمو <?= htmlspecialchars($group_emoji) ?></p>
           <?php if (!empty($group_message)): ?>
             <p class="text-sm text-gray-800 text-center"><?= htmlspecialchars($group_message) ?></p>
           <?php else: ?>
@@ -347,7 +351,7 @@ foreach ($students as $student) {
             <p class="text-sm text-gray-600 text-center">استمروا في التميز! ⚡</p>
           <?php endif; ?>
         </div>
-        <div class="character-emoji text-8xl">🤖</div>
+        <div class="character-emoji text-8xl"><?= htmlspecialchars($group_emoji) ?></div>
       </div>
       
     
