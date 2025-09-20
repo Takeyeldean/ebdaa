@@ -70,6 +70,7 @@ foreach ($students as $student) {
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
   <style>
+
     * {
       margin: 0;
       padding: 0;
@@ -125,6 +126,7 @@ foreach ($students as $student) {
       border-radius: 0 0 25px 25px;
       box-shadow: 0 8px 32px rgba(0,0,0,0.1);
     }
+
 
     .chart-container {
       background: rgba(255, 255, 255, 0.95);
@@ -206,6 +208,36 @@ foreach ($students as $student) {
     .decoration-10 { top: 50%; right: 10%; }
     .decoration-11 { bottom: 45%; left: 20%; }
     .decoration-12 { bottom: 55%; right: 25%; }
+
+    .character-behind {
+      pointer-events: none;
+    }
+
+    .character-bubble {
+      animation: float 3s ease-in-out infinite;
+      position: relative;
+    }
+
+    .character-bubble::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 20px;
+      width: 0;
+      height: 0;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-top: 10px solid rgba(255, 255, 255, 0.9);
+    }
+
+    .character-emoji {
+      filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
   </style>
 </head>
 <body>
@@ -289,12 +321,23 @@ foreach ($students as $student) {
     <?php endif; ?> 
 
     <!-- Chart Container -->
-    <div class="mt-12 flex justify-center">
-      <div class="chart-container p-8 w-full max-w-6xl relative h-[500px] floating">
+    <div class="mt-12 flex justify-center relative">
+      <!-- Character behind chart -->
+      <div class="character-behind absolute left-8 top-0 z-0">
+        <div class="character-bubble bg-white bg-opacity-90 rounded-2xl p-4 shadow-lg mb-4 max-w-xs">
+          <p class="text-sm font-bold text-blue-600 text-center mb-1">عمو </p>
+          <p class="text-lg font-bold text-gray-800 text-center">أنا أتابع تقدمكم! 🔥</p>
+          <p class="text-sm text-gray-600 text-center">استمروا في التميز! ⚡</p>
+        </div>
+        <div class="character-emoji text-8xl">🤖</div>
+      </div>
+      
+    
+     </div>
+      <div class="chart-container p-8 w-full max-w-6xl relative h-[500px] floating z-10 ml-24">
         <canvas id="gpaChart"></canvas>
       </div>
-    </div>
-  </div>
+  </div>  
 <script>
   const ctx = document.getElementById('gpaChart').getContext('2d');
 

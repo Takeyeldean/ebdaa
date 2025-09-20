@@ -34,6 +34,7 @@ $user = $stmt->fetch();
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
     <style>
+
         * {
             margin: 0;
             padding: 0;
@@ -80,6 +81,7 @@ $user = $stmt->fetch();
             border-radius: 0 0 25px 25px;
             box-shadow: 0 8px 32px rgba(0,0,0,0.1);
         }
+
 
         .profile-container {
             position: relative;
@@ -412,6 +414,7 @@ $user = $stmt->fetch();
     </div>
 
 </div>
+
 
 </body>
 </html>
