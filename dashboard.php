@@ -317,7 +317,7 @@ foreach ($students as $student) {
       <div class="flex justify-center -mt-4">
         <img src="uploads/<?= htmlspecialchars($profile_image); ?>" 
              alt="Profile Image" 
-             class="w-32 h-32 rounded-full profile-image floating">
+             class="w-36 h-36 rounded-full profile-image floating">
       </div>
     <?php endif; ?> 
 
@@ -369,7 +369,7 @@ foreach ($students as $student) {
   // 🥇🥈🥉 الميداليات والرموز التعبيرية للأولاد
   const medalEmojis = ["🥇", "🥈", "🥉"];
   const topTitles = ["البطل الذهبي", "البطل الفضي", "البطل البرونزي"];
-  const funEmojis = ["⚡", "🔥", "⚽", "🏆", "🎮", "🚀", "💪", "🎯", "🏅", "⭐"];
+ const funEmojis = ["⚡", "🔥", "⚽", "🏆", "🎮", "🚀", "💪", "🎯", "🏅", "⭐"];
 
   // ألوان متدرجة لكل الأعمدة
   function createGradient(color1, color2) {
@@ -381,9 +381,9 @@ foreach ($students as $student) {
 
   // أول 3 مميزين (ألوان ذهبية وفضية وبرونزية)
   const specialGradients = [
-    createGradient("#FFD700", "#FFA500"), // ذهبي لامع
-    createGradient("#C0C0C0", "#808080"), // فضي أنيق
-    createGradient("#CD7F32", "#B87333")  // برونزي كلاسيكي
+    createGradient("#ffe761ff", "#ff8c00ff"), // ذهبي لامع
+    createGradient("#C0C0C0", "#434343ff"), // فضي أنيق
+    createGradient("#cf8c49ff", "#b86415ff")  // برونزي كلاسيكي
   ];
 
   // باقي الأعمدة (ألوان زاهية ومبهجة للأولاد)
@@ -461,7 +461,7 @@ foreach ($students as $student) {
           if (loadedImages[index]) {
             const x = bar.x;
             const y = bar.y - 15; // Position above the bar
-            const imageSize = 45; // Size of the profile image
+            const imageSize = 80; // Size of the profile image
             
             // Draw white circle background
             ctx.save();
@@ -508,8 +508,8 @@ foreach ($students as $student) {
           if (i < 3) {
             return medalEmojis[i] + " " + topTitles[i] + " - " + name;  
           }
-          const emoji = funEmojis[(i - 3) % funEmojis.length];
-          return emoji + " " + name;
+        //  const emoji = funEmojis[(i - 3) % funEmojis.length];
+          return name;
         }),
         datasets: [{
           label: 'درجات الأبطال',
@@ -594,7 +594,7 @@ foreach ($students as $student) {
               if (index < 3) {
                 return medalEmojis[index] + " " + topTitles[index];
               }
-              return funEmojis[(index - 3) % funEmojis.length] + " " + context[0].label;
+              return  context[0].label;
             },
             label: function(context) {
               return 'الدرجة: ' + context.parsed.y + ' نقطة';

@@ -236,7 +236,7 @@ $groups = $stmt->fetchAll();
       color: white;
       border: none;
       padding: 15px 25px;
-      border-radius: 20px;
+      border-radius: 24px;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.3s ease;
@@ -257,7 +257,7 @@ $groups = $stmt->fetchAll();
     .decoration-icon {
       color: #f59e0b;
       font-size: 1.5rem;
-      animation: twinkle 2s ease-in-out infinite;
+      animation: twinkle 1s ease-in-out infinite;
     }
 
     @keyframes twinkle {
