@@ -597,7 +597,7 @@ foreach ($students as $student) {
               return  context[0].label;
             },
             label: function(context) {
-              return 'الدرجة: ' + context.parsed.y + ' نقطة';
+              return  context.parsed.y + ' نقطة';
             }
           }
         },
