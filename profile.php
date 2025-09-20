@@ -281,13 +281,31 @@ $user = $stmt->fetch();
         <?php if ($role === 'student'): ?>
             <a href="dashboard.php" class="btn-primary">
               <i class="fas fa-chart-bar"></i>
-              الدرجات
+              الترتيب
+            </a>
+            <a href="student_questions.php" class="btn-primary relative">
+              <i class="fas fa-question-circle"></i>
+              الأسئلة
+              <?php
+              // Get unread notifications count
+              $stmt = $conn->prepare("SELECT COUNT(*) as count FROM notifications WHERE student_id = ? AND is_read = 0");
+              $stmt->execute([$_SESSION['user']['id']]);
+              $notification_count = $stmt->fetch()['count'];
+              if ($notification_count > 0): ?>
+                <span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center animate-pulse">
+                  <?= $notification_count ?>
+                </span>
+              <?php endif; ?>
             </a>
         <?php endif; ?>
         <?php if ($role === 'admin'): ?>
             <a href="admin.php" class="btn-primary">
               <i class="fas fa-users"></i>
               المجموعات
+            </a>
+            <a href="admin_questions.php" class="btn-primary">
+              <i class="fas fa-question-circle"></i>
+              الأسئلة
             </a>
         <?php endif; ?>
       </div>
