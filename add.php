@@ -32,6 +32,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_student'])) {
         exit;
     }
 
+    // التحقق من صحة اسم المستخدم (إنجليزي فقط)
+    if (!preg_match('/^[a-zA-Z0-9_]+$/', $username)) {
+        $_SESSION['error'] = "❌ اسم المستخدم يجب أن يحتوي على أحرف إنجليزية وأرقام فقط (مثال: ahmed123 أو student_01)";
+        header("Location: manage_group.php?group_id=$group_id");
+        exit;
+    }
+
     try {
         // تحقق هل الإيميل موجود قبل كده
         $checkusername = $conn->prepare("SELECT id FROM students WHERE username = ?");
@@ -43,12 +50,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_student'])) {
             exit;
         }
 
-        // تحقق هل الاسم موجود قبل كده
-        $checkName = $conn->prepare("SELECT id FROM students WHERE name = ?");
-        $checkName->execute([$name]);
+        // تحقق هل الاسم موجود في نفس المجموعة
+        $checkName = $conn->prepare("SELECT id FROM students WHERE name = ? AND group_id = ?");
+        $checkName->execute([$name, $group_id]);
 
         if ($checkName->rowCount() > 0) {
-            $_SESSION['error'] = "⚠️ الاسم مستخدم من قبل. اختر اسم آخر.";
+            $_SESSION['error'] = "⚠️ الاسم مستخدم من قبل في هذه المجموعة. اختر اسم آخر.";
             header("Location: manage_group.php?group_id=$group_id");
             exit;
         }
@@ -66,7 +73,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_student'])) {
         exit;
 
     } catch (PDOException $e) {
-        $_SESSION['error'] = "❌ خطأ في قاعدة البيانات: " . $e->getMessage();
+        // Handle specific database errors with user-friendly messages
+        $error_message = $e->getMessage();
+        
+        if (strpos($error_message, 'Username must contain only English letters and numbers') !== false) {
+            $_SESSION['error'] = "❌ اسم المستخدم يجب أن يحتوي على أحرف إنجليزية وأرقام فقط (مثال: ahmed123 أو student_01)";
+        } elseif (strpos($error_message, 'Duplicate entry') !== false) {
+            $_SESSION['error'] = "❌ اسم المستخدم مستخدم من قبل. اختر اسم مستخدم آخر.";
+        } else {
+            $_SESSION['error'] = "❌ حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.";
+        }
+        
         header("Location: manage_group.php?group_id=$group_id");
         exit;
     }

@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // تحقق أن اليوزرنيم إنجليزي فقط
         if (!isEnglishUsername($username)) {
-            $error = "⚠️ اسم المستخدم يجب أن يحتوي على أحرف وأرقام إنجليزية فقط.";
+            $error = "❌ اسم المستخدم يجب أن يحتوي على أحرف إنجليزية وأرقام فقط (مثال: ahmed123 أو student_01)";
         } else {
             if ($role == 'student') {
                 // ✅ تحقق من username مكرر

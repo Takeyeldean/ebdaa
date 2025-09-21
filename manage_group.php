@@ -489,12 +489,15 @@ $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <select name="new_group_id" class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400" required>
               <option value="">اختر المجموعة...</option>
               <?php
-              // Get all groups except current one
-              $stmt = $conn->prepare("SELECT id, name FROM groups WHERE id != ? ORDER BY name");
-              $stmt->execute([$group_id]);
-              $other_groups = $stmt->fetchAll(PDO::FETCH_ASSOC);
-              foreach ($other_groups as $group): ?>
-                <option value="<?= $group['id'] ?>"><?= htmlspecialchars($group['name']) ?></option>
+              // Get all groups
+              $stmt = $conn->prepare("SELECT id, name FROM groups ORDER BY name");
+              $stmt->execute();
+              $all_groups = $stmt->fetchAll(PDO::FETCH_ASSOC);
+              foreach ($all_groups as $group): ?>
+                <option value="<?= $group['id'] ?>" <?= $group['id'] == $group_id ? 'disabled' : '' ?>>
+                  <?= htmlspecialchars($group['name']) ?>
+                  <?= $group['id'] == $group_id ? ' (المجموعة الحالية)' : '' ?>
+                </option>
               <?php endforeach; ?>
             </select>
           </div>

@@ -51,6 +51,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['student_id']) && isse
             exit;
         }
         
+        // Check if trying to move to the same group
+        if ($new_group_id == $current_group_id) {
+            $_SESSION['error'] = "❌ لا يمكن نقل الطالب إلى نفس المجموعة";
+            header("Location: manage_group.php?group_id=" . $current_group_id);
+            exit;
+        }
+        
         // Check if target group exists
         $stmt = $conn->prepare("SELECT name FROM groups WHERE id = ?");
         $stmt->execute([$new_group_id]);
@@ -59,6 +66,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['student_id']) && isse
         if (!$target_group) {
             $_SESSION['error'] = "❌ المجموعة الهدف غير موجودة";
             header("Location: manage_group.php?group_id=" . $current_group_id);
+            exit;
+        }
+        
+        // Check if there's a name conflict in the target group
+        $stmt = $conn->prepare("SELECT id FROM students WHERE name = ? AND group_id = ?");
+        $stmt->execute([$student['name'], $new_group_id]);
+        $name_conflict = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($name_conflict) {
+            // There's a name conflict, redirect to name change page
+            $_SESSION['move_student_data'] = [
+                'student_id' => $student_id,
+                'student_name' => $student['name'],
+                'current_group_id' => $current_group_id,
+                'new_group_id' => $new_group_id,
+                'target_group_name' => $target_group['name']
+            ];
+            header("Location: change_student_name.php");
             exit;
         }
         
