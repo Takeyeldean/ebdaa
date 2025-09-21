@@ -82,11 +82,20 @@ foreach ($students as $student) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>إبداع - لوحة التحكم 🎯</title>
+  <!-- Preload critical resources for faster loading -->
+  <link rel="preload" href="https://cdn.tailwindcss.com" as="script">
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" as="style">
+  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style">
+  
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  
+  <!-- Load optimized CSS asynchronously -->
+  <link rel="preload" href="/assets/css/optimized.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="/assets/css/optimized.css"></noscript>
   <style>
 
     * {
@@ -390,6 +399,9 @@ foreach ($students as $student) {
       </div>
   </div>  
 <script>
+  // Performance monitoring
+  const startTime = performance.now();
+  
   const ctx = document.getElementById('gpaChart').getContext('2d');
 
   const labels = <?= json_encode($labels) ?>; // أسماء الطلاب
@@ -638,9 +650,34 @@ foreach ($students as $student) {
     plugins: [ChartDataLabels, profileImagePlugin]
   });
   
+  // Performance optimization
+  chart.canvas.style.willChange = 'transform';
+  chart.canvas.style.transform = 'translateZ(0)';
+  
+  // Performance monitoring
+  const endTime = performance.now();
+  console.log(`Chart rendered in ${(endTime - startTime).toFixed(2)}ms`);
+  
   });
 </script>
 
+<!-- Load optimized JavaScript -->
+<script src="/assets/js/simple-optimized.js"></script>
+
+<!-- Service Worker Registration -->
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+      navigator.serviceWorker.register('/sw.js')
+        .then(function(registration) {
+          console.log('SW registered: ', registration);
+        })
+        .catch(function(registrationError) {
+          console.log('SW registration failed: ', registrationError);
+        });
+    });
+  }
+</script>
 
 </body>
 </html>
