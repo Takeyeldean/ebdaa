@@ -188,10 +188,19 @@ foreach ($students as $student) {
       gap: 8px;
     }
 
-    .btn-primary:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 12px 35px rgba(30, 64, 175, 0.4);
-    }
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(30, 64, 175, 0.4);
+        }
+
+        .btn-primary.active {
+            background: linear-gradient(45deg, #10b981, #059669);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-primary.active:hover {
+            box-shadow: 0 12px 35px rgba(16, 185, 129, 0.4);
+        }
 
     .decoration {
       position: absolute;
@@ -303,7 +312,12 @@ foreach ($students as $student) {
     <span class="text-4xl font-bold" style="background: linear-gradient(45deg, #1e40af, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
       ⚡ إبداع
     </span>
+
     <div class="space-x-2 space-x-reverse">
+      <a href="dashboard.php" class="btn-primary active">
+        <i class="fas fa-chart-bar"></i>
+        الترتيب
+      </a>
       <a href="student_questions.php" class="btn-primary relative">
         <i class="fas fa-question-circle"></i>
         الأسئلة
@@ -323,6 +337,7 @@ foreach ($students as $student) {
         حسابي
       </a>
     </div>
+
   </nav>
 
   <div class="container mx-auto p-8 relative z-10">

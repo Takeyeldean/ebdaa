@@ -34,10 +34,87 @@ $group_admins = $conn->query("
     <meta charset="UTF-8">
     <title>Database Manager</title>
     <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100 p-6">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+    <style>
+        body {
+            font-family: 'Cairo', Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 25%, #3b82f6 50%, #06b6d4 75%, #10b981 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 12s ease infinite;
+            min-height: 100vh;
+        }
 
-    <h1 class="text-2xl font-bold mb-6"> Database Manager</h1>
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .nav-glass {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #1e40af, #3b82f6);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(30, 64, 175, 0.3);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(30, 64, 175, 0.4);
+        }
+
+        .btn-primary.active {
+            background: linear-gradient(45deg, #10b981, #059669);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-primary.active:hover {
+            box-shadow: 0 12px 35px rgba(16, 185, 129, 0.4);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="nav-glass px-6 py-4 flex justify-between items-center">
+        <span class="text-4xl font-bold" style="background: linear-gradient(45deg, #1e40af, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+            ⚡ إبداع
+        </span>
+        
+        <div class="space-x-2 space-x-reverse">
+            <a href="../admin.php" class="btn-primary">
+                <i class="fas fa-users"></i>
+                المجموعات
+            </a>
+            <a href="../admin_questions.php" class="btn-primary">
+                <i class="fas fa-question-circle"></i>
+                الأسئلة
+            </a>
+            <a href="../admin_invitations.php" class="btn-primary">
+                <i class="fas fa-envelope"></i>
+                الدعوات
+            </a>
+            <a href="../profile.php" class="btn-primary">
+                <i class="fas fa-user"></i>
+                حسابي
+            </a>
+        </div>
+    </nav>
+
+    <div class="p-6">
+        <h1 class="text-2xl font-bold mb-6"> Database Manager</h1>
 
     <!-- الطلاب -->
     <h2 class="text-xl font-semibold mb-3"> Students</h2>

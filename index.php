@@ -37,7 +37,7 @@ if (isset($_SESSION['user'])) {
     }
 
     /* Floating animations */
-    .floating {
+     .floating {
       animation: floating 3s ease-in-out infinite;
     }
 
@@ -49,7 +49,7 @@ if (isset($_SESSION['user'])) {
     .floating-delayed {
       animation: floating 3s ease-in-out infinite;
       animation-delay: 1.5s;
-    }
+    } 
 
     /* Navbar */
     nav {
@@ -119,8 +119,8 @@ if (isset($_SESSION['user'])) {
       right: 0;
       height: 5px;
       background: linear-gradient(90deg, #1e40af, #3b82f6, #06b6d4, #10b981, #f59e0b);
-      background-size: 200% 100%;
-      animation: gradientShift 3s ease infinite;
+         background-size: 200% 100%;
+      animation: gradientShift 3s ease infinite; 
     }
 
     .login-box h2 {
@@ -237,21 +237,21 @@ if (isset($_SESSION['user'])) {
     .decoration-icon {
       color: #f59e0b;
       font-size: 2rem;
-      animation: twinkle 2s ease-in-out infinite;
+       animation: twinkle 2s ease-in-out infinite; 
     }
 
-    .decoration-icon:nth-child(2) { animation-delay: 0.5s; }
-    .decoration-icon:nth-child(3) { animation-delay: 1s; }
+     .decoration-icon:nth-child(2) { animation-delay: 0.5s; }
+    .decoration-icon:nth-child(3) { animation-delay: 1s; } 
 
-    @keyframes twinkle {
+     @keyframes twinkle {
       0%, 100% { opacity: 0.3; transform: scale(1); }
       50% { opacity: 1; transform: scale(1.2); }
-    }
+    } 
 
     .decoration-1 { top: 10%; left: 10%; }
     .decoration-2 { top: 20%; right: 15%; }
     .decoration-3 { bottom: 20%; left: 20%; }
-    .decoration-4 { bottom: 10%; right: 10%; }
+    .decoration-4 { bottom: 10%; right: 10%; } 
 
     /* Responsive design */
     @media (max-width: 768px) {
@@ -293,7 +293,7 @@ if (isset($_SESSION['user'])) {
   </div>
 
   <div class="login-container">
-    <div class="login-box floating">
+    <div class="login-box">
       <h2>⚡ مرحباً بك في إبداع! ⚡</h2>
       <p class="welcome-text">دعنا نبدأ مغامرة التعلم الرائعة! 🚀</p>
       

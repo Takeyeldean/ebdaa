@@ -208,6 +208,15 @@ foreach ($all_answers as $answer) {
             box-shadow: 0 12px 35px rgba(30, 64, 175, 0.4);
         }
 
+        .btn-primary.active {
+            background: linear-gradient(45deg, #10b981, #059669);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-primary.active:hover {
+            box-shadow: 0 12px 35px rgba(16, 185, 129, 0.4);
+        }
+
         .question-card {
             transition: all 0.3s ease;
             border: 1px solid #e5e7eb;
@@ -432,8 +441,16 @@ foreach ($all_answers as $answer) {
         </span>
         <div class="space-x-2 space-x-reverse">
             <a href="dashboard.php" class="btn-primary">
-                <i class="fas fa-arrow-right"></i>
-                العودة للوحة التحكم
+                <i class="fas fa-chart-bar"></i>
+                الترتيب
+            </a>
+            <a href="student_questions.php" class="btn-primary active">
+                <i class="fas fa-question-circle"></i>
+                الأسئلة
+            </a>
+            <a href="profile.php" class="btn-primary">
+                <i class="fas fa-user"></i>
+                حسابي
             </a>
         </div>
     </nav>
