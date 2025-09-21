@@ -107,10 +107,31 @@ $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
       gap: 6px;
     }
 
-    .btn-info:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 30px rgba(33, 150, 243, 0.4);
-    }
+     .btn-info:hover {
+       transform: translateY(-2px);
+       box-shadow: 0 10px 30px rgba(33, 150, 243, 0.4);
+     }
+
+     .btn-danger {
+       background: linear-gradient(45deg, #ef4444, #dc2626);
+       color: white;
+       padding: 12px 24px;
+       border-radius: 25px;
+       text-decoration: none;
+       font-weight: 600;
+       transition: all 0.3s ease;
+       box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
+       display: inline-flex;
+       align-items: center;
+       gap: 8px;
+       border: none;
+       cursor: pointer;
+     }
+
+     .btn-danger:hover {
+       transform: translateY(-3px);
+       box-shadow: 0 12px 35px rgba(239, 68, 68, 0.4);
+     }
   </style>
 </head>
 <body>
@@ -169,7 +190,8 @@ $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
           <tr class="bg-blue-100 text-blue-800">
             <th class="p-3 text-right"> الطالب</th>
             <th class="p-3 text-center"> الدرجة الحالية</th>
-            <th class="p-3 text-center"> تحكم</th>
+            <th class="p-3 text-center"> إدارة الدرجات</th>
+            <th class="p-3 text-center"> إدارة الطالب</th>
           </tr>
         </thead>
         <tbody>
@@ -194,6 +216,19 @@ $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
                   <?php foreach ([5,3,2,1] as $dec): ?>
                     <a href="update_degree.php?id=<?= $student['id'] ?>&amount=-<?= $dec ?>" class="inline-block bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-700 transition">-<?= $dec ?></a>
                   <?php endforeach; ?>
+                </td>
+                <td class="p-3 text-center space-x-2 space-x-reverse">
+                  <!-- Move Student Button -->
+                  <button onclick="showMoveStudentModal(<?= $student['id'] ?>, '<?= htmlspecialchars($student['name']) ?>')" class="btn-info">
+                    <i class="fas fa-exchange-alt"></i>
+                    نقل
+                  </button>
+                  
+                  <!-- Delete Student Button -->
+                  <button onclick="confirmDeleteStudent(<?= $student['id'] ?>, '<?= htmlspecialchars($student['name']) ?>')" class="btn-danger">
+                    <i class="fas fa-trash"></i>
+                    حذف
+                  </button>
                 </td>
             </tr>
           <?php endforeach; ?>
@@ -389,6 +424,94 @@ $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
   </form>
 </div>
 
+    <!-- Leave Group Section -->
+    <div class="bg-red-50 border border-red-200 rounded-2xl p-8 mt-8">
+      <h2 class="text-2xl font-bold text-red-800 mb-6">⚠️ مغادرة المجموعة</h2>
+      
+      <?php
+      // Check if there are other admins in this group
+      $stmt = $conn->prepare("SELECT COUNT(*) as admin_count FROM group_admins WHERE group_id = ? AND admin_id != ?");
+      $stmt->execute([$group_id, $_SESSION['user']['id']]);
+      $other_admins_count = $stmt->fetch()['admin_count'];
+      
+      // Get group name for display
+      $stmt = $conn->prepare("SELECT name FROM groups WHERE id = ?");
+      $stmt->execute([$group_id]);
+      $group_name = $stmt->fetch()['name'];
+      ?>
+      
+      <div class="bg-red-100 border border-red-300 rounded-lg p-4 mb-6">
+        <h3 class="font-bold text-red-800 mb-2">⚠️ تحذير مهم:</h3>
+        <ul class="text-red-700 space-y-1">
+          <li>• إذا كنت آخر مشرف في المجموعة، سيتم حذف المجموعة بالكامل</li>
+          <li>• سيتم حذف جميع بيانات الطلاب في هذه المجموعة</li>
+          <li>• سيتم حذف جميع الأسئلة والأجوبة المرتبطة بهذه المجموعة</li>
+          <li>• لا يمكن التراجع عن هذا الإجراء</li>
+        </ul>
+      </div>
+      
+      <div class="flex items-center gap-4">
+        <button onclick="confirmLeaveGroup()" class="btn-danger">
+          <i class="fas fa-sign-out-alt"></i>
+          مغادرة المجموعة "<?= htmlspecialchars($group_name) ?>"
+        </button>
+        
+        <?php if ($other_admins_count > 0): ?>
+          <span class="text-green-600 font-medium">
+            <i class="fas fa-check-circle"></i>
+            يوجد <?= $other_admins_count ?> مشرف آخر في هذه المجموعة
+          </span>
+        <?php else: ?>
+          <span class="text-red-600 font-medium">
+            <i class="fas fa-exclamation-triangle"></i>
+            أنت المشرف الوحيد - سيتم حذف المجموعة بالكامل!
+          </span>
+        <?php endif; ?>
+      </div>
+    </div>
+
+    <!-- Move Student Modal -->
+    <div id="moveStudentModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+      <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
+        <h3 class="text-2xl font-bold text-blue-800 mb-6">نقل الطالب</h3>
+        
+        <form id="moveStudentForm" method="post" action="move_student.php">
+          <input type="hidden" id="moveStudentId" name="student_id">
+          <input type="hidden" name="current_group_id" value="<?= $group_id ?>">
+          
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">الطالب:</label>
+            <p id="moveStudentName" class="text-lg font-semibold text-gray-800"></p>
+          </div>
+          
+          <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-2">اختر المجموعة الجديدة:</label>
+            <select name="new_group_id" class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400" required>
+              <option value="">اختر المجموعة...</option>
+              <?php
+              // Get all groups except current one
+              $stmt = $conn->prepare("SELECT id, name FROM groups WHERE id != ? ORDER BY name");
+              $stmt->execute([$group_id]);
+              $other_groups = $stmt->fetchAll(PDO::FETCH_ASSOC);
+              foreach ($other_groups as $group): ?>
+                <option value="<?= $group['id'] ?>"><?= htmlspecialchars($group['name']) ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          
+          <div class="flex gap-3">
+            <button type="submit" class="btn-info flex-1">
+              <i class="fas fa-exchange-alt"></i>
+              نقل الطالب
+            </button>
+            <button type="button" onclick="closeMoveStudentModal()" class="btn-danger flex-1">
+              <i class="fas fa-times"></i>
+              إلغاء
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
 
   </div>
 
@@ -422,6 +545,84 @@ function clearAll() {
         
         // Submit the form
         document.querySelector('form').submit();
+    }
+}
+
+function confirmLeaveGroup() {
+    const groupName = "<?= htmlspecialchars($group_name) ?>";
+    const otherAdminsCount = <?= $other_admins_count ?>;
+    
+    let message = `هل أنت متأكد من مغادرة المجموعة "${groupName}"؟\n\n`;
+    
+    if (otherAdminsCount > 0) {
+        message += `✅ يوجد ${otherAdminsCount} مشرف آخر في هذه المجموعة\n`;
+        message += `سيتم إزالتك من المجموعة فقط.`;
+    } else {
+        message += `⚠️ أنت المشرف الوحيد في هذه المجموعة!\n\n`;
+        message += `سيتم حذف المجموعة بالكامل بما في ذلك:\n`;
+        message += `• جميع بيانات الطلاب\n`;
+        message += `• جميع الأسئلة والأجوبة\n`;
+        message += `• جميع الإحصائيات\n\n`;
+        message += `هذا الإجراء لا يمكن التراجع عنه!`;
+    }
+    
+    if (confirm(message)) {
+        // Create a form to submit the leave request
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = 'leave_group.php';
+        
+        const groupIdInput = document.createElement('input');
+        groupIdInput.type = 'hidden';
+        groupIdInput.name = 'group_id';
+        groupIdInput.value = '<?= $group_id ?>';
+        
+        form.appendChild(groupIdInput);
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+function showMoveStudentModal(studentId, studentName) {
+    document.getElementById('moveStudentId').value = studentId;
+    document.getElementById('moveStudentName').textContent = studentName;
+    document.getElementById('moveStudentModal').classList.remove('hidden');
+}
+
+function closeMoveStudentModal() {
+    document.getElementById('moveStudentModal').classList.add('hidden');
+    document.getElementById('moveStudentForm').reset();
+}
+
+function confirmDeleteStudent(studentId, studentName) {
+    const message = `⚠️ تحذير: حذف الطالب "${studentName}"\n\n` +
+                   `سيتم حذف:\n` +
+                   `• حساب الطالب بالكامل\n` +
+                   `• جميع الإجابات التي كتبها\n` +
+                   `• جميع البيانات المرتبطة به\n\n` +
+                   `هذا الإجراء لا يمكن التراجع عنه!\n\n` +
+                   `هل أنت متأكد من الحذف؟`;
+    
+    if (confirm(message)) {
+        // Create a form to submit the delete request
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = 'delete_student.php';
+        
+        const studentIdInput = document.createElement('input');
+        studentIdInput.type = 'hidden';
+        studentIdInput.name = 'student_id';
+        studentIdInput.value = studentId;
+        
+        const groupIdInput = document.createElement('input');
+        groupIdInput.type = 'hidden';
+        groupIdInput.name = 'group_id';
+        groupIdInput.value = '<?= $group_id ?>';
+        
+        form.appendChild(studentIdInput);
+        form.appendChild(groupIdInput);
+        document.body.appendChild(form);
+        form.submit();
     }
 }
 
