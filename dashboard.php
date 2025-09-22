@@ -349,7 +349,7 @@ foreach ($students as $student) {
         <?php endif; ?> 
 
         <?php if ($role === 'admin'): ?>
-            <a href="admin.php" class="btn-primary">
+            <a href="admin.php" class="btn-primary active">
               <i class="fas fa-users"></i>
               المجموعات
             </a>

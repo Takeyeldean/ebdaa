@@ -134,26 +134,26 @@ $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
      }
 
      /* Custom Modal Animations */
-     #leaveGroupModal {
+     #leaveGroupModal, #deleteStudentModal {
        transition: all 0.3s ease-in-out;
      }
      
-     #leaveGroupModal.hidden {
+     #leaveGroupModal.hidden, #deleteStudentModal.hidden {
        opacity: 0;
        visibility: hidden;
      }
      
-     #leaveGroupModal:not(.hidden) {
+     #leaveGroupModal:not(.hidden), #deleteStudentModal:not(.hidden) {
        opacity: 1;
        visibility: visible;
      }
      
-     #leaveGroupModal .bg-white {
+     #leaveGroupModal .bg-white, #deleteStudentModal .bg-white {
        transform: scale(0.9);
        transition: transform 0.3s ease-in-out;
      }
      
-     #leaveGroupModal:not(.hidden) .bg-white {
+     #leaveGroupModal:not(.hidden) .bg-white, #deleteStudentModal:not(.hidden) .bg-white {
        transform: scale(1);
      }
      
@@ -506,6 +506,30 @@ $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
       </div>
     </div>
 
+    <!-- Delete Student Confirmation Modal -->
+    <div id="deleteStudentModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center" onclick="closeDeleteStudentModal()">
+      <div class="bg-white rounded-2xl p-8 max-w-lg w-full mx-4" onclick="event.stopPropagation()">
+        <div class="text-center">
+          <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-4">
+            <i class="fas fa-trash-alt text-red-600 text-2xl"></i>
+          </div>
+          <h3 class="text-2xl font-bold text-gray-900 mb-4">تأكيد حذف الطالب</h3>
+          <p id="deleteStudentMessage" class="text-gray-600 mb-8 text-lg leading-relaxed"></p>
+          
+          <div class="flex gap-4 justify-center">
+            <button onclick="closeDeleteStudentModal()" class="modal-button bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-8 rounded-lg">
+              <i class="fas fa-times"></i>
+              إلغاء
+            </button>
+            <button onclick="submitDeleteStudent()" class="modal-button bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg">
+              <i class="fas fa-trash-alt"></i>
+              تأكيد الحذف
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Move Student Modal -->
     <div id="moveStudentModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
       <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
@@ -642,15 +666,28 @@ function closeMoveStudentModal() {
 }
 
 function confirmDeleteStudent(studentId, studentName) {
-    const message = `⚠️ تحذير: حذف الطالب "${studentName}"\n\n` +
-                   `سيتم حذف:\n` +
-                   `• حساب الطالب بالكامل\n` +
-                   `• جميع الإجابات التي كتبها\n` +
-                   `• جميع البيانات المرتبطة به\n\n` +
-                   `هذا الإجراء لا يمكن التراجع عنه!\n\n` +
-                   `هل أنت متأكد من الحذف؟`;
+    const message = `هل أنت متأكد من حذف الطالب "<span class="font-bold text-red-600">${studentName}</span>"؟<br><br>` +
+                   `<span class="text-gray-700">سيتم حذف:</span><br>` +
+                   `<span class="text-gray-600">• حساب الطالب بالكامل</span><br>` +
+                   `<span class="text-gray-600">• جميع الإجابات التي كتبها</span><br>` +
+                   `<span class="text-gray-600">• جميع البيانات المرتبطة به</span><br><br>` +
+                   `<span class="text-red-600 font-bold">هذا الإجراء لا يمكن التراجع عنه!</span>`;
     
-    if (confirm(message)) {
+    // Store student data for submission
+    window.currentDeleteStudentId = studentId;
+    window.currentDeleteStudentName = studentName;
+    
+    // Show the custom modal
+    document.getElementById('deleteStudentMessage').innerHTML = message;
+    document.getElementById('deleteStudentModal').classList.remove('hidden');
+}
+
+function closeDeleteStudentModal() {
+    document.getElementById('deleteStudentModal').classList.add('hidden');
+}
+
+function submitDeleteStudent() {
+    if (window.currentDeleteStudentId) {
         // Create a form to submit the delete request
         const form = document.createElement('form');
         form.method = 'POST';
@@ -659,7 +696,7 @@ function confirmDeleteStudent(studentId, studentName) {
         const studentIdInput = document.createElement('input');
         studentIdInput.type = 'hidden';
         studentIdInput.name = 'student_id';
-        studentIdInput.value = studentId;
+        studentIdInput.value = window.currentDeleteStudentId;
         
         const groupIdInput = document.createElement('input');
         groupIdInput.type = 'hidden';
