@@ -132,6 +132,41 @@ $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
        transform: translateY(-3px);
        box-shadow: 0 12px 35px rgba(239, 68, 68, 0.4);
      }
+
+     /* Custom Modal Animations */
+     #leaveGroupModal {
+       transition: all 0.3s ease-in-out;
+     }
+     
+     #leaveGroupModal.hidden {
+       opacity: 0;
+       visibility: hidden;
+     }
+     
+     #leaveGroupModal:not(.hidden) {
+       opacity: 1;
+       visibility: visible;
+     }
+     
+     #leaveGroupModal .bg-white {
+       transform: scale(0.9);
+       transition: transform 0.3s ease-in-out;
+     }
+     
+     #leaveGroupModal:not(.hidden) .bg-white {
+       transform: scale(1);
+     }
+     
+     /* Button hover effects */
+     .modal-button {
+       transition: all 0.3s ease;
+       transform: translateY(0);
+     }
+     
+     .modal-button:hover {
+       transform: translateY(-2px);
+       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+     }
   </style>
 </head>
 <body>
@@ -425,9 +460,8 @@ $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
 </div>
 
     <!-- Leave Group Section -->
-    <div class="bg-red-50 border border-red-200 rounded-2xl p-8 mt-8">
-      <h2 class="text-2xl font-bold text-red-800 mb-6">⚠️ مغادرة المجموعة</h2>
-      
+    <div class="p-6">
+
       <?php
       // Check if there are other admins in this group
       $stmt = $conn->prepare("SELECT COUNT(*) as admin_count FROM group_admins WHERE group_id = ? AND admin_id != ?");
@@ -440,33 +474,35 @@ $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
       $group_name = $stmt->fetch()['name'];
       ?>
       
-      <div class="bg-red-100 border border-red-300 rounded-lg p-4 mb-6">
-        <h3 class="font-bold text-red-800 mb-2">⚠️ تحذير مهم:</h3>
-        <ul class="text-red-700 space-y-1">
-          <li>• إذا كنت آخر مشرف في المجموعة، سيتم حذف المجموعة بالكامل</li>
-          <li>• سيتم حذف جميع بيانات الطلاب في هذه المجموعة</li>
-          <li>• سيتم حذف جميع الأسئلة والأجوبة المرتبطة بهذه المجموعة</li>
-          <li>• لا يمكن التراجع عن هذا الإجراء</li>
-        </ul>
-      </div>
-      
       <div class="flex items-center gap-4">
         <button onclick="confirmLeaveGroup()" class="btn-danger">
           <i class="fas fa-sign-out-alt"></i>
           مغادرة المجموعة "<?= htmlspecialchars($group_name) ?>"
         </button>
-        
-        <?php if ($other_admins_count > 0): ?>
-          <span class="text-green-600 font-medium">
-            <i class="fas fa-check-circle"></i>
-            يوجد <?= $other_admins_count ?> مشرف آخر في هذه المجموعة
-          </span>
-        <?php else: ?>
-          <span class="text-red-600 font-medium">
-            <i class="fas fa-exclamation-triangle"></i>
-            أنت المشرف الوحيد - سيتم حذف المجموعة بالكامل!
-          </span>
-        <?php endif; ?>
+      </div>
+    </div>
+
+    <!-- Leave Group Confirmation Modal -->
+    <div id="leaveGroupModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center" onclick="closeLeaveGroupModal()">
+      <div class="bg-white rounded-2xl p-8 max-w-lg w-full mx-4" onclick="event.stopPropagation()">
+        <div class="text-center">
+          <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-4">
+            <i class="fas fa-exclamation-triangle text-red-600 text-2xl"></i>
+          </div>
+          <h3 class="text-2xl font-bold text-gray-900 mb-4">تأكيد مغادرة المجموعة</h3>
+          <p id="leaveGroupMessage" class="text-gray-600 mb-8 text-lg leading-relaxed"></p>
+          
+          <div class="flex gap-4 justify-center">
+            <button onclick="closeLeaveGroupModal()" class="modal-button bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-8 rounded-lg">
+              <i class="fas fa-times"></i>
+              إلغاء
+            </button>
+            <button onclick="submitLeaveGroup()" class="modal-button bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg">
+              <i class="fas fa-sign-out-alt"></i>
+              تأكيد المغادرة
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -555,35 +591,43 @@ function confirmLeaveGroup() {
     const groupName = "<?= htmlspecialchars($group_name) ?>";
     const otherAdminsCount = <?= $other_admins_count ?>;
     
-    let message = `هل أنت متأكد من مغادرة المجموعة "${groupName}"؟\n\n`;
+    let message = `هل أنت متأكد من مغادرة المجموعة "${groupName}"؟`;
     
     if (otherAdminsCount > 0) {
-        message += `✅ يوجد ${otherAdminsCount} مشرف آخر في هذه المجموعة\n`;
-        message += `سيتم إزالتك من المجموعة فقط.`;
+        message += `<br><br><span class="text-green-600 font-semibold">✅ يوجد ${otherAdminsCount} مشرف آخر في هذه المجموعة</span><br>`;
+        message += `<span class="text-gray-700">سيتم إزالتك من المجموعة فقط.</span>`;
     } else {
-        message += `⚠️ أنت المشرف الوحيد في هذه المجموعة!\n\n`;
-        message += `سيتم حذف المجموعة بالكامل بما في ذلك:\n`;
-        message += `• جميع بيانات الطلاب\n`;
-        message += `• جميع الأسئلة والأجوبة\n`;
-        message += `• جميع الإحصائيات\n\n`;
-        message += `هذا الإجراء لا يمكن التراجع عنه!`;
+        message += `<br><br><span class="text-red-600 font-semibold">⚠️ أنت المشرف الوحيد في هذه المجموعة!</span><br><br>`;
+        message += `<span class="text-gray-700">سيتم حذف المجموعة بالكامل بما في ذلك:</span><br>`;
+        message += `<span class="text-gray-600">• جميع بيانات الطلاب</span><br>`;
+        message += `<span class="text-gray-600">• جميع الأسئلة والأجوبة</span><br>`;
+        message += `<span class="text-gray-600">• جميع الإحصائيات</span><br><br>`;
+        message += `<span class="text-red-600 font-bold">هذا الإجراء لا يمكن التراجع عنه!</span>`;
     }
     
-    if (confirm(message)) {
-        // Create a form to submit the leave request
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = 'leave_group.php';
-        
-        const groupIdInput = document.createElement('input');
-        groupIdInput.type = 'hidden';
-        groupIdInput.name = 'group_id';
-        groupIdInput.value = '<?= $group_id ?>';
-        
-        form.appendChild(groupIdInput);
-        document.body.appendChild(form);
-        form.submit();
-    }
+    // Show the custom modal
+    document.getElementById('leaveGroupMessage').innerHTML = message;
+    document.getElementById('leaveGroupModal').classList.remove('hidden');
+}
+
+function closeLeaveGroupModal() {
+    document.getElementById('leaveGroupModal').classList.add('hidden');
+}
+
+function submitLeaveGroup() {
+    // Create a form to submit the leave request
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = 'leave_group.php';
+    
+    const groupIdInput = document.createElement('input');
+    groupIdInput.type = 'hidden';
+    groupIdInput.name = 'group_id';
+    groupIdInput.value = '<?= $group_id ?>';
+    
+    form.appendChild(groupIdInput);
+    document.body.appendChild(form);
+    form.submit();
 }
 
 function showMoveStudentModal(studentId, studentName) {

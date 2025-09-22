@@ -8,6 +8,7 @@ if (!isset($_SESSION['user'])) {
     header("Location: index.php");
     exit;
 }
+$role = $_SESSION['user']['role'];  
 
 if ($_SESSION['user']['role'] === 'admin') {
     $group_id = isset($_GET['group_id']) ? intval($_GET['group_id']) : 0;
@@ -321,32 +322,66 @@ foreach ($students as $student) {
     <span class="text-4xl font-bold" style="background: linear-gradient(45deg, #1e40af, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
       ⚡ إبداع
     </span>
-
     <div class="space-x-2 space-x-reverse">
-      <a href="dashboard.php" class="btn-primary active">
-        <i class="fas fa-chart-bar"></i>
-        الترتيب
-      </a>
-      <a href="student_questions.php" class="btn-primary relative">
-        <i class="fas fa-question-circle"></i>
-        الأسئلة
-        <?php
-        // Get unread notifications count
-        $stmt = $conn->prepare("SELECT COUNT(*) as count FROM notifications WHERE student_id = ? AND is_read = 0");
-        $stmt->execute([$_SESSION['user']['id']]);
-        $notification_count = $stmt->fetch()['count'];
-        if ($notification_count > 0): ?>
-          <span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center animate-pulse">
-            <?= $notification_count ?>
-          </span>
-        <?php endif; ?>
-      </a>
-      <a href="profile.php" class="btn-primary">
-        <i class="fas fa-user"></i>
-        حسابي
-      </a>
-    </div>
+        <?php if ($role === 'student'): ?>
+            <a href="dashboard.php" class="btn-primary active">
+              <i class="fas fa-chart-bar"></i>
+              الترتيب
+            </a>
+            <a href="student_questions.php" class="btn-primary relative">
+              <i class="fas fa-question-circle"></i>
+              الأسئلة
+              <?php
+              // Get unread notifications count
+              $stmt = $conn->prepare("SELECT COUNT(*) as count FROM notifications WHERE student_id = ? AND is_read = 0");
+              $stmt->execute([$_SESSION['user']['id']]);
+              $notification_count = $stmt->fetch()['count'];
+              if ($notification_count > 0): ?>
+                <span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center animate-pulse">
+                  <?= $notification_count ?>
+                </span>
+              <?php endif; ?>
+            </a>
+            <a href="profile.php" class="btn-primary">
+              <i class="fas fa-user"></i>
+              حسابي
+            </a>
+        <?php endif; ?> 
 
+        <?php if ($role === 'admin'): ?>
+            <a href="admin.php" class="btn-primary">
+              <i class="fas fa-users"></i>
+              المجموعات
+            </a>
+            <a href="admin_questions.php" class="btn-primary">
+              <i class="fas fa-question-circle"></i>
+              الأسئلة
+            </a>
+            <a href="admin_invitations.php" class="btn-primary relative">
+              <i class="fas fa-envelope"></i>
+              الدعوات
+              <?php
+              // Get pending invitations count
+              $admin_username = $_SESSION['user']['username'] ?? '';
+              if (!empty($admin_username)) {
+                  $stmt = $conn->prepare("SELECT COUNT(*) as count FROM admin_invitations WHERE invited_username = ? AND status = 'pending'");
+                  $stmt->execute([$admin_username]);
+                  $invitation_count = $stmt->fetch()['count'];
+              } else {
+                  $invitation_count = 0;
+              }
+              if ($invitation_count > 0): ?>
+                <span class="absolute -top-2 -right-2 bg-orange-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center animate-pulse">
+                  <?= $invitation_count ?>
+                </span>
+              <?php endif; ?>
+            </a>
+            <a href="profile.php" class="btn-primary">
+              <i class="fas fa-user"></i>
+              حسابي
+            </a>
+        <?php endif; ?>
+    </div>
   </nav>
 
   <div class="container mx-auto p-8 relative z-10">
