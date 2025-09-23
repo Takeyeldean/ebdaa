@@ -2,6 +2,7 @@
 // Performance Monitoring Dashboard for Ebdaa
 session_start();
 require_once 'includes/db.php';
+require_once 'includes/url_helper.php';
 
 // Check if user is admin
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
@@ -227,7 +228,7 @@ $metrics = getPerformanceMetrics();
             <a href="optimize_images.php" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300">
                 <i class="fas fa-images"></i> تحسين الصور
             </a>
-            <a href="admin.php" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300">
+            <a href="<?= url('admin') ?>" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300">
                 <i class="fas fa-arrow-right"></i> العودة للإدارة
             </a>
         </div>

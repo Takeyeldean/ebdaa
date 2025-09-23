@@ -3,6 +3,7 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 session_start();
 require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/../includes/url_helper.php';
 
 // تأكد أن المستخدم Admin
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
@@ -94,21 +95,21 @@ $group_admins = $conn->query("
         </span>
         
         <div class="space-x-2 space-x-reverse">
-            <a href="../admin.php" class="btn-primary">
-                <i class="fas fa-users"></i>
-                المجموعات
+            <a href="<?= url('admin') ?>" class="btn-primary">
+              <i class="fas fa-users"></i>
+              المجموعات
             </a>
-            <a href="../admin_questions.php" class="btn-primary">
-                <i class="fas fa-question-circle"></i>
-                الأسئلة
+            <a href="<?= url('admin.questions') ?>" class="btn-primary">
+              <i class="fas fa-question-circle"></i>
+              الأسئلة
             </a>
-            <a href="../admin_invitations.php" class="btn-primary">
-                <i class="fas fa-envelope"></i>
-                الدعوات
+            <a href="<?= url('admin.invitations') ?>" class="btn-primary">
+              <i class="fas fa-envelope"></i>
+              الدعوات
             </a>
-            <a href="../profile.php" class="btn-primary">
-                <i class="fas fa-user"></i>
-                حسابي
+            <a href="<?= url('profile') ?>" class="btn-primary">
+              <i class="fas fa-user"></i>
+              حسابي
             </a>
         </div>
     </nav>

@@ -2,11 +2,8 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+session_start();
 require_once "includes/db.php";
-require_once "includes/url_helper.php";
 // email
 // التأكد أن الأدمن مسجل دخول
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
@@ -18,7 +15,7 @@ $admin_id = $_SESSION['user']['id'];
 
 // البحث
 $search = isset($_GET['search']) ? trim($_GET['search']) : "";
-
+  
 // جلب الجروبات اللي هذا الأدمن مشرف عليها
 $sql = "
     SELECT g.id, g.name, g.numStudt
@@ -51,6 +48,7 @@ $groups = $stmt->fetchAll();
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link href="assets/css/beautiful-design.css" rel="stylesheet">
   <style>
     * {
       margin: 0;
@@ -307,15 +305,15 @@ $groups = $stmt->fetchAll();
     </span>
 
     <div class="space-x-2 space-x-reverse">
-      <a href="<?= url('admin') ?>" class="btn-primary active">
+      <a href="admin.php" class="btn-primary active">
         <i class="fas fa-users"></i>
         المجموعات
       </a>
-      <a href="<?= url('admin.questions') ?>" class="btn-primary">
+      <a href="admin_questions.php" class="btn-primary">
         <i class="fas fa-question-circle"></i>
         الأسئلة
       </a>
-      <a href="<?= url('admin.invitations') ?>" class="btn-primary relative">
+      <a href="admin_invitations.php" class="btn-primary relative">
         <i class="fas fa-envelope"></i>
         الدعوات
         <?php
@@ -334,7 +332,7 @@ $groups = $stmt->fetchAll();
           </span>
         <?php endif; ?>
       </a>
-      <a href="<?= url('profile') ?>" class="btn-primary">
+      <a href="profile.php" class="btn-primary">
         <i class="fas fa-user"></i>
         حسابي
       </a>
@@ -386,11 +384,11 @@ $groups = $stmt->fetchAll();
             </div>
             
             <div class="flex flex-col gap-3">
-                <a href="<?= adminGroupUrl($group['id']) ?>" class="btn-success">
+                <a href="manage_group.php?group_id=<?= $group['id'] ?>" class="btn-success">
                     <i class="fas fa-cogs"></i>
                     إدارة المجموعة
                 </a>
-                <a href="<?= url('dashboard.group', ['id' => $group['id']]) ?>" class="btn-info">
+                <a href="dashboard.php?group_id=<?= $group['id'] ?>" class="btn-info">
                     <i class="fas fa-chart-bar"></i>
                     عرض الدرجات
                 </a>
@@ -403,7 +401,7 @@ $groups = $stmt->fetchAll();
             <div class="text-center">
                 <div class="text-6xl mb-4">⚡</div>
                 <h3 class="text-xl font-bold text-gray-700 mb-4">إضافة مجموعة جديدة</h3>
-                <a href="<?= url('admin.add-group') ?>" class="btn-primary">
+                <a href="add_group.php" class="btn-primary">
                     <i class="fas fa-plus"></i>
                     إضافة مجموعة
                 </a>
@@ -417,7 +415,7 @@ $groups = $stmt->fetchAll();
             <div class="text-8xl mb-6">⚡</div>
             <h3 class="text-3xl font-bold text-gray-700 mb-4">لا توجد مجموعات بعد!</h3>
             <p class="text-xl text-gray-600 mb-8">دعنا نبدأ بإنشاء مجموعتك الأولى! 🚀</p>
-            <a href="<?= url('admin.add-group') ?>" class="btn-primary text-xl px-8 py-4">
+            <a href="add_group.php" class="btn-primary text-xl px-8 py-4">
                 <i class="fas fa-plus"></i>
                 إنشاء مجموعة جديدة
             </a>

@@ -1,8 +1,11 @@
 <?php
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require_once 'includes/db.php';
+require_once 'includes/url_helper.php';
 // email
 // ✅ تأكد أن المستخدم أدمن
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
@@ -146,15 +149,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     </span>
 
     <div class="space-x-2 space-x-reverse">
-      <a href="admin.php" class="btn-primary active">
+      <a href="<?= url('admin') ?>" class="btn-primary active">
         <i class="fas fa-users"></i>
         المجموعات
       </a>
-      <a href="admin_questions.php" class="btn-primary">
+      <a href="<?= url('admin.questions') ?>" class="btn-primary">
         <i class="fas fa-question-circle"></i>
         الأسئلة
       </a>
-      <a href="admin_invitations.php" class="btn-primary relative">
+      <a href="<?= url('admin.invitations') ?>" class="btn-primary relative">
         <i class="fas fa-envelope"></i>
         الدعوات
         <?php
@@ -173,7 +176,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
           </span>
         <?php endif; ?>
       </a>
-      <a href="profile.php" class="btn-primary">
+      <a href="<?= url('profile') ?>" class="btn-primary">
         <i class="fas fa-user"></i>
         حسابي
       </a>
@@ -206,7 +209,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     </form>
 
     <div class="mt-4 text-center">
-      <a href="admin.php" class="bg-white text-blue-700 border border-blue-700 font-semibold px-4 py-2 rounded-lg hover:bg-blue-50 transition">العودة إلى لوحة التحكم</a>
+      <a href="<?= url('admin') ?>" class="bg-white text-blue-700 border border-blue-700 font-semibold px-4 py-2 rounded-lg hover:bg-blue-50 transition">رجوع</a>
     </div>
   </div>
 

@@ -52,5 +52,5 @@ if (isset($_FILES['profile_image']) && $_FILES['profile_image']['error'] === 0) 
     $_SESSION['error'] = "لم يتم اختيار أي ملف أو حدث خطأ.";
 }
 
-header("Location: profile.php");
+header("Location: profile");
 exit();

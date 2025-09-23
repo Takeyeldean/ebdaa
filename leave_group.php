@@ -3,11 +3,12 @@ session_start();
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 require_once "includes/db.php";
+require_once "includes/url_helper.php";
 
 // Check if user is admin
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
     $_SESSION['error'] = "❌ غير مسموح لك بالدخول";
-    header("Location: index.php");
+    header("Location: " . url('login'));
     exit;
 }
 
@@ -23,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['group_id'])) {
         
         if (!$is_admin) {
             $_SESSION['error'] = "❌ لست مشرفاً في هذه المجموعة";
-            header("Location: admin.php");
+            header("Location: " . url('admin'));
             exit;
         }
         
@@ -101,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['group_id'])) {
         $_SESSION['error'] = "❌ حدث خطأ أثناء مغادرة المجموعة. يرجى المحاولة مرة أخرى.";
     }
     
-    header("Location: admin.php");
+    header("Location: " . url('admin'));
     exit;
 }
 

@@ -3,18 +3,19 @@ session_start();
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 require_once "includes/db.php";
+require_once "includes/url_helper.php";
 
 // Check if user is admin
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
     $_SESSION['error'] = "❌ غير مسموح لك بالدخول";
-    header("Location: index.php");
+    header("Location: " . url('login'));
     exit;
 }
 
 // Check if we have move student data
 if (!isset($_SESSION['move_student_data'])) {
     $_SESSION['error'] = "❌ لا توجد بيانات نقل طالب";
-    header("Location: admin.php");
+    header("Location: " . url('admin'));
     exit;
 }
 
@@ -63,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['new_name'])) {
                     unset($_SESSION['move_student_data']);
                     
                     $_SESSION['success'] = "✅ تم نقل الطالب وتغيير اسمه إلى '{$new_name}' في مجموعة '{$target_group_name}' بنجاح";
-                    header("Location: manage_group.php?group_id=" . $current_group_id);
+                    header("Location: " . adminGroupUrl($current_group_id));
                     exit;
                     
                 } catch (Exception $e) {
@@ -166,21 +167,21 @@ $current_group_name = $stmt->fetch()['name'];
         </span>
         
         <div class="space-x-2 space-x-reverse">
-            <a href="admin.php" class="btn-primary">
-                <i class="fas fa-users"></i>
-                المجموعات
+            <a href="<?= url('admin') ?>" class="btn-primary">
+              <i class="fas fa-users"></i>
+              المجموعات
             </a>
-            <a href="admin_questions.php" class="btn-primary">
-                <i class="fas fa-question-circle"></i>
-                الأسئلة
+            <a href="<?= url('admin.questions') ?>" class="btn-primary">
+              <i class="fas fa-question-circle"></i>
+              الأسئلة
             </a>
-            <a href="admin_invitations.php" class="btn-primary">
-                <i class="fas fa-envelope"></i>
-                الدعوات
+            <a href="<?= url('admin.invitations') ?>" class="btn-primary">
+              <i class="fas fa-envelope"></i>
+              الدعوات
             </a>
-            <a href="profile.php" class="btn-primary">
-                <i class="fas fa-user"></i>
-                حسابي
+            <a href="<?= url('profile') ?>" class="btn-primary">
+              <i class="fas fa-user"></i>
+              حسابي
             </a>
         </div>
     </nav>
@@ -242,7 +243,7 @@ $current_group_name = $stmt->fetch()['name'];
                             <i class="fas fa-check"></i>
                             تأكيد النقل مع الاسم الجديد
                         </button>
-                        <a href="manage_group.php?group_id=<?= $current_group_id ?>" class="btn-danger flex-1 text-center">
+                        <a href="<?= adminGroupUrl($current_group_id) ?>" class="btn-danger flex-1 text-center">
                             <i class="fas fa-times"></i>
                             إلغاء النقل
                         </a>

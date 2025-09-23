@@ -1,5 +1,7 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // مسح كل بيانات الـ session
 session_unset();
@@ -8,6 +10,6 @@ session_unset();
 session_destroy();
 
 // إعادة التوجيه لصفحة تسجيل الدخول
-header("Location: index.php");
+header("Location: login");
 exit();
 ?>

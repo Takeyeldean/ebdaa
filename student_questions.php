@@ -1,8 +1,11 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 require_once "includes/db.php";
+require_once "includes/url_helper.php";
 
 // Check if user is student
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'student') {
@@ -29,7 +32,9 @@ if (!$group_id) {
 }
 
 // Handle answer submission
+error_log("Request method: " . $_SERVER['REQUEST_METHOD'] . ", POST data: " . print_r($_POST, true));
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_answer'])) {
+    error_log("Form submitted - question_id: " . ($_POST['question_id'] ?? 'not set') . ", answer_text: " . ($_POST['answer_text'] ?? 'not set'));
     $question_id = intval($_POST['question_id']);
     $answer_text = trim($_POST['answer_text']);
     
@@ -42,6 +47,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_answer'])) {
         } catch (PDOException $e) {
             $_SESSION['error'] = "حدث خطأ في إرسال الإجابة: " . $e->getMessage();
         }
+        
+        // Redirect to prevent form resubmission on page reload
+        header("Location: " . url('questions'));
+        exit();
     } else {
         $_SESSION['error'] = "يرجى كتابة إجابة";
     }
@@ -68,6 +77,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_answer'])) {
         } catch (PDOException $e) {
             $_SESSION['error'] = "حدث خطأ في تحديث الإجابة: " . $e->getMessage();
         }
+        
+        // Redirect to prevent form resubmission on page reload
+        header("Location: " . url('questions'));
+        exit();
     } else {
         $_SESSION['error'] = "يرجى كتابة إجابة صحيحة";
     }
@@ -93,6 +106,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_answer'])) {
         } catch (PDOException $e) {
             $_SESSION['error'] = "حدث خطأ في حذف الإجابة: " . $e->getMessage();
         }
+        
+        // Redirect to prevent form resubmission on page reload
+        header("Location: " . url('questions'));
+        exit();
     } else {
         $_SESSION['error'] = "معرف الإجابة غير صحيح";
     }
@@ -108,6 +125,31 @@ $questions = $conn->prepare("
 ");
 $questions->execute([$group_id]);
 $questions = $questions->fetchAll();
+
+// Get read status for questions (try to create table if it doesn't exist)
+try {
+    $conn->exec("CREATE TABLE IF NOT EXISTS question_reads (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        student_id INT NOT NULL,
+        question_id INT NOT NULL,
+        read_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY unique_student_question (student_id, question_id)
+    )");
+} catch (PDOException $e) {
+    // Table might already exist or there might be permission issues
+    error_log("Could not create question_reads table: " . $e->getMessage());
+}
+
+// Get read status for questions
+$read_questions = [];
+try {
+    $stmt = $conn->prepare("SELECT question_id FROM question_reads WHERE student_id = ?");
+    $stmt->execute([$student_id]);
+    $read_questions = $stmt->fetchAll(PDO::FETCH_COLUMN);
+} catch (PDOException $e) {
+    // Table might not exist yet, continue without read tracking
+    error_log("Could not fetch read questions: " . $e->getMessage());
+}
 
 // Get all answers for this student
 $my_answers = $conn->prepare("
@@ -160,48 +202,52 @@ foreach ($all_answers as $answer) {
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
     <style>
+        /* Completely redesigned with soft, eye-comfortable styling inspired by design references */
         body {
-            font-family: 'Cairo', Arial, sans-serif;
-            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 25%, #3b82f6 50%, #06b6d4 75%, #10b981 100%);
-            background-size: 400% 400%;
-            animation: gradientShift 12s ease infinite;
+      font-family: 'Cairo', Arial, sans-serif;
+            background: linear-gradient(135deg, #fefefe 0%, #f8f9fa 100%);
+                  background-size: 400% 400%;
+
             min-height: 100vh;
+            line-height: 1.7;
         }
 
-        @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
+    .nav-glass {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 0 0 25px 25px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    }
 
-        .nav-glass {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border-radius: 0 0 25px 25px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-        }
-
+        /* Refined card styling */
         .card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(15px);
-            border-radius: 20px;
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .btn-primary {
-            background: linear-gradient(45deg, #1e40af, #3b82f6);
-            color: white;
-            padding: 12px 24px;
-            border-radius: 25px;
-            text-decoration: none;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            box-shadow: 0 8px 25px rgba(30, 64, 175, 0.3);
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
+        .card:hover {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+            transform: translateY(-1px);
         }
+
+        /* Elegant button styling */
+         .btn-primary {
+      background: linear-gradient(45deg, #1e40af, #3b82f6);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 25px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      box-shadow: 0 8px 25px rgba(30, 64, 175, 0.3);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
 
         .btn-primary:hover {
             transform: translateY(-3px);
@@ -217,12 +263,52 @@ foreach ($all_answers as $answer) {
             box-shadow: 0 12px 35px rgba(16, 185, 129, 0.4);
         }
 
+    .btn-success {
+      background: linear-gradient(45deg, #4CAF50, #45a049);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 20px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      box-shadow: 0 6px 20px rgba(76, 175, 80, 0.3);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-success:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(76, 175, 80, 0.4);
+    }
+
+    .btn-info {
+      background: linear-gradient(45deg, #2196F3, #1976D2);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 20px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      box-shadow: 0 6px 20px rgba(33, 150, 243, 0.3);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-info:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(33, 150, 243, 0.4);
+    }
+
+        /* Question card styling */
         .question-card {
-            transition: all 0.3s ease;
-            border: 1px solid #e5e7eb;
-            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            background: white;
             position: relative;
             overflow: hidden;
+            cursor: pointer;
         }
 
         .question-card::before {
@@ -231,96 +317,46 @@ foreach ($all_answers as $answer) {
             top: 0;
             left: 0;
             right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #3b82f6, #06b6d4, #10b981);
+            height: 3px;
+            background: linear-gradient(90deg, #059669, #10b981, #34d399);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .question-card:hover::before {
+            opacity: 1;
         }
 
         .question-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 20px 40px rgba(59, 130, 246, 0.15);
-            border-color: #3b82f6;
-        }
-
-        .question-card:active {
-            transform: translateY(-1px);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            border-color: rgba(5, 150, 105, 0.2);
         }
 
         .question-card.active {
-            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-            border-color: #3b82f6;
-            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.2);
-            transform: translateY(-2px);
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            border-color: rgba(5, 150, 105, 0.3);
+            transform: translateY(-1px);
         }
 
         .question-card.active::before {
-            background: linear-gradient(90deg, #3b82f6, #1d4ed8, #1e40af);
-            height: 6px;
-        }
-
-        .question-card.active .question-title {
-            color: #1e40af;
-        }
-
-        .question-card.active .chevron-icon {
-            color: #3b82f6;
-            transform: rotate(180deg) scale(1.1);
+            opacity: 1;
+            height: 4px;
         }
 
         .question-content {
-            background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
-            border: 2px solid #e2e8f0;
+            background: linear-gradient(135deg, #fefefe 0%, #f9fafb 100%);
+            border: 1px solid rgba(0, 0, 0, 0.06);
             border-top: none;
             border-radius: 0 0 16px 16px;
             margin-top: -1px;
-            position: relative;
         }
 
-        .question-content::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, #3b82f6, #06b6d4, #10b981);
-        }
-
-        .cursor-pointer {
-            cursor: pointer;
-        }
-
-        .answer-card {
-            background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
-            border: 1px solid #e2e8f0;
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 16px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            transition: all 0.3s ease;
-        }
-
-        .answer-card:hover {
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-            transform: translateY(-2px);
-        }
-
-        .answer-form {
-            background: linear-gradient(135deg, #f1f5f9 0%, #ffffff 100%);
-            border: 2px solid #e2e8f0;
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-
-        .answer-form:focus-within {
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-
+        /* Typography improvements */
         .question-title {
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: #1e293b;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1f2937;
             line-height: 1.6;
             margin-bottom: 12px;
         }
@@ -329,8 +365,8 @@ foreach ($all_answers as $answer) {
             display: flex;
             align-items: center;
             gap: 16px;
-            color: #64748b;
-            font-size: 0.875rem;
+            color: #6b7280;
+            font-size: 0.85rem;
         }
 
         .meta-item {
@@ -340,22 +376,24 @@ foreach ($all_answers as $answer) {
         }
 
         .meta-item i {
-            color: #3b82f6;
+            color: #059669;
+            font-size: 0.8rem;
         }
 
+        /* Status badges */
         .status-badge {
-            padding: 4px 12px;
-            border-radius: 20px;
+            padding: 4px 10px;
+            border-radius: 12px;
             font-size: 0.75rem;
-            font-weight: 600;
+            font-weight: 500;
             display: inline-flex;
             align-items: center;
             gap: 4px;
         }
 
         .status-public {
-            background: linear-gradient(135deg, #dcfce7, #bbf7d0);
-            color: #166534;
+            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+            color: #065f46;
         }
 
         .status-private {
@@ -363,42 +401,68 @@ foreach ($all_answers as $answer) {
             color: #92400e;
         }
 
-        .chevron-icon {
-            color: #94a3b8;
-            font-size: 1.25rem;
+        /* Answer styling */
+        .answer-card {
+            background: white;
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
             transition: all 0.3s ease;
         }
 
-        .question-card:hover .chevron-icon {
-            color: #3b82f6;
-            transform: scale(1.1);
+        .answer-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transform: translateY(-1px);
         }
 
-        .answer-text {
-            color: #374151;
-            line-height: 1.7;
-            font-size: 1rem;
+        .answer-form {
+            background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
         }
 
-        .answer-actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 12px;
+        .answer-form:focus-within {
+            border-color: rgba(5, 150, 105, 0.3);
+            box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
         }
 
+        /* Form elements */
+        .form-textarea {
+            width: 100%;
+            padding: 16px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            resize: vertical;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-textarea:focus {
+            outline: none;
+            border-color: rgba(5, 150, 105, 0.4);
+            box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+        }
+
+        /* Action buttons */
         .action-btn {
-            padding: 6px 12px;
+            padding: 8px 14px;
             border-radius: 8px;
-            font-size: 0.875rem;
+            font-size: 0.8rem;
             font-weight: 500;
             transition: all 0.2s ease;
             border: 1px solid transparent;
+            cursor: pointer;
         }
 
         .edit-btn {
             background: linear-gradient(135deg, #dbeafe, #bfdbfe);
             color: #1e40af;
-            border-color: #93c5fd;
+            border-color: rgba(59, 130, 246, 0.2);
         }
 
         .edit-btn:hover {
@@ -409,7 +473,7 @@ foreach ($all_answers as $answer) {
         .delete-btn {
             background: linear-gradient(135deg, #fee2e2, #fecaca);
             color: #dc2626;
-            border-color: #fca5a5;
+            border-color: rgba(220, 38, 38, 0.2);
         }
 
         .delete-btn:hover {
@@ -417,10 +481,11 @@ foreach ($all_answers as $answer) {
             transform: translateY(-1px);
         }
 
+        /* Section titles */
         .section-title {
-            font-size: 1.125rem;
-            font-weight: 700;
-            color: #1e293b;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1f2937;
             margin-bottom: 16px;
             display: flex;
             align-items: center;
@@ -428,64 +493,249 @@ foreach ($all_answers as $answer) {
         }
 
         .section-title i {
-            color: #3b82f6;
+            color: #059669;
+            font-size: 0.9rem;
         }
 
+        /* Chevron icon */
+        .chevron-icon {
+            color: #9ca3af;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+
+        .question-card:hover .chevron-icon {
+            color: #059669;
+        }
+
+        .question-card.active .chevron-icon {
+            color: #059669;
+            transform: rotate(180deg);
+        }
+
+        /* Unread question styling (new questions) */
+        .question-card.unread {
+            border-left: 4px solid #dc2626;
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            position: relative;
+        }
+
+        .question-card.unread::after {
+            content: 'جديد';
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: linear-gradient(45deg, #dc2626, #b91c1c);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+        }
+
+        .question-card.unread:hover {
+            border-color: rgba(220, 38, 38, 0.3);
+            box-shadow: 0 8px 24px rgba(220, 38, 38, 0.15);
+        }
+
+        .question-card.unread::before {
+            background: linear-gradient(90deg, #dc2626, #b91c1c, #991b1b);
+        }
+
+        /* Unanswered question styling (read but not answered) */
+        .question-card.unanswered {
+            border-left: 4px solid #f59e0b;
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+            position: relative;
+        }
+
+        .question-card.unanswered::after {
+            content: 'لم يُجاب';
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: linear-gradient(45deg, #f59e0b, #d97706);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+        }
+
+        .question-card.unanswered:hover {
+            border-color: rgba(245, 158, 11, 0.3);
+            box-shadow: 0 8px 24px rgba(245, 158, 11, 0.15);
+        }
+
+        .question-card.unanswered::before {
+            background: linear-gradient(90deg, #f59e0b, #d97706, #b45309);
+        }
+
+        /* Message styling */
+        .message {
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 500;
+        }
+
+        .message.success {
+            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+            color: #065f46;
+            border: 1px solid rgba(5, 150, 105, 0.2);
+        }
+
+        .message.error {
+            background: linear-gradient(135deg, #fee2e2, #fecaca);
+            color: #991b1b;
+            border: 1px solid rgba(220, 38, 38, 0.2);
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .container {
+                padding: 16px;
+            }
+            
+            .nav-glass {
+                padding: 16px;
+            }
+            
+            .nav-glass .space-x-2 {
+                flex-direction: column;
+                gap: 8px;
+                align-items: stretch;
+            }
+            
+            .btn-primary {
+                justify-content: center;
+                padding: 12px 16px;
+            }
+            
+            .question-meta {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            
+            .answer-actions {
+                flex-direction: column;
+                gap: 8px;
+            }
+            
+            .action-btn {
+                text-align: center;
+                justify-content: center;
+            }
+        }
+
+        /* Smooth animations */
+        * {
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Empty state styling */
+        .empty-state {
+            text-align: center;
+            padding: 48px 24px;
+            color: #6b7280;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            color: #d1d5db;
+        }
+
+        .empty-state h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #4b5563;
+        }
     </style>
 </head>
 <body>
-    <!-- Navbar -->
-    <nav class="nav-glass px-6 py-4 flex justify-between items-center">
-        <span class="text-4xl font-bold" style="background: linear-gradient(45deg, #1e40af, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
-            ❓ الأسئلة والأجوبة
-        </span>
-        <div class="space-x-2 space-x-reverse">
-            <a href="dashboard.php" class="btn-primary">
-                <i class="fas fa-chart-bar"></i>
-                الترتيب
+   
+  <!-- Navbar -->
+   <nav class="nav-glass px-6 py-4 flex justify-between items-center">
+    <span class="text-4xl font-bold" style="background: linear-gradient(45deg, #1e40af, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+      ⚡ إبداع
+    </span>
+    <div class="space-x-2 space-x-reverse">
+            <a href="<?= url('dashboard') ?>" class="btn-primary">
+              <i class="fas fa-chart-bar"></i>
+              الترتيب
             </a>
-            <a href="student_questions.php" class="btn-primary active">
-                <i class="fas fa-question-circle"></i>
-                الأسئلة
+            <a href="<?= url('questions') ?>" class="btn-primary active relative">
+              <i class="fas fa-question-circle"></i>
+              الأسئلة
+              <?php
+              // Get unread notifications count
+              $stmt = $conn->prepare("SELECT COUNT(*) as count FROM notifications WHERE student_id = ? AND is_read = 0");
+              $stmt->execute([$_SESSION['user']['id']]);
+              $notification_count = $stmt->fetch()['count'];
+              if ($notification_count > 0): ?>
+                <span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center animate-pulse">
+                  <?= $notification_count ?>
+                </span>
+              <?php endif; ?>
             </a>
-            <a href="profile.php" class="btn-primary">
-                <i class="fas fa-user"></i>
-                حسابي
+            <a href="<?= url('profile') ?>" class="btn-primary">
+              <i class="fas fa-user"></i>
+              حسابي
             </a>
-        </div>
-    </nav>
+    </div>
+  </nav>
 
-    <div class="container mx-auto p-8 relative z-10">
-        <!-- Success/Error Messages -->
+
+
+    <div class="container mx-auto p-6 max-w-4xl">
+        <!-- Improved message styling for better readability -->
         <?php if (!empty($_SESSION['success'])): ?>
-            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg mb-6">
+            <div class="message success">
                 <i class="fas fa-check-circle"></i>
-                <?= $_SESSION['success']; unset($_SESSION['success']); ?>
+                <span><?= $_SESSION['success']; unset($_SESSION['success']); ?></span>
             </div>
         <?php endif; ?>
 
         <?php if (!empty($_SESSION['error'])): ?>
-            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6">
+            <div class="message error">
                 <i class="fas fa-exclamation-circle"></i>
-                <?= $_SESSION['error']; unset($_SESSION['error']); ?>
+                <span><?= $_SESSION['error']; unset($_SESSION['error']); ?></span>
             </div>
         <?php endif; ?>
 
-        <!-- Questions List -->
-        <div class="space-y-4">
+        <!-- Enhanced questions list with better spacing and typography -->
+        <div class="space-y-6">
             <?php if (empty($questions)): ?>
-                <div class="card p-8 text-center">
-                    <i class="fas fa-inbox text-6xl text-gray-400 mb-4"></i>
-                    <h3 class="text-2xl font-bold text-gray-600 mb-2">لا توجد أسئلة بعد</h3>
-                    <p class="text-gray-500">سيتم إشعارك عند إضافة أسئلة جديدة</p>
+                <div class="card empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <h3>لا توجد أسئلة بعد</h3>
+                    <p>سيتم إشعارك عند إضافة أسئلة جديدة</p>
                 </div>
             <?php else: ?>
                 <?php foreach ($questions as $question): ?>
-                    <div class="card p-6 question-card cursor-pointer" onclick="toggleQuestion(<?= $question['id'] ?>)">
-                        <!-- Question Header (Always Visible) -->
+                    <?php 
+                    $is_read = in_array($question['id'], $read_questions);
+                    $is_answered = isset($my_answers_by_question[$question['id']]);
+                    $card_class = 'question-card';
+                    
+                    if (!$is_read) {
+                        $card_class .= ' unread';
+                    } elseif (!$is_answered) {
+                        $card_class .= ' unanswered';
+                    }
+                    ?>
+                    <div class="card p-6 <?= $card_class ?>" onclick="toggleQuestion(<?= $question['id'] ?>)">
                         <div class="flex justify-between items-start">
                             <div class="flex-1">
-                                <h3 class="question-title">
+                                <h3 class="question-title text-balance">
                                     <?= htmlspecialchars($question['question_text']) ?>
                                 </h3>
                                 <div class="question-meta">
@@ -503,15 +753,14 @@ foreach ($all_answers as $answer) {
                                     </div>
                                 </div>
                             </div>
-                            <div class="ml-4">
+                            <div class="mr-4">
                                 <i class="fas fa-chevron-down chevron-icon" id="chevron-<?= $question['id'] ?>"></i>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Question Content (Collapsible) -->
+                    <!-- Enhanced question content with better form styling -->
                     <div class="question-content p-6 hidden" id="content-<?= $question['id'] ?>">
-
                         <!-- Answer Form -->
                         <div class="answer-form">
                             <h4 class="section-title">
@@ -521,7 +770,7 @@ foreach ($all_answers as $answer) {
                             <form method="post">
                                 <input type="hidden" name="question_id" value="<?= $question['id'] ?>">
                                 <textarea name="answer_text" rows="4" required 
-                                    class="w-full p-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none text-gray-700 placeholder-gray-400"
+                                    class="form-textarea"
                                     placeholder="اكتب إجابتك هنا..."></textarea>
                                 <div class="mt-4 text-right">
                                     <button type="submit" name="submit_answer" class="btn-primary px-6 py-3">
@@ -544,48 +793,46 @@ foreach ($all_answers as $answer) {
                                         <div class="answer-card">
                                             <div class="flex justify-between items-start mb-3">
                                                 <div class="flex items-center gap-3">
-                                                    <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                                                        <i class="fas fa-user text-blue-600 text-sm"></i>
+                                                    <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                                                        <i class="fas fa-user text-green-600 text-sm"></i>
                                                     </div>
                                                     <div>
                                                         <div class="text-sm text-gray-600">
-                                                            <i class="fas fa-clock mr-1"></i>
+                                                            <i class="fas fa-clock ml-1"></i>
                                                             <?= date('Y-m-d H:i', strtotime($answer['created_at'])) ?>
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div class="answer-actions">
-                                                    <!-- Edit Button -->
+                                                <div class="answer-actions flex gap-2">
                                                     <button onclick="editAnswer(<?= $answer['id'] ?>, '<?= htmlspecialchars($answer['answer_text'], ENT_QUOTES) ?>')" 
                                                             class="action-btn edit-btn">
-                                                        <i class="fas fa-edit mr-1"></i>
+                                                        <i class="fas fa-edit ml-1"></i>
                                                         تعديل
                                                     </button>
-                                                    <!-- Delete Button -->
-                                                    <form method="post" class="inline" onsubmit="return confirm('هل أنت متأكد من حذف هذه الإجابة؟')">
+                                                    <form method="post" action="<?= url('questions') ?>" class="inline" onsubmit="return confirm('هل أنت متأكد من حذف هذه الإجابة؟')">
                                                         <input type="hidden" name="answer_id" value="<?= $answer['id'] ?>">
                                                         <button type="submit" name="delete_answer" class="action-btn delete-btn">
-                                                            <i class="fas fa-trash mr-1"></i>
+                                                            <i class="fas fa-trash ml-1"></i>
                                                             حذف
                                                         </button>
                                                     </form>
                                                 </div>
                                             </div>
-                                            <p class="answer-text" id="answer-text-<?= $answer['id'] ?>"><?= htmlspecialchars($answer['answer_text']) ?></p>
+                                            <p class="text-gray-700 leading-relaxed text-pretty" id="answer-text-<?= $answer['id'] ?>"><?= htmlspecialchars($answer['answer_text']) ?></p>
                                             
-                                            <!-- Edit Form (Hidden by default) -->
+                                            <!-- Edit Form -->
                                             <div id="edit-form-<?= $answer['id'] ?>" class="hidden mt-4 p-4 bg-gray-50 rounded-xl border">
-                                                <form method="post">
+                                                <form method="post" action="<?= url('questions') ?>">
                                                     <input type="hidden" name="answer_id" value="<?= $answer['id'] ?>">
                                                     <textarea name="answer_text" rows="3" required 
-                                                        class="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none text-gray-700"><?= htmlspecialchars($answer['answer_text']) ?></textarea>
+                                                        class="form-textarea"><?= htmlspecialchars($answer['answer_text']) ?></textarea>
                                                     <div class="flex space-x-2 space-x-reverse mt-3">
                                                         <button type="submit" name="update_answer" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors">
-                                                            <i class="fas fa-save mr-1"></i>
+                                                            <i class="fas fa-save ml-1"></i>
                                                             حفظ
                                                         </button>
                                                         <button type="button" onclick="cancelEdit(<?= $answer['id'] ?>)" class="bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors">
-                                                            <i class="fas fa-times mr-1"></i>
+                                                            <i class="fas fa-times ml-1"></i>
                                                             إلغاء
                                                         </button>
                                                     </div>
@@ -597,7 +844,7 @@ foreach ($all_answers as $answer) {
                             </div>
                         <?php endif; ?>
 
-                        <!-- Public Answers (if question is public) -->
+                        <!-- Public Answers -->
                         <?php if ($question['is_public'] && isset($answers_by_question[$question['id']])): ?>
                             <div class="mt-8">
                                 <h4 class="section-title">
@@ -609,21 +856,21 @@ foreach ($all_answers as $answer) {
                                         <div class="answer-card">
                                             <div class="flex justify-between items-start mb-3">
                                                 <div class="flex items-center gap-3">
-                                                    <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                                                        <i class="fas fa-user text-green-600 text-sm"></i>
+                                                    <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                                                        <i class="fas fa-user text-blue-600 text-sm"></i>
                                                     </div>
                                                     <div>
-                                                        <div class="font-semibold text-gray-800">
+                                                        <div class="font-medium text-gray-800">
                                                             <?= htmlspecialchars($answer['student_name']) ?>
                                                         </div>
                                                         <div class="text-sm text-gray-600">
-                                                            <i class="fas fa-clock mr-1"></i>
+                                                            <i class="fas fa-clock ml-1"></i>
                                                             <?= date('H:i', strtotime($answer['created_at'])) ?>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                            <p class="answer-text"><?= htmlspecialchars($answer['answer_text']) ?></p>
+                                            <p class="text-gray-700 leading-relaxed text-pretty"><?= htmlspecialchars($answer['answer_text']) ?></p>
                                         </div>
                                     <?php endforeach; ?>
                                 </div>
@@ -657,32 +904,57 @@ foreach ($all_answers as $answer) {
             });
             
             if (content.classList.contains('hidden')) {
-                // Open this question
-                content.classList.remove('hidden');
+                    content.classList.remove('hidden');
                 questionCard.classList.add('active');
-                chevron.style.transform = 'rotate(180deg) scale(1.1)';
+                chevron.style.transform = 'rotate(180deg)';
+                
+                // Mark question as read when opened
+                markQuestionAsRead(questionId);
             } else {
-                // Close this question
                 content.classList.add('hidden');
                 questionCard.classList.remove('active');
                 chevron.style.transform = 'rotate(0deg)';
             }
         }
 
+        function markQuestionAsRead(questionId) {
+            // Send AJAX request to mark question as read
+            fetch('mark_question_read.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'question_id=' + questionId
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Remove unanswered class and update styling
+                    const questionCard = document.querySelector(`[onclick="toggleQuestion(${questionId})"]`);
+                    if (questionCard) {
+                        questionCard.classList.remove('unanswered');
+                        // Remove the "جديد" badge
+                        const badge = questionCard.querySelector('::after');
+                        if (badge) {
+                            questionCard.style.setProperty('--badge-content', 'none');
+                        }
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error marking question as read:', error);
+            });
+        }
+
         function editAnswer(answerId, currentText) {
-            // Hide the answer text
             document.getElementById('answer-text-' + answerId).style.display = 'none';
-            // Show the edit form
             document.getElementById('edit-form-' + answerId).classList.remove('hidden');
         }
 
         function cancelEdit(answerId) {
-            // Show the answer text
             document.getElementById('answer-text-' + answerId).style.display = 'block';
-            // Hide the edit form
             document.getElementById('edit-form-' + answerId).classList.add('hidden');
         }
-
     </script>
 </body>
 </html>

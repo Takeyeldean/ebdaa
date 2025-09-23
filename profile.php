@@ -1,8 +1,11 @@
 <?php
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require_once 'includes/db.php';
+require_once 'includes/url_helper.php';
 // username
 // Redirect if not logged in
 if (!isset($_SESSION['user'])) {
@@ -290,11 +293,11 @@ $user = $stmt->fetch();
     <div class="space-x-2 space-x-reverse">
 
         <?php if ($role === 'student'): ?>
-            <a href="dashboard.php" class="btn-primary">
+            <a href="<?= url('dashboard') ?>" class="btn-primary">
               <i class="fas fa-chart-bar"></i>
               الترتيب
             </a>
-            <a href="student_questions.php" class="btn-primary relative">
+            <a href="<?= url('questions') ?>" class="btn-primary relative">
               <i class="fas fa-question-circle"></i>
               الأسئلة
               <?php
@@ -308,22 +311,22 @@ $user = $stmt->fetch();
                 </span>
               <?php endif; ?>
             </a>
-            <a href="profile.php" class="btn-primary active">
+            <a href="<?= url('profile') ?>" class="btn-primary active">
               <i class="fas fa-user"></i>
               حسابي
             </a>
-        <?php endif; ?>
+        <?php endif; ?> 
 
         <?php if ($role === 'admin'): ?>
-            <a href="admin.php" class="btn-primary">
+            <a href="<?= url('admin') ?>" class="btn-primary">
               <i class="fas fa-users"></i>
               المجموعات
             </a>
-            <a href="admin_questions.php" class="btn-primary">
+            <a href="<?= url('admin.questions') ?>" class="btn-primary">
               <i class="fas fa-question-circle"></i>
               الأسئلة
             </a>
-            <a href="admin_invitations.php" class="btn-primary relative">
+            <a href="<?= url('admin.invitations') ?>" class="btn-primary relative">
               <i class="fas fa-envelope"></i>
               الدعوات
               <?php
@@ -342,7 +345,7 @@ $user = $stmt->fetch();
                 </span>
               <?php endif; ?>
             </a>
-            <a href="profile.php" class="btn-primary active">
+            <a href="<?= url('profile') ?>" class="btn-primary active">
               <i class="fas fa-user"></i>
               حسابي
             </a>
@@ -358,9 +361,9 @@ $user = $stmt->fetch();
     <?php if ($role === 'student'): ?>
     <div class="profile-container floating">
         <?php if (!empty($user['profile_image'])): ?>
-            <img src="uploads/<?= htmlspecialchars($user['profile_image']) ?>" alt="صورة الملف الشخصي">
+            <img src="/ebdaa/uploads/<?= htmlspecialchars($user['profile_image']) ?>" alt="صورة الملف الشخصي">
         <?php else: ?>
-            <img src="uploads/default.png" alt="صورة الملف الشخصي">
+            <img src="/ebdaa/uploads/default.png" alt="صورة الملف الشخصي">
         <?php endif; ?>
         <form action="upload_image.php" method="POST" enctype="multipart/form-data" class="upload-btn">
             <label>
@@ -465,7 +468,7 @@ $user = $stmt->fetch();
 
     <!-- Logout Button -->
     <div class="text-center">
-        <a href="logout.php" class="btn-danger">
+        <a href="<?= url('logout') ?>" class="btn-danger">
             <i class="fas fa-sign-out-alt"></i>
             تسجيل الخروج
         </a>

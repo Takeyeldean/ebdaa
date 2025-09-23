@@ -1,8 +1,11 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 require_once "includes/db.php";
+require_once "includes/url_helper.php";
 
 // Check if user is admin
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
@@ -149,7 +152,6 @@ if (!empty($all_question_ids)) {
     }
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -162,16 +164,9 @@ if (!empty($all_question_ids)) {
     <style>
         body {
             font-family: 'Cairo', Arial, sans-serif;
-            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 25%, #3b82f6 50%, #06b6d4 75%, #10b981 100%);
-            background-size: 400% 400%;
-            animation: gradientShift 12s ease infinite;
+            background: linear-gradient(135deg, #fefefe 0%, #f8f9fa 100%);
             min-height: 100vh;
-        }
-
-        @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+            line-height: 1.7;
         }
 
         .nav-glass {
@@ -182,11 +177,17 @@ if (!empty($all_question_ids)) {
         }
 
         .card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(15px);
-            border-radius: 20px;
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .card:hover {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+            transform: translateY(-1px);
         }
 
         .btn-primary {
@@ -215,6 +216,223 @@ if (!empty($all_question_ids)) {
 
         .btn-primary.active:hover {
             box-shadow: 0 12px 35px rgba(16, 185, 129, 0.4);
+        }
+
+        .question-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            background: white;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .question-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #059669, #10b981, #34d399);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .question-card:hover::before {
+            opacity: 1;
+        }
+
+        .question-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            border-color: rgba(5, 150, 105, 0.2);
+        }
+
+        .question-card.active {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            border-color: rgba(5, 150, 105, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .question-card.active::before {
+            opacity: 1;
+            height: 4px;
+        }
+
+        .question-content {
+            background: linear-gradient(135deg, #fefefe 0%, #f9fafb 100%);
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            border-top: none;
+            border-radius: 0 0 16px 16px;
+            margin-top: -1px;
+        }
+
+        .question-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1f2937;
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
+
+        .question-meta {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            color: #6b7280;
+            font-size: 0.85rem;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .meta-item i {
+            color: #059669;
+            font-size: 0.8rem;
+        }
+
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .status-public {
+            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+            color: #065f46;
+        }
+
+        .status-private {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            color: #92400e;
+        }
+
+        .answer-card {
+            background: white;
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .answer-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transform: translateY(-1px);
+        }
+
+        .form-textarea {
+            width: 100%;
+            padding: 16px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            resize: vertical;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-textarea:focus {
+            outline: none;
+            border-color: rgba(5, 150, 105, 0.4);
+            box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+        }
+
+        .action-btn {
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+            cursor: pointer;
+        }
+
+        .edit-btn {
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+            color: #1e40af;
+            border-color: rgba(59, 130, 246, 0.2);
+        }
+
+        .edit-btn:hover {
+            background: linear-gradient(135deg, #bfdbfe, #93c5fd);
+            transform: translateY(-1px);
+        }
+
+        .delete-btn {
+            background: linear-gradient(135deg, #fee2e2, #fecaca);
+            color: #dc2626;
+            border-color: rgba(220, 38, 38, 0.2);
+        }
+
+        .delete-btn:hover {
+            background: linear-gradient(135deg, #fecaca, #fca5a5);
+            transform: translateY(-1px);
+        }
+
+        .section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title i {
+            color: #059669;
+            font-size: 0.9rem;
+        }
+
+        .chevron-icon {
+            color: #9ca3af;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+
+        .question-card:hover .chevron-icon {
+            color: #059669;
+        }
+
+        .question-card.active .chevron-icon {
+            color: #059669;
+            transform: rotate(180deg);
+        }
+
+        .message {
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 500;
+        }
+
+        .message.success {
+            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+            color: #065f46;
+            border: 1px solid rgba(5, 150, 105, 0.2);
+        }
+
+        .message.error {
+            background: linear-gradient(135deg, #fee2e2, #fecaca);
+            color: #991b1b;
+            border: 1px solid rgba(220, 38, 38, 0.2);
         }
 
         .group-section {
@@ -291,6 +509,7 @@ if (!empty($all_question_ids)) {
         .questions-grid {
             display: grid;
             gap: 1.5rem;
+            grid-template-columns: 1fr;
         }
 
         .no-questions {
@@ -304,27 +523,24 @@ if (!empty($all_question_ids)) {
             margin-bottom: 1rem;
             opacity: 0.5;
         }
-
     </style>
 </head>
 <body>
     <!-- Navbar -->
     <nav class="nav-glass px-6 py-4 flex justify-between items-center">
-
-      <span class="text-4xl font-bold" style="background: linear-gradient(45deg, #1e40af, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
-      ⚡ إبداع
-    </span>
-
+        <span class="text-4xl font-bold" style="background: linear-gradient(45deg, #1e40af, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+            ⚡ إبداع
+        </span>
         <div class="space-x-2 space-x-reverse">
-            <a href="admin.php" class="btn-primary">
+            <a href="<?= url('admin') ?>" class="btn-primary">
                 <i class="fas fa-users"></i>
                 المجموعات
             </a>
-            <a href="admin_questions.php" class="btn-primary active">
+            <a href="<?= url('admin.questions') ?>" class="btn-primary active">
                 <i class="fas fa-question-circle"></i>
                 الأسئلة
             </a>
-            <a href="admin_invitations.php" class="btn-primary relative">
+            <a href="<?= url('admin.invitations') ?>" class="btn-primary relative">
                 <i class="fas fa-envelope"></i>
                 الدعوات
                 <?php
@@ -338,12 +554,12 @@ if (!empty($all_question_ids)) {
                     $invitation_count = 0;
                 }
                 if ($invitation_count > 0): ?>
-                  <span class="absolute -top-2 -right-2 bg-orange-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center animate-pulse">
-                    <?= $invitation_count ?>
-                  </span>
+                    <span class="absolute -top-2 -right-2 bg-orange-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center animate-pulse">
+                        <?= $invitation_count ?>
+                    </span>
                 <?php endif; ?>
             </a>
-            <a href="profile.php" class="btn-primary">
+            <a href="<?= url('profile') ?>" class="btn-primary">
                 <i class="fas fa-user"></i>
                 حسابي
             </a>
@@ -353,16 +569,16 @@ if (!empty($all_question_ids)) {
     <div class="container mx-auto p-8 relative z-10">
         <!-- Success/Error Messages -->
         <?php if (!empty($_SESSION['success'])): ?>
-            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg mb-6">
+            <div class="message success">
                 <i class="fas fa-check-circle"></i>
-                <?= $_SESSION['success']; unset($_SESSION['success']); ?>
+                <span><?= $_SESSION['success']; unset($_SESSION['success']); ?></span>
             </div>
         <?php endif; ?>
 
         <?php if (!empty($_SESSION['error'])): ?>
-            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6">
+            <div class="message error">
                 <i class="fas fa-exclamation-circle"></i>
-                <?= $_SESSION['error']; unset($_SESSION['error']); ?>
+                <span><?= $_SESSION['error']; unset($_SESSION['error']); ?></span>
             </div>
         <?php endif; ?>
 
@@ -379,7 +595,7 @@ if (!empty($all_question_ids)) {
                         <i class="fas fa-users"></i>
                         اختر المجموعة:
                     </label>
-                    <select name="group_id" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg">
+                    <select name="group_id" required class="form-textarea">
                         <option value="">-- اختر المجموعة --</option>
                         <?php foreach ($groups as $group): ?>
                             <option value="<?= $group['id'] ?>"><?= htmlspecialchars($group['name']) ?></option>
@@ -393,7 +609,7 @@ if (!empty($all_question_ids)) {
                         نص السؤال:
                     </label>
                     <textarea name="question_text" rows="4" required 
-                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg resize-none"
+                        class="form-textarea"
                         placeholder="اكتب سؤالك هنا..."></textarea>
                 </div>
 
@@ -449,52 +665,61 @@ if (!empty($all_question_ids)) {
                     <!-- Questions Grid -->
                     <div class="questions-grid">
                         <?php foreach ($questions as $question): ?>
-                            <div class="bg-gray-50 rounded-lg p-4 border-l-4 border-blue-500">
-                                <div class="flex justify-between items-start mb-2">
-                                    <h3 class="text-lg font-bold text-gray-800" id="question-text-<?= $question['id'] ?>">
+                            <div class="card p-6     question-card" onclick="toggleQuestion(<?= $question['id'] ?>)">
+                                <div class="flex justify-between items-start mb-3">
+                                    <h3 class="question-title text-balance flex-1" id="question-text-<?= $question['id'] ?>">
                                         <?= htmlspecialchars($question['question_text']) ?>
                                     </h3>
-                                    <div class="flex items-center space-x-2 space-x-reverse">
-                                        <span class="text-sm text-gray-500">
-                                            <?= date('Y-m-d H:i', strtotime($question['created_at'])) ?>
-                                        </span>
-                                        <div class="flex space-x-1 space-x-reverse">
-                                            <!-- View Answers Button -->
-                                            <button onclick="toggleAnswers(<?= $question['id'] ?>)" 
-                                                    class="text-green-600 hover:text-green-800 text-sm" 
-                                                    title="عرض إجابات الطلاب">
-                                                <i class="fas fa-comments"></i>
-                                                <span class="text-xs">(<?= isset($answers_by_question[$question['id']]) ? count($answers_by_question[$question['id']]) : 0 ?>)</span>
-                                            </button>
-                                            <!-- Edit Button -->
-                                            <button onclick="editQuestion(<?= $question['id'] ?>, '<?= htmlspecialchars($question['question_text'], ENT_QUOTES) ?>', <?= $question['is_public'] ?>)" 
-                                                    class="text-blue-600 hover:text-blue-800 text-sm">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <!-- Delete Button -->
-                                            <form method="post" class="inline" onsubmit="return confirm('هل أنت متأكد من حذف هذا السؤال؟ سيتم حذف جميع الإجابات المرتبطة به.')">
-                                                <input type="hidden" name="question_id" value="<?= $question['id'] ?>">
-                                                <button type="submit" name="delete_question" class="text-red-600 hover:text-red-800 text-sm">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </form>
-                                        </div>
+                                    <div class="mr-4">
+                                        <i class="fas fa-chevron-down chevron-icon" id="chevron-<?= $question['id'] ?>"></i>
                                     </div>
                                 </div>
-                                <div class="flex justify-between items-center text-sm text-gray-600">
-                                    <span>
+                                
+                                <div class="question-meta">
+                                    <div class="meta-item">
                                         <i class="fas fa-user-tie"></i>
-                                        <?= htmlspecialchars($question['admin_name']) ?>
-                                    </span>
-                                    <span class="px-2 py-1 rounded-full text-xs <?= $question['is_public'] ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' ?>">
+                                        <span><?= htmlspecialchars($question['admin_name']) ?></span>
+                                    </div>
+                                    <div class="meta-item">
+                                        <i class="fas fa-clock"></i>
+                                        <span><?= date('Y-m-d H:i', strtotime($question['created_at'])) ?></span>
+                                    </div>
+                                    <div class="status-badge <?= $question['is_public'] ? 'status-public' : 'status-private' ?>">
                                         <i class="fas <?= $question['is_public'] ? 'fa-globe' : 'fa-lock' ?>"></i>
                                         <?= $question['is_public'] ? 'عام' : 'خاص' ?>
-                                    </span>
+                                    </div>
                                 </div>
+                                
+                                <div class="flex justify-end items-center mt-3">
+                                    <div class="flex space-x-1 space-x-reverse">
+                                        <!-- View Answers Button -->
+                                        <button onclick="event.stopPropagation(); toggleAnswers(<?= $question['id'] ?>)" 
+                                                class="text-green-600 hover:text-green-800 text-sm" 
+                                                title="عرض إجابات الطلاب">
+                                            <i class="fas fa-comments"></i>
+                                            <span class="text-xs">(<?= isset($answers_by_question[$question['id']]) ? count($answers_by_question[$question['id']]) : 0 ?>)</span>
+                                        </button>
+                                        <!-- Edit Button -->
+                                        <button onclick="event.stopPropagation(); editQuestion(<?= $question['id'] ?>, '<?= htmlspecialchars($question['question_text'], ENT_QUOTES) ?>', <?= $question['is_public'] ?>)" 
+                                                class="text-blue-600 hover:text-blue-800 text-l">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <!-- Delete Button -->
+                                        <form method="post" class="inline" onsubmit="return confirm('هل أنت متأكد من حذف هذا السؤال؟ سيتم حذف جميع الإجابات المرتبطة به.')">
+                                            <input type="hidden" name="question_id" value="<?= $question['id'] ?>">
+                                            <button type="submit" name="delete_question" class="text-red-600 hover:text-red-800 text-sm" onclick="event.stopPropagation();">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
 
-                                <!-- Student Answers Section (Collapsible) -->
-                                <div id="answers-<?= $question['id'] ?>" class="hidden mt-4 border-t pt-4">
-                                    <h4 class="text-lg font-bold text-gray-700 mb-3">
+                            <!-- Question Content (Collapsible) -->
+                            <div class="question-content p-6 hidden" id="content-<?= $question['id'] ?>">
+                                <!-- Student Answers Section -->
+                                <div id="answers-<?= $question['id'] ?>" class="mt-4">
+                                    <h4 class="section-title">
                                         <i class="fas fa-comments"></i>
                                         إجابات الطلاب (<?= isset($answers_by_question[$question['id']]) ? count($answers_by_question[$question['id']]) : 0 ?>)
                                     </h4>
@@ -502,7 +727,7 @@ if (!empty($all_question_ids)) {
                                     <?php if (isset($answers_by_question[$question['id']]) && !empty($answers_by_question[$question['id']])): ?>
                                         <div class="space-y-3 max-h-96 overflow-y-auto">
                                             <?php foreach ($answers_by_question[$question['id']] as $answer): ?>
-                                                <div class="bg-white rounded-lg p-3 border border-gray-200">
+                                                <div class="answer-card">
                                                     <div class="flex justify-between items-start mb-2">
                                                         <div class="flex items-center space-x-2 space-x-reverse">
                                                             <span class="font-semibold text-gray-800">
@@ -529,37 +754,37 @@ if (!empty($all_question_ids)) {
                                         </div>
                                     <?php endif; ?>
                                 </div>
+                            </div>
                                 
-                                <!-- Edit Form (Hidden by default) -->
-                                <div id="edit-form-<?= $question['id'] ?>" class="hidden mt-4 p-4 bg-white rounded-lg border">
-                                    <form method="post">
-                                        <input type="hidden" name="question_id" value="<?= $question['id'] ?>">
-                                        <div class="mb-3">
-                                            <label class="block text-sm font-semibold text-gray-700 mb-2">
-                                                نص السؤال:
-                                            </label>
-                                            <textarea name="question_text" rows="3" required 
-                                                class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"><?= htmlspecialchars($question['question_text']) ?></textarea>
-                                        </div>
-                                        <div class="flex items-center space-x-4 space-x-reverse mb-3">
-                                            <input type="checkbox" name="is_public" id="is_public_<?= $question['id'] ?>" value="1" <?= $question['is_public'] ? 'checked' : '' ?> class="w-4 h-4 text-blue-600">
-                                            <label for="is_public_<?= $question['id'] ?>" class="text-sm font-semibold text-gray-700">
-                                                <i class="fas fa-globe"></i>
-                                                إجابات عامة
-                                            </label>
-                                        </div>
-                                        <div class="flex space-x-2 space-x-reverse">
-                                            <button type="submit" name="update_question" class="bg-green-600 text-white px-4 py-2 rounded text-sm">
-                                                <i class="fas fa-save"></i>
-                                                حفظ
-                                            </button>
-                                            <button type="button" onclick="cancelEdit(<?= $question['id'] ?>)" class="bg-gray-600 text-white px-4 py-2 rounded text-sm">
-                                                <i class="fas fa-times"></i>
-                                                إلغاء
-                                            </button>
-                                        </div>
-                                    </form>
-                                </div>
+                            <!-- Edit Form (Hidden by default) -->
+                            <div id="edit-form-<?= $question['id'] ?>" class="hidden mt-4 p-4 bg-white rounded-lg border">
+                                <form method="post">
+                                    <input type="hidden" name="question_id" value="<?= $question['id'] ?>">
+                                    <div class="mb-3">
+                                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                            نص السؤال:
+                                        </label>
+                                        <textarea name="question_text" rows="3" required 
+                                            class="form-textarea"><?= htmlspecialchars($question['question_text']) ?></textarea>
+                                    </div>
+                                    <div class="flex items-center space-x-4 space-x-reverse mb-3">
+                                        <input type="checkbox" name="is_public" id="is_public_<?= $question['id'] ?>" value="1" <?= $question['is_public'] ? 'checked' : '' ?> class="w-4 h-4 text-blue-600">
+                                        <label for="is_public_<?= $question['id'] ?>" class="text-sm font-semibold text-gray-700">
+                                            <i class="fas fa-globe"></i>
+                                            إجابات عامة
+                                        </label>
+                                    </div>
+                                    <div class="flex space-x-2 space-x-reverse">
+                                        <button type="submit" name="update_question" class="action-btn edit-btn">
+                                            <i class="fas fa-save"></i>
+                                            حفظ
+                                        </button>
+                                        <button type="button" onclick="cancelEdit(<?= $question['id'] ?>)" class="action-btn delete-btn">
+                                            <i class="fas fa-times"></i>
+                                            إلغاء
+                                        </button>
+                                    </div>
+                                </form>
                             </div>
                         <?php endforeach; ?>
                     </div>
@@ -569,29 +794,129 @@ if (!empty($all_question_ids)) {
     </div>
 
     <script>
-        function toggleAnswers(questionId) {
-            const answersDiv = document.getElementById('answers-' + questionId);
-            if (answersDiv.classList.contains('hidden')) {
-                answersDiv.classList.remove('hidden');
+        function toggleQuestion(questionId) {
+            const questionCard = document.querySelector(`[onclick="toggleQuestion(${questionId})"]`);
+            const content = document.getElementById('content-' + questionId);
+            const chevron = document.getElementById('chevron-' + questionId);
+            
+            // Check if elements exist
+            if (!questionCard || !content || !chevron) {
+                console.error('Required elements not found for question:', questionId);
+                return;
+            }
+            
+            // Close all other questions first - improved approach
+            document.querySelectorAll('.question-card.active').forEach(activeCard => {
+                if (activeCard !== questionCard) {
+                    activeCard.classList.remove('active');
+                    
+                    // Get question ID from the active card more reliably
+                    const activeOnclick = activeCard.getAttribute('onclick');
+                    if (activeOnclick) {
+                        const match = activeOnclick.match(/toggleQuestion$$(\d+)$$/);
+                        if (match) {
+                            const otherQuestionId = match[1];
+                            const otherContent = document.getElementById('content-' + otherQuestionId);
+                            const otherChevron = document.getElementById('chevron-' + otherQuestionId);
+                            
+                            if (otherContent) {
+                                otherContent.classList.add('hidden');
+                            }
+                            if (otherChevron) {
+                                otherChevron.style.transform = 'rotate(0deg)';
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Toggle current question
+            const isHidden = content.classList.contains('hidden');
+            if (isHidden) {
+                content.classList.remove('hidden');
+                questionCard.classList.add('active');
+                chevron.style.transform = 'rotate(180deg)';
+                smoothScrollToElement(questionCard);
             } else {
-                answersDiv.classList.add('hidden');
+                content.classList.add('hidden');
+                questionCard.classList.remove('active');
+                chevron.style.transform = 'rotate(0deg)';
             }
         }
 
+        function toggleAnswers(questionId) {
+            const answersDiv = document.getElementById('answers-' + questionId);
+            if (!answersDiv) {
+                console.error('Answers div not found for question:', questionId);
+                return;
+            }
+            
+            answersDiv.classList.toggle('hidden');
+        }
+
         function editQuestion(questionId, currentText, isPublic) {
-            // Hide the question text
-            document.getElementById('question-text-' + questionId).style.display = 'none';
-            // Show the edit form
-            document.getElementById('edit-form-' + questionId).classList.remove('hidden');
+            const questionText = document.getElementById('question-text-' + questionId);
+            const editForm = document.getElementById('edit-form-' + questionId);
+            
+            if (!questionText || !editForm) {
+                console.error('Required elements not found for editing question:', questionId);
+                return;
+            }
+            
+            // Hide the question text and show edit form
+            questionText.style.display = 'none';
+            editForm.classList.remove('hidden');
+            
+            // Focus on the textarea for better UX
+            const textarea = editForm.querySelector('textarea[name="question_text"]');
+            if (textarea) {
+                setTimeout(() => textarea.focus(), 100);
+            }
         }
 
         function cancelEdit(questionId) {
-            // Show the question text
-            document.getElementById('question-text-' + questionId).style.display = 'block';
-            // Hide the edit form
-            document.getElementById('edit-form-' + questionId).classList.add('hidden');
+            const questionText = document.getElementById('question-text-' + questionId);
+            const editForm = document.getElementById('edit-form-' + questionId);
+            
+            if (!questionText || !editForm) {
+                console.error('Required elements not found for canceling edit:', questionId);
+                return;
+            }
+            
+            // Show the question text and hide edit form
+            questionText.style.display = 'block';
+            editForm.classList.add('hidden');
         }
 
+        document.addEventListener('keydown', function(e) {
+            // Close all open questions when pressing Escape
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.question-card.active').forEach(card => {
+                    const onclick = card.getAttribute('onclick');
+                    if (onclick) {
+                        const match = onclick.match(/toggleQuestion$$(\d+)$$/);
+                        if (match) {
+                            const questionId = match[1];
+                            const content = document.getElementById('content-' + questionId);
+                            const chevron = document.getElementById('chevron-' + questionId);
+                            
+                            if (content) content.classList.add('hidden');
+                            if (chevron) chevron.style.transform = 'rotate(0deg)';
+                            card.classList.remove('active');
+                        }
+                    }
+                });
+            }
+        });
+
+        function smoothScrollToElement(element) {
+            if (element) {
+                element.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'nearest' 
+                });
+            }
+        }
     </script>
 </body>
 </html>

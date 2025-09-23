@@ -1,13 +1,16 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 require_once "includes/db.php";
+require_once "includes/url_helper.php";
 
 // Check if user is admin
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
-    die("❌ غير مسموح لك بالدخول");
-}
+  header("Location: " . url('login'));
+    exit;}
 
 $admin_id = $_SESSION['user']['id'];
 $admin_username = $_SESSION['user']['username'] ?? '';
@@ -15,12 +18,14 @@ $admin_username = $_SESSION['user']['username'] ?? '';
 // If username is not set, redirect to login
 if (empty($admin_username)) {
     session_destroy();
-    header("Location: index.php");
+    header("Location: " . url('login'));
     exit;
 }
 
 // Handle invitation responses
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Debug: Log POST data
+    error_log("Admin invitations POST data: " . print_r($_POST, true));
     if (isset($_POST['accept_invitation'])) {
         $invitation_id = intval($_POST['invitation_id']);
         $group_id = intval($_POST['group_id']);
@@ -32,21 +37,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $invitation = $stmt->fetch(PDO::FETCH_ASSOC);
             
             if ($invitation) {
-                // Add admin to group
-                $stmt = $conn->prepare("INSERT INTO group_admins (group_id, admin_id) VALUES (?, ?)");
+                // Check if admin is already in the group
+                $stmt = $conn->prepare("SELECT COUNT(*) FROM group_admins WHERE group_id = ? AND admin_id = ?");
                 $stmt->execute([$group_id, $admin_id]);
+                $already_member = $stmt->fetchColumn();
                 
-                // Update invitation status
-                $stmt = $conn->prepare("UPDATE admin_invitations SET status = 'accepted' WHERE id = ?");
-                $stmt->execute([$invitation_id]);
-                
-                $_SESSION['success'] = "✅ تم قبول الدعوة بنجاح!";
+                if ($already_member > 0) {
+                    // Admin is already in the group, just update invitation status
+                    $stmt = $conn->prepare("UPDATE admin_invitations SET status = 'accepted' WHERE id = ?");
+                    $stmt->execute([$invitation_id]);
+                    $_SESSION['success'] = "✅ تم قبول الدعوة بنجاح! (كنت عضو في المجموعة بالفعل)";
+                } else {
+                    // Add admin to group
+                    $stmt = $conn->prepare("INSERT INTO group_admins (group_id, admin_id) VALUES (?, ?)");
+                    $stmt->execute([$group_id, $admin_id]);
+                    
+                    // Update invitation status
+                    $stmt = $conn->prepare("UPDATE admin_invitations SET status = 'accepted' WHERE id = ?");
+                    $stmt->execute([$invitation_id]);
+                    
+                    $_SESSION['success'] = "✅ تم قبول الدعوة بنجاح!";
+                }
             } else {
                 $_SESSION['error'] = "❌ الدعوة غير موجودة أو غير صالحة";
             }
         } catch (Exception $e) {
             error_log("Accept invitation error: " . $e->getMessage());
-            $_SESSION['error'] = "❌ حدث خطأ في قبول الدعوة";
+            $_SESSION['error'] = "❌ حدث خطأ في قبول الدعوة: " . $e->getMessage();
         }
     }
     
@@ -65,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     
-    header("Location: admin_invitations.php");
+    header("Location: " . url('admin.invitations'));
     exit;
 }
 
@@ -188,15 +205,15 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
     </span>
 
     <div class="space-x-2 space-x-reverse">
-      <a href="admin.php" class="btn-primary">
+      <a href="<?= url('admin') ?>" class="btn-primary">
         <i class="fas fa-users"></i>
         المجموعات
       </a>
-      <a href="admin_questions.php" class="btn-primary">
+      <a href="<?= url('admin.questions') ?>" class="btn-primary">
         <i class="fas fa-question-circle"></i>
         الأسئلة
       </a>
-      <a href="admin_invitations.php" class="btn-primary relative active">
+      <a href="<?= url('admin.invitations') ?>" class="btn-primary relative active">
         <i class="fas fa-envelope"></i>
         الدعوات
         <?php
@@ -215,7 +232,7 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
           </span>
         <?php endif; ?>
       </a>
-      <a href="profile.php" class="btn-primary">
+      <a href="<?= url('profile') ?>" class="btn-primary">
         <i class="fas fa-user"></i>
         حسابي
       </a>

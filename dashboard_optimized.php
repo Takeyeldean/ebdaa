@@ -2,8 +2,9 @@
 // Optimized Dashboard - Performance Enhanced Version
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
-session_start(); 
+session_start();
 require_once 'includes/db.php';
+require_once 'includes/url_helper.php';
 
 // Security check
 if (!isset($_SESSION['user'])) {
@@ -16,7 +17,7 @@ $user_role = $_SESSION['user']['role'];
 $user_id = $_SESSION['user']['id'];
 
 if ($user_role === 'admin') {
-    $group_id = isset($_GET['group_id']) ? intval($_GET['group_id']) : 0;
+    $group_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
     
     if ($group_id > 0) {
         // Single optimized query with JOIN
@@ -139,25 +140,25 @@ if ($user_role === 'student') {
       <div class="flex items-center space-x-4 space-x-reverse">
         <h1 class="text-2xl font-bold text-white text-shadow">إبداع 🎯</h1>
         <?php if ($user_role === 'admin'): ?>
-          <a href="admin.php" class="btn-primary hover-lift">المجموعات</a>
-          <a href="admin_questions.php" class="btn-primary hover-lift relative">
+          <a href="<?= url('admin') ?>" class="btn-primary hover-lift">المجموعات</a>
+          <a href="<?= url('admin.questions') ?>" class="btn-primary hover-lift relative">
             الأسئلة
             <?php if ($notification_count > 0): ?>
               <span class="notification-badge"><?= $notification_count ?></span>
             <?php endif; ?>
           </a>
-          <a href="admin_invitations.php" class="btn-primary hover-lift">الدعوات</a>
+          <a href="<?= url('admin.invitations') ?>" class="btn-primary hover-lift">الدعوات</a>
         <?php else: ?>
-          <a href="dashboard.php" class="btn-primary hover-lift">الترتيب</a>
-          <a href="student_questions.php" class="btn-primary hover-lift relative">
+          <a href="<?= url('dashboard') ?>" class="btn-primary hover-lift">الترتيب</a>
+          <a href="<?= url('questions') ?>" class="btn-primary hover-lift relative">
             الأسئلة
             <?php if ($notification_count > 0): ?>
               <span class="notification-badge"><?= $notification_count ?></span>
             <?php endif; ?>
           </a>
         <?php endif; ?>
-        <a href="profile.php" class="btn-primary hover-lift">حسابي الشخصي</a>
-        <a href="logout.php" class="btn-primary hover-lift">تسجيل الخروج</a>
+        <a href="<?= url('profile') ?>" class="btn-primary hover-lift">حسابي الشخصي</a>
+        <a href="<?= url('logout') ?>" class="btn-primary hover-lift">تسجيل الخروج</a>
       </div>
     </div>
   </nav>
@@ -305,7 +306,7 @@ if ($user_role === 'student') {
                 ctx.restore();
               };
               
-              img.src = 'uploads/' + imageUrl;
+              img.src = '/ebdaa/uploads/' + imageUrl;
             });
           });
         }

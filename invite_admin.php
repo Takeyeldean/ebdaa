@@ -3,11 +3,12 @@ session_start();
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 require_once "includes/db.php";
+require_once "includes/url_helper.php";
 
 // Check if user is admin
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
     $_SESSION['invite_error'] = "❌ غير مسموح لك بالدخول";
-    header("Location: admin.php");
+    header("Location: " . url('admin'));
     exit;
 }
 
@@ -19,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['invite_admin'])) {
     // Validate input
     if (empty($admin_username)) {
         $_SESSION['invite_error'] = "❌ يرجى إدخال اسم المستخدم";
-        header("Location: manage_group.php?group_id=" . $group_id);
+        header("Location: " . adminGroupUrl($group_id));
         exit;
     }
     
@@ -31,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['invite_admin'])) {
         
         if (!$invited_admin) {
             $_SESSION['invite_error'] = "❌ لا يوجد مشرف بهذا اسم المستخدم: " . htmlspecialchars($admin_username);
-            header("Location: manage_group.php?group_id=" . $group_id);
+            header("Location: " . adminGroupUrl($group_id));
             exit;
         }
         
@@ -42,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['invite_admin'])) {
         
         if ($already_admin > 0) {
             $_SESSION['invite_error'] = "❌ هذا المشرف موجود بالفعل في المجموعة";
-            header("Location: manage_group.php?group_id=" . $group_id);
+            header("Location: " . adminGroupUrl($group_id));
             exit;
         }
         
@@ -53,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['invite_admin'])) {
         
         if ($pending_invitation > 0) {
             $_SESSION['invite_error'] = "❌ يوجد دعوة معلقة بالفعل لهذا المشرف";
-            header("Location: manage_group.php?group_id=" . $group_id);
+            header("Location: " . adminGroupUrl($group_id));
             exit;
         }
         
@@ -64,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['invite_admin'])) {
         
         if ($can_invite == 0) {
             $_SESSION['invite_error'] = "❌ ليس لديك صلاحية لدعوة مشرفين لهذه المجموعة";
-            header("Location: admin.php");
+            header("Location: " . url('admin'));
             exit;
         }
         
@@ -79,11 +80,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['invite_admin'])) {
         $_SESSION['invite_error'] = "❌ حدث خطأ في إرسال الدعوة. يرجى المحاولة مرة أخرى.";
     }
     
-    header("Location: manage_group.php?group_id=" . $group_id);
+    header("Location: " . adminGroupUrl($group_id));
     exit;
 }
 
 // If not POST request, redirect to admin page
-header("Location: admin.php");
+header("Location: " . url('admin'));
 exit;
 ?>

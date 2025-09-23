@@ -98,7 +98,7 @@ $groups = $conn->query("SELECT * FROM groups")->fetchAll(PDO::FETCH_ASSOC);
         </select><br><br>
 
         <label>الصورة الحالية:</label><br>
-        <img src="uploads/<?= htmlspecialchars($student['profile_image']) ?>" width="100"><br><br>
+        <img src="/ebdaa/uploads/<?= htmlspecialchars($student['profile_image']) ?>" width="100"><br><br>
 
         <label>تغيير الصورة:</label>
         <input type="file" name="profile_image"><br><br>

@@ -1,7 +1,9 @@
 <?php
 error_reporting(E_ALL);
 ini_set('display_errors', 1);   
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require_once "includes/db.php"; // الاتصال بقاعدة البيانات (PDO)
 // username
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
@@ -26,7 +28,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             "username" => $user['username'],
             "role" => $role     
         ];
-         $redirect = ($_SESSION['user']['role'] === 'admin') ? 'admin.php' : 'dashboard.php';
+         $redirect = ($_SESSION['user']['role'] === 'admin') ? 'admin' : 'dashboard';
     header("Location: $redirect");
         exit();
     } else {
