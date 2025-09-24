@@ -1,4 +1,7 @@
 <?php
+// Start output buffering to prevent any output before redirects
+ob_start();
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -9,13 +12,29 @@ require_once "includes/url_helper.php";
 
 // Check if user is admin
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
-    header("Location: index.php");
+    header("Location: login");
     exit();
 }
 
 $admin_id = $_SESSION['user']['id'];
 
-// Handle form submission
+/**
+ * Helper function: redirect safely (PRG pattern)
+ */
+function safe_redirect($url) {
+    // Clear any output buffer
+    if (ob_get_level()) {
+        ob_end_clean();
+    }
+    
+    // Set redirect header
+    header("Location: " . $url);
+    
+    // Ensure no further output
+    exit();
+}
+
+// Handle form submission (Create)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_question'])) {
     $group_id = intval($_POST['group_id']);
     $question_text = trim($_POST['question_text']);
@@ -25,28 +44,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_question'])) {
     
     if ($group_id > 0 && !empty($question_text)) {
         try {
-            // Verify that the admin has access to this group
             $stmt = $conn->prepare("SELECT 1 FROM group_admins WHERE group_id = ? AND admin_id = ?");
             $stmt->execute([$group_id, $admin_id]);
             
             if ($stmt->fetch()) {
-                // Start transaction
                 $conn->beginTransaction();
                 
-                // Insert the question
                 $stmt = $conn->prepare("INSERT INTO questions (group_id, admin_id, question_text, question_type, points, is_public) VALUES (?, ?, ?, ?, ?, ?)");
                 $stmt->execute([$group_id, $admin_id, $question_text, $question_type, $points, $is_public]);
                 $question_id = $conn->lastInsertId();
                 
-                // If it's an MCQ question, insert the options
                 if ($question_type === 'mcq' && isset($_POST['mcq_options'])) {
                     $options = $_POST['mcq_options'];
                     $correct_option = intval($_POST['correct_option'] ?? 0);
                     
-                    // Validate MCQ options
-                    $valid_options = array_filter($options, function($option) {
-                        return !empty(trim($option));
-                    });
+                    $valid_options = array_filter($options, fn($option) => !empty(trim($option)));
                     
                     if (count($valid_options) < 2) {
                         throw new Exception("يجب أن يكون هناك على الأقل خياران للإجابة");
@@ -67,30 +79,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_question'])) {
                     }
                 }
                 
-                // Create notifications for all students in this group
                 $stmt = $conn->prepare("INSERT INTO notifications (student_id, question_id) SELECT id, ? FROM students WHERE group_id = ?");
                 $stmt->execute([$question_id, $group_id]);
                 
-                // Commit transaction
                 $conn->commit();
                 
                 $_SESSION['success'] = "تم إنشاء السؤال بنجاح!";
-                
-                // Redirect to prevent form resubmission on page reload
-                header("Location: " . url('admin.questions'));
-                exit();
+                safe_redirect(url('admin.questions'));
             } else {
                 $_SESSION['error'] = "ليس لديك صلاحية للوصول إلى هذه المجموعة";
+                safe_redirect(url('admin.questions'));
             }
         } catch (PDOException $e) {
             $conn->rollBack();
             $_SESSION['error'] = "حدث خطأ في إنشاء السؤال: " . $e->getMessage();
+            safe_redirect(url('admin.questions'));
         } catch (Exception $e) {
             $conn->rollBack();
             $_SESSION['error'] = "خطأ في التحقق من الخيارات: " . $e->getMessage();
+            safe_redirect(url('admin.questions'));
         }
     } else {
         $_SESSION['error'] = "يرجى ملء جميع الحقول المطلوبة";
+        safe_redirect(url('admin.questions'));
     }
 }
 
@@ -102,7 +113,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_question'])) {
     
     if ($question_id > 0 && !empty($question_text)) {
         try {
-            // Verify the question belongs to this admin
             $stmt = $conn->prepare("SELECT id FROM questions WHERE id = ? AND admin_id = ?");
             $stmt->execute([$question_id, $admin_id]);
             
@@ -111,17 +121,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_question'])) {
                 $stmt->execute([$question_text, $is_public, $question_id, $admin_id]);
                 $_SESSION['success'] = "تم تحديث السؤال بنجاح!";
                 
-                // Redirect to prevent form resubmission on page reload
-                header("Location: " . url('admin.questions'));
-                exit();
+                safe_redirect(url('admin.questions'));
             } else {
                 $_SESSION['error'] = "غير مسموح لك بتعديل هذا السؤال";
+                safe_redirect(url('admin.questions'));
             }
         } catch (PDOException $e) {
             $_SESSION['error'] = "حدث خطأ في تحديث السؤال: " . $e->getMessage();
+            safe_redirect(url('admin.questions'));
         }
     } else {
         $_SESSION['error'] = "يرجى كتابة نص السؤال";
+        safe_redirect(url('admin.questions'));
     }
 }
 
@@ -131,7 +142,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_question'])) {
     
     if ($question_id > 0) {
         try {
-            // Verify the question belongs to this admin
             $stmt = $conn->prepare("SELECT id FROM questions WHERE id = ? AND admin_id = ?");
             $stmt->execute([$question_id, $admin_id]);
             
@@ -140,17 +150,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_question'])) {
                 $stmt->execute([$question_id, $admin_id]);
                 $_SESSION['success'] = "تم حذف السؤال بنجاح!";
                 
-                // Redirect to prevent form resubmission on page reload
-                header("Location: " . url('admin.questions'));
-                exit();
+                safe_redirect(url('admin.questions'));
             } else {
                 $_SESSION['error'] = "غير مسموح لك بحذف هذا السؤال";
+                safe_redirect(url('admin.questions'));
             }
         } catch (PDOException $e) {
             $_SESSION['error'] = "حدث خطأ في حذف السؤال: " . $e->getMessage();
+            safe_redirect(url('admin.questions'));
         }
     } else {
         $_SESSION['error'] = "معرف السؤال غير صحيح";
+        safe_redirect(url('admin.questions'));
     }
 }
 
@@ -201,7 +212,6 @@ if (!empty($all_question_ids)) {
     $stmt->execute($all_question_ids);
     $mcq_options = $stmt->fetchAll();
     
-    // Group options by question ID
     foreach ($mcq_options as $option) {
         $mcq_options_by_question[$option['question_id']][] = $option;
     }
@@ -219,7 +229,6 @@ if (!empty($all_question_ids)) {
     $stmt->execute($all_question_ids);
     $all_answers = $stmt->fetchAll();
     
-    // Group answers by question_id
     foreach ($all_answers as $answer) {
         $answers_by_question[$answer['question_id']][] = $answer;
     }
@@ -240,12 +249,12 @@ if (!empty($all_question_ids)) {
     $stmt->execute($all_question_ids);
     $all_mcq_answers = $stmt->fetchAll();
     
-    // Group MCQ answers by question_id
     foreach ($all_mcq_answers as $answer) {
         $mcq_answers_by_question[$answer['question_id']][] = $answer;
     }
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -268,6 +277,333 @@ if (!empty($all_question_ids)) {
             backdrop-filter: blur(20px);
             border-radius: 0 0 25px 25px;
             box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 10000;
+        }
+
+        /* Mobile hamburger menu */
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #1e40af;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 10001;
+        }
+
+        .mobile-menu-btn:hover {
+            background: rgba(30, 64, 175, 0.1);
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.2);
+        }
+
+        .mobile-menu-btn:active {
+            transform: scale(0.95);
+        }
+
+        .mobile-nav-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            border-radius: 0 0 25px 25px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+            padding: 20px;
+            z-index: 9999;
+        }
+
+        .mobile-nav-menu.active {
+            display: block;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .mobile-nav-menu.active .mobile-nav-links .btn-primary {
+            animation: fadeInUp 0.4s ease-out;
+            animation-fill-mode: both;
+        }
+
+        .mobile-nav-menu.active .mobile-nav-links .btn-primary:nth-child(1) { animation-delay: 0.1s; }
+        .mobile-nav-menu.active .mobile-nav-links .btn-primary:nth-child(2) { animation-delay: 0.2s; }
+        .mobile-nav-menu.active .mobile-nav-links .btn-primary:nth-child(3) { animation-delay: 0.3s; }
+        .mobile-nav-menu.active .mobile-nav-links .btn-primary:nth-child(4) { animation-delay: 0.4s; }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .mobile-nav-links {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .mobile-nav-links .btn-primary {
+            justify-content: center;
+            width: 100%;
+            padding: 16px 24px;
+            font-size: 1rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mobile-nav-links .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .mobile-nav-links .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(30, 64, 175, 0.3);
+            background: linear-gradient(45deg, #1e3a8a, #2563eb);
+        }
+
+        .mobile-nav-links .btn-primary:hover::before {
+            left: 100%;
+        }
+
+        .mobile-nav-links .btn-primary:active {
+            transform: translateY(0);
+            box-shadow: 0 4px 15px rgba(30, 64, 175, 0.2);
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .desktop-nav {
+                display: none;
+            }
+            
+            .mobile-menu-btn {
+                display: block;
+            }
+            
+            .container {
+                padding: 8px;   
+            }
+            
+            .nav-glass {
+                padding: 12px 16px;
+            }
+
+            /* Make text smaller on mobile */
+            .text-4xl {
+                font-size: 1.5rem; /* 24px instead of 36px */
+            }
+
+            .text-3xl {
+                font-size: 1.5rem; /* 24px instead of 30px */
+            }
+
+            .text-2xl {
+                font-size: 1.25rem; /* 20px instead of 24px */
+            }
+
+            .text-xl {
+                font-size: 1.125rem; /* 18px instead of 20px */
+            }
+
+            /* Card adjustments */
+            .card {
+                padding: 16px;
+                margin-bottom: 16px;
+            }
+
+            /* Form elements */
+            .form-group {
+                margin-bottom: 16px;
+            }
+
+            .form-group label {
+                font-size: 0.875rem; /* 14px */
+                margin-bottom: 6px;
+            }
+
+            .form-group input,
+            .form-group textarea,
+            .form-group select {
+                padding: 10px 12px;
+                font-size: 0.875rem; /* 14px */
+            }
+
+            /* Buttons */
+            .btn-primary {
+                padding: 10px 16px;
+                font-size: 0.875rem; /* 14px */
+                border-radius: 20px;
+            }
+
+            /* Question cards */
+            .question-card {
+                padding: 12px;
+                margin-bottom: 12px;
+            }
+
+            .question-title {
+                font-size: 1rem; /* 16px */
+                margin-bottom: 8px;
+            }
+
+            .question-content {
+                font-size: 0.875rem; /* 14px */
+                line-height: 1.5;
+            }
+
+            /* MCQ options */
+            .mcq-option-row {
+                padding: 8px;
+                margin-bottom: 8px;
+            }
+
+            .mcq-option-row input[type="text"] {
+                padding: 8px 10px;
+                font-size: 0.875rem; /* 14px */
+            }
+
+            /* Section titles */
+            .section-title {
+                font-size: 1rem; /* 16px */
+                margin-bottom: 8px;
+            }
+
+            /* Answer cards */
+            .answer-card {
+                padding: 12px;
+                margin-bottom: 12px;
+            }
+
+            /* Grid adjustments */
+            .questions-grid {
+                gap: 1rem;
+            }
+
+            /* Modal adjustments */
+            .modal-content {
+                margin: 10px;
+                padding: 16px;
+                max-height: 90vh;
+                overflow-y: auto;
+            }
+
+            /* Close button */
+            .close-btn {
+                font-size: 1.25rem; /* 20px */
+                padding: 8px;
+            }
+
+            /* Success/Error messages */
+            .message {
+                padding: 12px 16px;
+                font-size: 0.875rem; /* 14px */
+                margin-bottom: 16px;
+            }
+
+            /* Badge adjustments */
+            .badge {
+                font-size: 0.75rem; /* 12px */
+                padding: 4px 8px;
+            }
+
+            /* Icon adjustments */
+            .fas, .far {
+                font-size: 0.875rem; /* 14px */
+            }
+
+            /* Spacing adjustments */
+            .space-y-4 > * + * {
+                margin-top: 12px;
+            }
+
+            .space-y-3 > * + * {
+                margin-top: 8px;
+            }
+
+            .mb-8 {
+                margin-bottom: 16px;
+            }
+
+            .mb-6 {
+                margin-bottom: 12px;
+            }
+
+            .mb-4 {
+                margin-bottom: 8px;
+            }
+
+            /* Text alignment for mobile */
+            .text-center {
+                text-align: center;
+            }
+
+            /* Hide some elements on very small screens */
+            @media (max-width: 480px) {
+                .container {
+                    padding: 8px;
+                }
+                
+                .nav-glass {
+                    padding: 8px 12px;
+                }
+
+                .text-4xl {
+                    font-size: 1.5rem; /* 24px */
+                }
+
+                .card {
+                    padding: 12px;
+                }
+
+                .btn-primary {
+                    padding: 8px 12px;
+                    font-size: 0.8rem; /* 13px */
+                }
+
+                .question-card {
+                    padding: 12px;
+                }
+            }
+        }
+
+        @media (min-width: 769px) {
+            .mobile-menu-btn {
+                display: none;
+            }
+            
+            .mobile-nav-menu {
+                display: none !important;
+            }
         }
 
         .card {
@@ -303,6 +639,27 @@ if (!empty($all_question_ids)) {
             box-shadow: 0 12px 35px rgba(30, 64, 175, 0.4);
         }
 
+        .btn-secondary {
+            background: linear-gradient(45deg, #6b7280, #9ca3af);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(107, 114, 128, 0.3);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(107, 114, 128, 0.4);
+        }
+
         .btn-primary.active {
             background: linear-gradient(45deg, #10b981, #059669);
             box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
@@ -323,6 +680,17 @@ if (!empty($all_question_ids)) {
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+        }
+
+        .question-card.active {
+            border-color: #3b82f6;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+            background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+        }
+
+        .question-card:hover {
+            border-color: #3b82f6;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
         }
 
         .question-card::before {
@@ -364,6 +732,21 @@ if (!empty($all_question_ids)) {
             border-top: none;
             border-radius: 0 0 16px 16px;
             margin-top: -1px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+
+        .question-content.hidden {
+            max-height: 0;
+            opacity: 0;
+            padding: 0;
+            margin: 0;
+            border: none;
+        }
+
+        .question-content:not(.hidden) {
+            max-height: 1000px;
+            opacity: 1;
         }
 
         .question-title {
@@ -580,7 +963,7 @@ if (!empty($all_question_ids)) {
             color: white;
             padding: 1.5rem 2rem;
             border-radius: 16px;
-            margin-bottom: 2rem;
+            margin-bottom: 1rem;
             position: relative;
             overflow: hidden;
         }
@@ -658,11 +1041,17 @@ if (!empty($all_question_ids)) {
 </head>
 <body>
     <!-- Navbar -->
-    <nav class="nav-glass px-6 py-4 flex justify-between items-center">
+    <nav class="nav-glass px-6 py-4 flex justify-between items-center relative">
         <span class="text-4xl font-bold" style="background: linear-gradient(45deg, #1e40af, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
             ⚡ إبداع
         </span>
-        <div class="space-x-2 space-x-reverse">
+        
+        <!-- Mobile menu button -->
+        <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+            <i class="fas fa-bars"></i>
+        </button>
+        
+        <div class="space-x-2 space-x-reverse desktop-nav">
             <a href="<?= url('admin') ?>" class="btn-primary">
                 <i class="fas fa-users"></i>
                 المجموعات
@@ -694,6 +1083,43 @@ if (!empty($all_question_ids)) {
                 <i class="fas fa-user"></i>
                 حسابي
             </a>
+        </div>
+
+        <!-- Mobile Navigation Menu -->
+        <div class="mobile-nav-menu" id="mobileNavMenu">
+            <div class="mobile-nav-links">
+                <a href="<?= url('admin') ?>" class="btn-primary">
+                    <i class="fas fa-users"></i>
+                    المجموعات
+                </a>
+                <a href="<?= url('admin.questions') ?>" class="btn-primary active">
+                    <i class="fas fa-question-circle"></i>
+                    الأسئلة
+                </a>
+                <a href="<?= url('admin.invitations') ?>" class="btn-primary relative">
+                    <i class="fas fa-envelope"></i>
+                    الدعوات
+                    <?php
+                    // Get pending invitations count
+                    $admin_username = $_SESSION['user']['username'] ?? '';
+                    if (!empty($admin_username)) {
+                        $stmt = $conn->prepare("SELECT COUNT(*) as count FROM admin_invitations WHERE invited_username = ? AND status = 'pending'");
+                        $stmt->execute([$admin_username]);
+                        $invitation_count = $stmt->fetch()['count'];
+                    } else {
+                        $invitation_count = 0;
+                    }
+                    if ($invitation_count > 0): ?>
+                        <span class="absolute -top-2 -right-2 bg-orange-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center animate-pulse">
+                            <?= $invitation_count ?>
+                        </span>
+                    <?php endif; ?>
+                </a>
+                <a href="<?= url('profile') ?>" class="btn-primary">
+                    <i class="fas fa-user"></i>
+                    حسابي
+                </a>
+            </div>
         </div>
     </nav>
 
@@ -772,14 +1198,14 @@ if (!empty($all_question_ids)) {
                     <div id="mcq_options_container" class="space-y-3">
                         <div class="flex items-center space-x-3 space-x-reverse mcq-option-row">
                             <input type="radio" name="correct_option" value="0" class="w-4 h-4 text-green-600">
-                            <input type="text" name="mcq_options[]" placeholder="الخيار الأول" class="form-textarea flex-1" required>
+                            <input type="text" name="mcq_options[]" placeholder="الخيار الأول" class="form-textarea flex-1">
                             <button type="button" onclick="removeMcqOption(this)" class="text-red-600 hover:text-red-800 p-1" title="حذف الخيار">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
                         <div class="flex items-center space-x-3 space-x-reverse mcq-option-row">
                             <input type="radio" name="correct_option" value="1" class="w-4 h-4 text-green-600">
-                            <input type="text" name="mcq_options[]" placeholder="الخيار الثاني" class="form-textarea flex-1" required>
+                            <input type="text" name="mcq_options[]" placeholder="الخيار الثاني" class="form-textarea flex-1">
                             <button type="button" onclick="removeMcqOption(this)" class="text-red-600 hover:text-red-800 p-1" title="حذف الخيار">
                                 <i class="fas fa-trash"></i>
                             </button>
@@ -803,10 +1229,13 @@ if (!empty($all_question_ids)) {
                     </div>
 
                 <div class="text-center">
-                    <button type="submit" name="create_question" class="btn-primary text-lg px-8 py-3" onclick="return validateMcqForm()">
+                    <button type="submit" name="create_question" class="btn-primary text-lg px-8 py-3" onclick="console.log('Submit button clicked'); const result = validateMcqForm(); console.log('Validation result:', result); return result;">
                         <i class="fas fa-paper-plane"></i>
                         إرسال السؤال
                     </button>
+                    
+                    <!-- Test button without validation -->
+                   
                 </div>
             </form>
         </div>
@@ -836,18 +1265,15 @@ if (!empty($all_question_ids)) {
                                 <i class="fas fa-comments"></i>
                                 <span><?= array_sum(array_map(function($q) use ($answers_by_question) { return isset($answers_by_question[$q['id']]) ? count($answers_by_question[$q['id']]) : 0; }, $questions)) ?> إجابة</span>
                             </div>
-                            <div class="stat-item">
-                                <i class="fas fa-clock"></i>
-                                <span>آخر سؤال: <?= date('Y-m-d', strtotime($questions[0]['created_at'])) ?></span>
-                            </div>
+                          
                         </div>
                     </div>
 
                     <!-- Questions Grid -->
                     <div class="questions-grid">
                         <?php foreach ($questions as $question): ?>
-                            <div class="card p-6     question-card" onclick="toggleQuestion(<?= $question['id'] ?>)">
-                                <div class="flex justify-between items-start mb-3">
+                            <div class="card p-2 question-card" onclick="toggleQuestion(<?= $question['id'] ?>)">
+                                <div class="flex justify-between items-start mb-1">
                                     <h3 class="question-title text-balance flex-1" id="question-text-<?= $question['id'] ?>">
                                         <?= htmlspecialchars($question['question_text']) ?>
                                         <?php if ($question['question_type'] === 'mcq'): ?>
@@ -885,18 +1311,17 @@ if (!empty($all_question_ids)) {
                                         <button onclick="event.stopPropagation(); toggleAnswers(<?= $question['id'] ?>)" 
                                                 class="text-green-600 hover:text-green-800 text-sm" 
                                                 title="عرض إجابات الطلاب">
-                                            <i class="fas fa-comments"></i>
-                                            <span class="text-xs">(<?= isset($answers_by_question[$question['id']]) ? count($answers_by_question[$question['id']]) : 0 ?>)</span>
+                            
                                         </button>
                                         <!-- Edit Button -->
                                         <button onclick="event.stopPropagation(); editQuestion(<?= $question['id'] ?>, '<?= htmlspecialchars($question['question_text'], ENT_QUOTES) ?>', <?= $question['is_public'] ?>)" 
-                                                class="text-blue-600 hover:text-blue-800 text-l">
+                                                class="text-blue-600 hover:text-blue-800 text-l p-2">
                                             <i class="fas fa-edit"></i>
                                         </button>
                                         <!-- Delete Button -->
                                         <form method="post" class="inline" onsubmit="return confirm('هل أنت متأكد من حذف هذا السؤال؟ سيتم حذف جميع الإجابات المرتبطة به.')">
                                             <input type="hidden" name="question_id" value="<?= $question['id'] ?>">
-                                            <button type="submit" name="delete_question" class="text-red-600 hover:text-red-800 text-sm" onclick="event.stopPropagation();">
+                                            <button type="submit" name="delete_question" class="text-red-600 hover:text-red-800 text-sm p-2" onclick="event.stopPropagation();">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </form>
@@ -1076,6 +1501,13 @@ if (!empty($all_question_ids)) {
                 pointsSection.classList.remove('hidden');
                 mcqOptionsSection.classList.remove('hidden');
                 publicAnswersSection.classList.add('hidden');
+                
+                // Add required attribute to MCQ option inputs
+                const mcqInputs = mcqOptionsSection.querySelectorAll('input[name="mcq_options[]"]');
+                mcqInputs.forEach(input => {
+                    input.setAttribute('required', 'required');
+                });
+                
                 // Add visual reminder for correct answer selection
                 setTimeout(() => {
                     highlightCorrectAnswerReminder();
@@ -1084,6 +1516,12 @@ if (!empty($all_question_ids)) {
                 pointsSection.classList.add('hidden');
                 mcqOptionsSection.classList.add('hidden');
                 publicAnswersSection.classList.remove('hidden');
+                
+                // Remove required attribute from MCQ option inputs when hidden
+                const mcqInputs = mcqOptionsSection.querySelectorAll('input[name="mcq_options[]"]');
+                mcqInputs.forEach(input => {
+                    input.removeAttribute('required');
+                });
             }
         }
 
@@ -1126,13 +1564,20 @@ if (!empty($all_question_ids)) {
             optionRow.className = 'flex items-center space-x-3 space-x-reverse mcq-option-row';
             optionRow.innerHTML = `
                 <input type="radio" name="correct_option" value="${optionCount}" class="w-4 h-4 text-green-600">
-                <input type="text" name="mcq_options[]" placeholder="الخيار ${getArabicNumber(optionNumber)}" class="form-textarea flex-1" required>
+                <input type="text" name="mcq_options[]" placeholder="الخيار ${getArabicNumber(optionNumber)}" class="form-textarea flex-1">
                 <button type="button" onclick="removeMcqOption(this)" class="text-red-600 hover:text-red-800 p-1" title="حذف الخيار">
                     <i class="fas fa-trash"></i>
                 </button>
             `;
             
             container.appendChild(optionRow);
+            
+            // Add required attribute if MCQ section is visible
+            const mcqSection = document.getElementById('mcq_options_section');
+            if (!mcqSection.classList.contains('hidden')) {
+                const newInput = optionRow.querySelector('input[name="mcq_options[]"]');
+                newInput.setAttribute('required', 'required');
+            }
         }
 
         function removeMcqOption(button) {
@@ -1160,16 +1605,40 @@ if (!empty($all_question_ids)) {
         }
 
         function validateMcqForm() {
-            const questionType = document.getElementById('question_type').value;
-            
-            if (questionType === 'mcq') {
-                // Check if MCQ options section is visible
-                const mcqSection = document.getElementById('mcq_options_section');
-                if (!mcqSection.classList.contains('hidden')) {
+            try {
+                console.log('validateMcqForm called');
+                const questionTypeElement = document.getElementById('question_type');
+                
+                if (!questionTypeElement) {
+                    console.log('Question type element not found, returning true');
+                    return true;
+                }
+                
+                const questionType = questionTypeElement.value;
+                console.log('Question type:', questionType);
+                
+                // For text questions, always return true
+                if (questionType === 'text') {
+                    console.log('Text question - validation passed');
+                    return true;
+                }
+                
+                // For MCQ questions, validate options
+                if (questionType === 'mcq') {
+                    console.log('MCQ question - checking validation');
+                    
+                    // Check if MCQ options section is visible
+                    const mcqSection = document.getElementById('mcq_options_section');
+                    if (!mcqSection || mcqSection.classList.contains('hidden')) {
+                        console.log('MCQ section not visible - validation passed');
+                        return true;
+                    }
+                    
                     // Check if any correct answer is selected
                     const correctOption = document.querySelector('input[name="correct_option"]:checked');
                     if (!correctOption) {
                         // Show error message
+                        console.log('No correct option selected, showing error');
                         showMcqValidationError('⚠️ يجب اختيار الإجابة الصحيحة قبل إرسال السؤال');
                         return false;
                     }
@@ -1184,13 +1653,22 @@ if (!empty($all_question_ids)) {
                     });
                     
                     if (emptyOptions > 0) {
+                        console.log('Empty options found:', emptyOptions);
                         showMcqValidationError(`⚠️ يجب ملء جميع الخيارات (${emptyOptions} خيار فارغ)`);
                         return false;
                     }
+                    
+                    console.log('MCQ validation passed');
                 }
+                
+                console.log('Validation passed, returning true');
+                return true;
+                
+            } catch (error) {
+                console.error('Error in validateMcqForm:', error);
+                // If there's an error, allow form submission
+                return true;
             }
-            
-            return true;
         }
 
         function showMcqValidationError(message) {
@@ -1244,7 +1722,7 @@ if (!empty($all_question_ids)) {
                     // Get question ID from the active card more reliably
                     const activeOnclick = activeCard.getAttribute('onclick');
                     if (activeOnclick) {
-                        const match = activeOnclick.match(/toggleQuestion$$(\d+)$$/);
+                        const match = activeOnclick.match(/toggleQuestion\((\d+)\)/);
                         if (match) {
                             const otherQuestionId = match[1];
                             const otherContent = document.getElementById('content-' + otherQuestionId);
@@ -1348,6 +1826,28 @@ if (!empty($all_question_ids)) {
                 });
             }
         }
+
+        // Mobile navigation functions
+        function toggleMobileMenu() {
+            const mobileMenu = document.getElementById('mobileNavMenu');
+            mobileMenu.classList.toggle('active');
+        }
+
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const mobileMenu = document.getElementById('mobileNavMenu');
+            const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+            
+            if (!mobileMenu.contains(event.target) && !mobileMenuBtn.contains(event.target)) {
+                mobileMenu.classList.remove('active');
+            }
+        });
+
+
     </script>
 </body>
 </html>
+<?php
+// End output buffering and flush content
+ob_end_flush();
+?>

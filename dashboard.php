@@ -259,12 +259,141 @@ foreach ($students as $student) {
       50% { transform: scale(1.05); }
     }
 
-    .nav-glass {
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(20px);
-      border-radius: 0 0 25px 25px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-    }
+        .nav-glass {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 0 0 25px 25px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 10000;
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .container {
+                padding: 8px;
+            }
+            
+            .nav-glass {
+                padding: 12px 16px;
+            }
+
+            /* Make text smaller on mobile */
+            .text-4xl {
+                font-size: 1.5rem; /* 24px instead of 36px */
+            }
+
+            .text-3xl {
+                font-size: 1.25rem; /* 20px instead of 30px */
+            }
+
+            .text-2xl {
+                font-size: 1.125rem; /* 18px instead of 24px */
+            }
+
+            .text-xl {
+                font-size: 1rem; /* 16px instead of 20px */
+            }
+
+            /* Card adjustments */
+            .card {
+                padding: 12px;
+                margin-bottom: 12px;
+            }
+
+            /* Welcome card */
+            .welcome-card {
+                padding: 16px;
+                margin-bottom: 16px;
+            }
+
+            /* Chart container */
+            .chart-container {
+                padding: 12px;
+                margin-bottom: 16px;
+            }
+
+            /* Character positioning */
+            .character {
+                position: relative;
+                top: auto;
+                right: auto;
+                margin-top: 16px;
+                text-align: center;
+            }
+
+            /* Reduce margins and padding globally */
+            .mb-8 { margin-bottom: 16px; }
+            .mb-6 { margin-bottom: 12px; }
+            .mb-4 { margin-bottom: 8px; }
+            .mb-3 { margin-bottom: 6px; }
+            .mb-2 { margin-bottom: 4px; }
+            .mb-1 { margin-bottom: 2px; }
+
+            .p-6 { padding: 12px; }
+            .p-4 { padding: 8px; }
+            .p-3 { padding: 6px; }
+            .p-2 { padding: 4px; }
+
+            /* Button improvements */
+            .btn-primary {
+                padding: 10px 16px;
+                font-size: 0.875rem;
+                margin-bottom: 8px;
+            }
+
+            /* Profile image */
+            .profile-image {
+                width: 60px;
+                height: 60px;
+            }
+
+            /* Chart responsive */
+            .chart-wrapper {
+                height: 300px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 4px;
+            }
+            
+            .nav-glass {
+                padding: 8px 12px;
+            }
+
+            .text-4xl {
+                font-size: 1.25rem; /* 20px */
+            }
+
+            .card {
+                padding: 8px;
+            }
+
+            .welcome-card {
+                padding: 12px;
+            }
+
+            .chart-container {
+                padding: 8px;
+            }
+
+            .btn-primary {
+                padding: 8px 12px;
+                font-size: 0.8rem;
+            }
+
+            .profile-image {
+                width: 50px;
+                height: 50px;
+            }
+
+            .chart-wrapper {
+                height: 250px;
+            }
+        }
 
 
      .chart-container {

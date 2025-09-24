@@ -7,11 +7,6 @@ ini_set('display_errors', 1);
 require_once "includes/db.php";
 require_once "includes/url_helper.php";
 
-// Check if user is student
-if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'student') {
-    header("Location: index.php");
-    exit();
-}
 
 $student_id = $_SESSION['user']['id'];
 error_log("Current student ID: " . $student_id);
@@ -328,6 +323,9 @@ foreach ($all_answers as $answer) {
       backdrop-filter: blur(20px);
       border-radius: 0 0 25px 25px;
       box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 10000;
     }
 
         /* Refined card styling */
@@ -420,6 +418,7 @@ foreach ($all_answers as $answer) {
             position: relative;
             overflow: hidden;
             cursor: pointer;
+            z-index: 1;
         }
 
         .question-card::before {
@@ -707,6 +706,125 @@ foreach ($all_answers as $answer) {
             border: 1px solid rgba(220, 38, 38, 0.2);
         }
 
+        /* Added responsive mobile navigation styles */
+        /* Mobile hamburger menu */
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #1e40af;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 10001;
+        }
+
+        .mobile-menu-btn:hover {
+            background: rgba(30, 64, 175, 0.1);
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.2);
+        }
+
+        .mobile-menu-btn:active {
+            transform: scale(0.95);
+        }
+
+        .mobile-nav-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            border-radius: 0 0 25px 25px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+            padding: 20px;
+            z-index: 9999;
+        }
+
+        .mobile-nav-menu.active {
+            display: block;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .mobile-nav-menu.active .mobile-nav-links .btn-primary {
+            animation: fadeInUp 0.4s ease-out;
+            animation-fill-mode: both;
+        }
+
+        .mobile-nav-menu.active .mobile-nav-links .btn-primary:nth-child(1) { animation-delay: 0.1s; }
+        .mobile-nav-menu.active .mobile-nav-links .btn-primary:nth-child(2) { animation-delay: 0.2s; }
+        .mobile-nav-menu.active .mobile-nav-links .btn-primary:nth-child(3) { animation-delay: 0.3s; }
+        .mobile-nav-menu.active .mobile-nav-links .btn-primary:nth-child(4) { animation-delay: 0.4s; }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .mobile-nav-links {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .mobile-nav-links .btn-primary {
+            justify-content: center;
+            width: 100%;
+            padding: 16px 24px;
+            font-size: 1rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mobile-nav-links .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .mobile-nav-links .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(30, 64, 175, 0.3);
+            background: linear-gradient(45deg, #1e3a8a, #2563eb);
+        }
+
+        .mobile-nav-links .btn-primary:hover::before {
+            left: 100%;
+        }
+
+        .mobile-nav-links .btn-primary:active {
+            transform: translateY(0);
+            box-shadow: 0 4px 15px rgba(30, 64, 175, 0.2);
+        }
+
         /* Mobile responsiveness */
         @media (max-width: 768px) {
             .container {
@@ -714,18 +832,16 @@ foreach ($all_answers as $answer) {
             }
             
             .nav-glass {
-                padding: 16px;
+                padding: 16px 20px;
+                position: relative;
             }
             
-            .nav-glass .space-x-2 {
-                flex-direction: column;
-                gap: 8px;
-                align-items: stretch;
+            .desktop-nav {
+                display: none;
             }
             
-            .btn-primary {
-                justify-content: center;
-                padding: 12px 16px;
+            .mobile-menu-btn {
+                display: block;
             }
             
             .question-meta {
@@ -742,6 +858,14 @@ foreach ($all_answers as $answer) {
             .action-btn {
                 text-align: center;
                 justify-content: center;
+            }
+
+            .question-card.unread::after,
+            .question-card.unanswered::after {
+                right: 8px;
+                top: 8px;
+                font-size: 0.7rem;
+                padding: 3px 6px;
             }
         }
 
@@ -773,12 +897,12 @@ foreach ($all_answers as $answer) {
 </head>
 <body>
    
-  <!-- Navbar -->
    <nav class="nav-glass px-6 py-4 flex justify-between items-center">
     <span class="text-4xl font-bold" style="background: linear-gradient(45deg, #1e40af, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
       ⚡ إبداع
     </span>
-    <div class="space-x-2 space-x-reverse">
+    
+    <div class="desktop-nav space-x-2 space-x-reverse">
             <a href="<?= url('dashboard') ?>" class="btn-primary">
               <i class="fas fa-chart-bar"></i>
               الترتيب
@@ -802,12 +926,34 @@ foreach ($all_answers as $answer) {
               حسابي
             </a>
     </div>
+
+    <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+        <i class="fas fa-bars" id="mobile-menu-icon"></i>
+    </button>
+    <div class="mobile-nav-menu" id="mobile-nav-menu">
+        <div class="mobile-nav-links">
+            <a href="<?= url('dashboard') ?>" class="btn-primary">
+              <i class="fas fa-chart-bar"></i>
+              الترتيب
+            </a>
+            <a href="<?= url('questions') ?>" class="btn-primary active relative">
+              <i class="fas fa-question-circle"></i>
+              الأسئلة
+              <?php if ($notification_count > 0): ?>
+                <span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center animate-pulse">
+                  <?= $notification_count ?>
+                </span>
+              <?php endif; ?>
+            </a>
+            <a href="<?= url('profile') ?>" class="btn-primary">
+              <i class="fas fa-user"></i>
+              حسابي
+            </a>
+        </div>
+    </div>
   </nav>
 
-
-
     <div class="container mx-auto p-6 max-w-4xl">
-        <!-- Improved message styling for better readability -->
         <?php if (!empty($_SESSION['success'])): ?>
             <div class="message success">
                 <i class="fas fa-check-circle"></i>
@@ -822,7 +968,6 @@ foreach ($all_answers as $answer) {
             </div>
         <?php endif; ?>
 
-        <!-- Enhanced questions list with better spacing and typography -->
         <div class="space-y-6">
             <?php if (empty($questions)): ?>
                 <div class="card empty-state">
@@ -886,14 +1031,11 @@ foreach ($all_answers as $answer) {
                         </div>
                     </div>
 
-                    <!-- Enhanced question content with better form styling -->
                     <div class="question-content p-6 hidden" id="content-<?= $question['id'] ?>">
-                        <!-- Answer Form -->
                         <div class="answer-form">
                             <?php if ($question['question_type'] === 'mcq'): ?>
-                                <!-- MCQ Answer Form -->
                                 <?php if (isset($student_mcq_answers[$question['id']])): ?>
-                                    <!-- Already answered MCQ -->
+                                     Already answered MCQ 
                                     <div class="bg-green-50 border border-green-200 rounded-lg p-4">
                                         <h4 class="section-title text-green-800">
                                             <i class="fas fa-check-circle"></i>
@@ -919,7 +1061,6 @@ foreach ($all_answers as $answer) {
                                         </p>
                                     </div>
                                 <?php else: ?>
-                                    <!-- MCQ Options -->
                                     <h4 class="section-title">
                                         <i class="fas fa-list-ul"></i>
                                         اختر الإجابة الصحيحة
@@ -948,7 +1089,6 @@ foreach ($all_answers as $answer) {
                                     </form>
                                 <?php endif; ?>
                             <?php else: ?>
-                                <!-- Text Answer Form -->
                                 <h4 class="section-title">
                                     <i class="fas fa-plus-circle"></i>
                                     إضافة إجابة جديدة
@@ -968,7 +1108,6 @@ foreach ($all_answers as $answer) {
                             <?php endif; ?>
                         </div>
 
-                        <!-- My Answers -->
                         <?php if (isset($my_answers_by_question[$question['id']])): ?>
                             <div class="mt-8">
                                 <h4 class="section-title">
@@ -1007,7 +1146,6 @@ foreach ($all_answers as $answer) {
                                             </div>
                                             <p class="text-gray-700 leading-relaxed text-pretty" id="answer-text-<?= $answer['id'] ?>"><?= htmlspecialchars($answer['answer_text']) ?></p>
                                             
-                                            <!-- Edit Form -->
                                             <div id="edit-form-<?= $answer['id'] ?>" class="hidden mt-4 p-4 bg-gray-50 rounded-xl border">
                                                 <form method="post" action="<?= url('questions') ?>">
                                                     <input type="hidden" name="answer_id" value="<?= $answer['id'] ?>">
@@ -1031,7 +1169,6 @@ foreach ($all_answers as $answer) {
                             </div>
                         <?php endif; ?>
 
-                        <!-- Public Answers -->
                         <?php if ($question['is_public'] && isset($answers_by_question[$question['id']])): ?>
                             <div class="mt-8">
                                 <h4 class="section-title">
@@ -1069,7 +1206,6 @@ foreach ($all_answers as $answer) {
         </div>
     </div>
 
-    <!-- MCQ Confirmation Modal -->
     <div id="mcq-confirmation-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
         <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
             <div class="text-center">
@@ -1093,6 +1229,33 @@ foreach ($all_answers as $answer) {
     </div>
 
     <script>
+        function toggleMobileMenu() {
+            const mobileMenu = document.getElementById('mobile-nav-menu');
+            const menuIcon = document.getElementById('mobile-menu-icon');
+            
+            if (mobileMenu.classList.contains('active')) {
+                mobileMenu.classList.remove('active');
+                menuIcon.classList.remove('fa-times');
+                menuIcon.classList.add('fa-bars');
+            } else {
+                mobileMenu.classList.add('active');
+                menuIcon.classList.remove('fa-bars');
+                menuIcon.classList.add('fa-times');
+            }
+        }
+
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function(e) {
+            const mobileMenu = document.getElementById('mobile-nav-menu');
+            const menuBtn = document.querySelector('.mobile-menu-btn');
+            
+            if (!mobileMenu.contains(e.target) && !menuBtn.contains(e.target)) {
+                mobileMenu.classList.remove('active');
+                document.getElementById('mobile-menu-icon').classList.remove('fa-times');
+                document.getElementById('mobile-menu-icon').classList.add('fa-bars');
+            }
+        });
+
         function toggleQuestion(questionId) {
             const questionCard = document.querySelector(`[onclick="toggleQuestion(${questionId})"]`);
             const content = document.getElementById('content-' + questionId);

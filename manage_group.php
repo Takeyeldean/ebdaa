@@ -40,12 +40,299 @@ $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
       100% { background-position: 0% 50%; }
     }
 
-    .nav-glass {
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(20px);
-      border-radius: 0 0 25px 25px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-    }
+        .nav-glass {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 0 0 25px 25px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 10000;
+        }
+
+        /* Mobile hamburger menu */
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #1e40af;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 10001;
+        }
+
+        .mobile-menu-btn:hover {
+            background: rgba(30, 64, 175, 0.1);
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.2);
+        }
+
+        .mobile-menu-btn:active {
+            transform: scale(0.95);
+        }
+
+        .mobile-nav-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            border-radius: 0 0 25px 25px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+            padding: 20px;
+            z-index: 9999;
+        }
+
+        .mobile-nav-menu.active {
+            display: block;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .mobile-nav-menu.active .mobile-nav-links .btn-primary {
+            animation: fadeInUp 0.4s ease-out;
+            animation-fill-mode: both;
+        }
+
+        .mobile-nav-menu.active .mobile-nav-links .btn-primary:nth-child(1) { animation-delay: 0.1s; }
+        .mobile-nav-menu.active .mobile-nav-links .btn-primary:nth-child(2) { animation-delay: 0.2s; }
+        .mobile-nav-menu.active .mobile-nav-links .btn-primary:nth-child(3) { animation-delay: 0.3s; }
+        .mobile-nav-menu.active .mobile-nav-links .btn-primary:nth-child(4) { animation-delay: 0.4s; }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .mobile-nav-links {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .mobile-nav-links .btn-primary {
+            justify-content: center;
+            width: 100%;
+            padding: 16px 24px;
+            font-size: 1rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mobile-nav-links .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .mobile-nav-links .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(30, 64, 175, 0.3);
+            background: linear-gradient(45deg, #1e3a8a, #2563eb);
+        }
+
+        .mobile-nav-links .btn-primary:hover::before {
+            left: 100%;
+        }
+
+        .mobile-nav-links .btn-primary:active {
+            transform: translateY(0);
+            box-shadow: 0 4px 15px rgba(30, 64, 175, 0.2);
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .desktop-nav {
+                display: none;
+            }
+            
+            .mobile-menu-btn {
+                display: block;
+            }
+            
+            .container {
+                padding: 8px;
+            }
+            
+            .nav-glass {
+                padding: 12px 16px;
+            }
+
+            /* Make text smaller on mobile */
+            .text-4xl {
+                font-size: 1.5rem; /* 24px instead of 36px */
+            }
+
+            .text-3xl {
+                font-size: 1.25rem; /* 20px instead of 30px */
+            }
+
+            .text-2xl {
+                font-size: 1.125rem; /* 18px instead of 24px */
+            }
+
+            .text-xl {
+                font-size: 1rem; /* 16px instead of 20px */
+            }
+
+            /* Card adjustments */
+            .card {
+                padding: 12px;
+                margin-bottom: 12px;
+            }
+
+            /* Form elements */
+            .form-group {
+                margin-bottom: 12px;
+            }
+
+            .form-group label {
+                font-size: 0.875rem;
+                margin-bottom: 4px;
+            }
+
+            .form-group input,
+            .form-group textarea,
+            .form-group select {
+                padding: 10px 12px;
+                font-size: 0.875rem;
+            }
+
+            /* Buttons */
+            .btn-primary {
+                padding: 10px 16px;
+                font-size: 0.875rem;
+                margin-bottom: 8px;
+            }
+
+            /* Student cards */
+            .student-card {
+                padding: 12px;
+                margin-bottom: 12px;
+            }
+
+            /* Message form */
+            .message-form {
+                padding: 12px;
+            }
+
+            /* Emoji selector */
+            .emoji-selector {
+                padding: 8px;
+                gap: 4px;
+            }
+
+            .emoji-btn {
+                padding: 6px;
+                font-size: 1.25rem;
+            }
+
+            /* Reduce margins and padding globally */
+            .mb-8 { margin-bottom: 16px; }
+            .mb-6 { margin-bottom: 12px; }
+            .mb-4 { margin-bottom: 8px; }
+            .mb-3 { margin-bottom: 6px; }
+            .mb-2 { margin-bottom: 4px; }
+            .mb-1 { margin-bottom: 2px; }
+
+            .p-6 { padding: 12px; }
+            .p-4 { padding: 8px; }
+            .p-3 { padding: 6px; }
+            .p-2 { padding: 4px; }
+
+            /* Table responsive */
+            .table-responsive {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            /* Modal improvements */
+            .modal-content {
+                margin: 10px;
+                padding: 16px;
+                max-height: 90vh;
+                overflow-y: auto;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 4px;
+            }
+            
+            .nav-glass {
+                padding: 8px 12px;
+            }
+
+            .text-4xl {
+                font-size: 1.25rem; /* 20px */
+            }
+
+            .card {
+                padding: 8px;
+            }
+
+            .student-card {
+                padding: 8px;
+            }
+
+            .message-form {
+                padding: 8px;
+            }
+
+            .btn-primary {
+                padding: 8px 12px;
+                font-size: 0.8rem;
+            }
+
+            .emoji-selector {
+                padding: 6px;
+                gap: 2px;
+            }
+
+            .emoji-btn {
+                padding: 4px;
+                font-size: 1rem;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .mobile-menu-btn {
+                display: none;
+            }
+            
+            .mobile-nav-menu {
+                display: none !important;
+            }
+        }
 
 
     .btn-primary {
@@ -175,13 +462,18 @@ $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <body>
 
   <!-- Navbar -->
-    <nav class="nav-glass px-6 py-4 flex justify-between items-center">
+    <nav class="nav-glass px-6 py-4 flex justify-between items-center relative">
     
     <span class="text-4xl font-bold" style="background: linear-gradient(45deg, #1e40af, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
       ⚡ إبداع
     </span>
 
-    <div class="space-x-2 space-x-reverse">
+    <!-- Mobile menu button -->
+    <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+      <i class="fas fa-bars"></i>
+    </button>
+
+    <div class="space-x-2 space-x-reverse desktop-nav">
       <a href="<?= url('admin') ?>" class="btn-primary active">
         <i class="fas fa-users"></i>
         المجموعات
@@ -213,6 +505,43 @@ $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <i class="fas fa-user"></i>
         حسابي
       </a>
+    </div>
+
+    <!-- Mobile Navigation Menu -->
+    <div class="mobile-nav-menu" id="mobileNavMenu">
+        <div class="mobile-nav-links">
+            <a href="<?= url('admin') ?>" class="btn-primary active">
+                <i class="fas fa-users"></i>
+                المجموعات
+            </a>
+            <a href="<?= url('admin.questions') ?>" class="btn-primary">
+                <i class="fas fa-question-circle"></i>
+                الأسئلة
+            </a>
+            <a href="<?= url('admin.invitations') ?>" class="btn-primary relative">
+                <i class="fas fa-envelope"></i>
+                الدعوات
+                <?php
+                // Get pending invitations count
+                $admin_username = $_SESSION['user']['username'] ?? '';
+                if (!empty($admin_username)) {
+                    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM admin_invitations WHERE invited_username = ? AND status = 'pending'");
+                    $stmt->execute([$admin_username]);
+                    $invitation_count = $stmt->fetch()['count'];
+                } else {
+                    $invitation_count = 0;
+                }
+                if ($invitation_count > 0): ?>
+                    <span class="absolute -top-2 -right-2 bg-orange-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center animate-pulse">
+                        <?= $invitation_count ?>
+                    </span>
+                <?php endif; ?>
+            </a>
+            <a href="<?= url('profile') ?>" class="btn-primary">
+                <i class="fas fa-user"></i>
+                حسابي
+            </a>
+        </div>
     </div>
   </nav>
 
@@ -486,7 +815,7 @@ $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
     </div>
 
     <!-- Leave Group Confirmation Modal -->
-    <div id="leaveGroupModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center" onclick="closeLeaveGroupModal()">
+    <div id="leaveGroupModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center" onclick="closeLeaveGroupModal()" style="z-index: 9999;">
       <div class="bg-white rounded-2xl p-8 max-w-lg w-full mx-4" onclick="event.stopPropagation()">
         <div class="text-center">
           <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-4">
@@ -615,8 +944,12 @@ function clearAll() {
 }
 
 function confirmLeaveGroup() {
+    console.log('confirmLeaveGroup function called');
     const groupName = "<?= htmlspecialchars($group_name) ?>";
     const otherAdminsCount = <?= $other_admins_count ?>;
+    
+    console.log('Group name:', groupName);
+    console.log('Other admins count:', otherAdminsCount);
     
     let message = `هل أنت متأكد من مغادرة المجموعة "${groupName}"؟`;
     
@@ -642,15 +975,20 @@ function closeLeaveGroupModal() {
 }
 
 function submitLeaveGroup() {
+    console.log('submitLeaveGroup function called');
     // Create a form to submit the leave request
     const form = document.createElement('form');
     form.method = 'POST';
-    form.action = 'leave_group.php';
+    form.action = '<?= url('admin.group.leave', ['id' => $group_id]) ?>';
+    
+    console.log('Form action:', form.action);
     
     const groupIdInput = document.createElement('input');
     groupIdInput.type = 'hidden';
     groupIdInput.name = 'group_id';
     groupIdInput.value = '<?= $group_id ?>';
+    
+    console.log('Group ID:', groupIdInput.value);
     
     form.appendChild(groupIdInput);
     document.body.appendChild(form);
@@ -745,6 +1083,22 @@ document.addEventListener('DOMContentLoaded', function() {
             selectedEmojiInput.value = selectedEmoji;
         });
     });
+});
+
+// Mobile navigation functions
+function toggleMobileMenu() {
+    const mobileMenu = document.getElementById('mobileNavMenu');
+    mobileMenu.classList.toggle('active');
+}
+
+// Close mobile menu when clicking outside
+document.addEventListener('click', function(event) {
+    const mobileMenu = document.getElementById('mobileNavMenu');
+    const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+    
+    if (!mobileMenu.contains(event.target) && !mobileMenuBtn.contains(event.target)) {
+        mobileMenu.classList.remove('active');
+    }
 });
 </script>
 

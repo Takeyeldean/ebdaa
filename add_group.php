@@ -68,6 +68,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
       backdrop-filter: blur(20px);
       border-radius: 0 0 25px 25px;
       box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 10000;
     }
 
 

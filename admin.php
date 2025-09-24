@@ -92,12 +92,252 @@ $groups = $stmt->fetchAll();
       100% { transform: scale(1); opacity: 1; }
     }
 
-    .nav-glass {
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(20px);
-      border-radius: 0 0 25px 25px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-    }
+        .nav-glass {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 0 0 25px 25px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 10000;
+        }
+
+        /* Mobile hamburger menu */
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #1e40af;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 10001;
+        }
+
+        .mobile-menu-btn:hover {
+            background: rgba(30, 64, 175, 0.1);
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.2);
+        }
+
+        .mobile-menu-btn:active {
+            transform: scale(0.95);
+        }
+
+        .mobile-nav-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            border-radius: 0 0 25px 25px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+            padding: 20px;
+            z-index: 9999;
+        }
+
+        .mobile-nav-menu.active {
+            display: block;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .mobile-nav-menu.active .mobile-nav-links .btn-primary {
+            animation: fadeInUp 0.4s ease-out;
+            animation-fill-mode: both;
+        }
+
+        .mobile-nav-menu.active .mobile-nav-links .btn-primary:nth-child(1) { animation-delay: 0.1s; }
+        .mobile-nav-menu.active .mobile-nav-links .btn-primary:nth-child(2) { animation-delay: 0.2s; }
+        .mobile-nav-menu.active .mobile-nav-links .btn-primary:nth-child(3) { animation-delay: 0.3s; }
+        .mobile-nav-menu.active .mobile-nav-links .btn-primary:nth-child(4) { animation-delay: 0.4s; }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .mobile-nav-links {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .mobile-nav-links .btn-primary {
+            justify-content: center;
+            width: 100%;
+            padding: 16px 24px;
+            font-size: 1rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mobile-nav-links .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .mobile-nav-links .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(30, 64, 175, 0.3);
+            background: linear-gradient(45deg, #1e3a8a, #2563eb);
+        }
+
+        .mobile-nav-links .btn-primary:hover::before {
+            left: 100%;
+        }
+
+        .mobile-nav-links .btn-primary:active {
+            transform: translateY(0);
+            box-shadow: 0 4px 15px rgba(30, 64, 175, 0.2);
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .desktop-nav {
+                display: none;
+            }
+            
+            .mobile-menu-btn {
+                display: block;
+            }
+            
+            .container {
+                padding: 8px;
+            }
+            
+            .nav-glass {
+                padding: 12px 16px;
+            }
+
+            /* Make text smaller on mobile */
+            .text-4xl {
+                font-size: 1.5rem; /* 24px instead of 36px */
+            }
+
+            .text-3xl {
+                font-size: 1.25rem; /* 20px instead of 30px */
+            }
+
+            .text-2xl {
+                font-size: 1.125rem; /* 18px instead of 24px */
+            }
+
+            .text-xl {
+                font-size: 1rem; /* 16px instead of 20px */
+            }
+
+            /* Card adjustments */
+            .card {
+                padding: 12px;
+                margin-bottom: 12px;
+            }
+
+            .welcome-card {
+                padding: 16px;
+                margin-bottom: 16px;
+            }
+
+            /* Group cards */
+            .group-card {
+                padding: 12px;
+                margin-bottom: 12px;
+            }
+
+            /* Buttons */
+            .btn-primary {
+                padding: 10px 16px;
+                font-size: 0.875rem;
+                margin-bottom: 8px;
+            }
+
+            /* Reduce margins and padding globally */
+            .mb-8 { margin-bottom: 16px; }
+            .mb-6 { margin-bottom: 12px; }
+            .mb-4 { margin-bottom: 8px; }
+            .mb-3 { margin-bottom: 6px; }
+            .mb-2 { margin-bottom: 4px; }
+            .mb-1 { margin-bottom: 2px; }
+
+            .p-6 { padding: 12px; }
+            .p-4 { padding: 8px; }
+            .p-3 { padding: 6px; }
+            .p-2 { padding: 4px; }
+
+            /* Grid adjustments */
+            .groups-grid {
+                gap: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 4px;
+            }
+            
+            .nav-glass {
+                padding: 8px 12px;
+            }
+
+            .text-4xl {
+                font-size: 1.25rem; /* 20px */
+            }
+
+            .card {
+                padding: 8px;
+            }
+
+            .welcome-card {
+                padding: 12px;
+            }
+
+            .group-card {
+                padding: 8px;
+            }
+
+            .btn-primary {
+                padding: 8px 12px;
+                font-size: 0.8rem;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .mobile-menu-btn {
+                display: none;
+            }
+            
+            .mobile-nav-menu {
+                display: none !important;
+            }
+        }
 
     .welcome-card {
       background: rgba(255, 255, 255, 0.9);
@@ -285,28 +525,19 @@ $groups = $stmt->fetchAll();
 </head>
 <body>
 
-  <!-- Decorative elements for boys -->
-  <div class="decoration decoration-1">
-    <span class="decoration-icon">⚡</span>
-  </div>
-  <div class="decoration decoration-2">
-    <span class="decoration-icon">🔥</span>
-  </div>
-  <div class="decoration decoration-3">
-    <span class="decoration-icon">⚽</span>
-  </div>
-  <div class="decoration decoration-4">
-    <span class="decoration-icon">🎮</span>
-  </div>
-
   <!-- Navbar -->
-  <nav class="nav-glass px-6 py-4 flex justify-between items-center">
+  <nav class="nav-glass px-6 py-4 flex justify-between items-center relative">
     
     <span class="text-4xl font-bold" style="background: linear-gradient(45deg, #1e40af, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
       ⚡ إبداع
     </span>
 
-    <div class="space-x-2 space-x-reverse">
+    <!-- Mobile menu button -->
+    <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+      <i class="fas fa-bars"></i>
+    </button>
+
+    <div class="space-x-2 space-x-reverse desktop-nav">
       <a href="<?= url('admin') ?>" class="btn-primary active">
         <i class="fas fa-users"></i>
         المجموعات
@@ -339,24 +570,46 @@ $groups = $stmt->fetchAll();
         حسابي
       </a>
     </div>
+
+    <!-- Mobile Navigation Menu -->
+    <div class="mobile-nav-menu" id="mobileNavMenu">
+        <div class="mobile-nav-links">
+            <a href="<?= url('admin') ?>" class="btn-primary active">
+                <i class="fas fa-users"></i>
+                المجموعات
+            </a>
+            <a href="<?= url('admin.questions') ?>" class="btn-primary">
+                <i class="fas fa-question-circle"></i>
+                الأسئلة
+            </a>
+            <a href="<?= url('admin.invitations') ?>" class="btn-primary relative">
+                <i class="fas fa-envelope"></i>
+                الدعوات
+                <?php
+                // Get pending invitations count
+                $admin_username = $_SESSION['user']['username'] ?? '';
+                if (!empty($admin_username)) {
+                    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM admin_invitations WHERE invited_username = ? AND status = 'pending'");
+                    $stmt->execute([$admin_username]);
+                    $invitation_count = $stmt->fetch()['count'];
+                } else {
+                    $invitation_count = 0;
+                }
+                if ($invitation_count > 0): ?>
+                    <span class="absolute -top-2 -right-2 bg-orange-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center animate-pulse">
+                        <?= $invitation_count ?>
+                    </span>
+                <?php endif; ?>
+            </a>
+            <a href="<?= url('profile') ?>" class="btn-primary">
+                <i class="fas fa-user"></i>
+                حسابي
+            </a>
+        </div>
+    </div>
   </nav>
 
   <div class="container mx-auto mt-8 px-4 relative z-10">
-
-    <!-- Welcome Card -->
-    <div class="welcome-card text-center p-8 mb-8 bounce-in">
-      <h1 class="text-5xl font-bold mb-4" style="background: linear-gradient(45deg, #1e40af, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
-        أهلاً وسهلاً يا <span class="text-6xl"><?php echo htmlspecialchars($_SESSION['user']['name']); ?></span>! ⚡
-      </h1>
-      <p class="text-xl text-gray-600 mb-4">دعنا ندير مجموعاتك بطريقة ممتعة! 🚀</p>
-      <div class="flex justify-center space-x-4 space-x-reverse">
-        <span class="text-2xl">👨‍🏫</span>
-        <span class="text-2xl">⚡</span>
-        <span class="text-2xl">🎯</span>
-        <span class="text-2xl">🏆</span>
-        <span class="text-2xl">🔥</span>
-      </div>
-    </div>
 
     <!-- Search Box -->
     <form method="get" class="mb-8">
@@ -411,7 +664,6 @@ $groups = $stmt->fetchAll();
         <div class="add-card floating">
             <div class="text-center">
                 <div class="text-6xl mb-4">⚡</div>
-                <h3 class="text-xl font-bold text-gray-700 mb-4">إضافة مجموعة جديدة</h3>
                 <a href="<?= url('admin.add-group') ?>" class="btn-primary">
                     <i class="fas fa-plus"></i>
                     إضافة مجموعة
@@ -436,6 +688,23 @@ $groups = $stmt->fetchAll();
 
 
   </div>
+
+<script>
+function toggleMobileMenu() {
+    const mobileMenu = document.getElementById('mobileNavMenu');
+    mobileMenu.classList.toggle('active');
+}
+
+// Close mobile menu when clicking outside
+document.addEventListener('click', function(event) {
+    const mobileMenu = document.getElementById('mobileNavMenu');
+    const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+    
+    if (!mobileMenu.contains(event.target) && !mobileMenuBtn.contains(event.target)) {
+        mobileMenu.classList.remove('active');
+    }
+});
+</script>
 
 </body>
 </html>

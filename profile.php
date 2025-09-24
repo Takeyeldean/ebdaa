@@ -83,6 +83,127 @@ $user = $stmt->fetch();
             backdrop-filter: blur(20px);
             border-radius: 0 0 25px 25px;
             box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 10000;
+        }
+
+        /* Mobile hamburger menu */
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #1e40af;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 10001;
+        }
+
+        .mobile-menu-btn:hover {
+            background: rgba(30, 64, 175, 0.1);
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.2);
+        }
+
+        .mobile-menu-btn:active {
+            transform: scale(0.95);
+        }
+
+        .mobile-nav-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            border-radius: 0 0 25px 25px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+            padding: 20px;
+            z-index: 9999;
+        }
+
+        .mobile-nav-menu.active {
+            display: block;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .mobile-nav-menu.active .mobile-nav-links .btn-primary {
+            animation: fadeInUp 0.4s ease-out;
+            animation-fill-mode: both;
+        }
+
+        .mobile-nav-menu.active .mobile-nav-links .btn-primary:nth-child(1) { animation-delay: 0.1s; }
+        .mobile-nav-menu.active .mobile-nav-links .btn-primary:nth-child(2) { animation-delay: 0.2s; }
+        .mobile-nav-menu.active .mobile-nav-links .btn-primary:nth-child(3) { animation-delay: 0.3s; }
+        .mobile-nav-menu.active .mobile-nav-links .btn-primary:nth-child(4) { animation-delay: 0.4s; }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .mobile-nav-links {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .mobile-nav-links .btn-primary {
+            justify-content: center;
+            width: 100%;
+            padding: 16px 24px;
+            font-size: 1rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mobile-nav-links .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .mobile-nav-links .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(30, 64, 175, 0.3);
+            background: linear-gradient(45deg, #1e3a8a, #2563eb);
+        }
+
+        .mobile-nav-links .btn-primary:hover::before {
+            left: 100%;
+        }
+
+        .mobile-nav-links .btn-primary:active {
+            transform: translateY(0);
+            box-shadow: 0 4px 15px rgba(30, 64, 175, 0.2);
         }
 
 
@@ -284,13 +405,18 @@ $user = $stmt->fetch();
     <span class="decoration-icon">🎮</span>
   </div>
 
-  <nav class="nav-glass px-6 py-4 flex justify-between items-center">
+  <nav class="nav-glass px-6 py-4 flex justify-between items-center relative">
 
     <span class="text-4xl font-bold" style="background: linear-gradient(45deg, #1e40af, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
       ⚡ إبداع
     </span>
 
-    <div class="space-x-2 space-x-reverse">
+    <!-- Mobile menu button -->
+    <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+      <i class="fas fa-bars"></i>
+    </button>
+
+    <div class="space-x-2 space-x-reverse desktop-nav">
 
         <?php if ($role === 'student'): ?>
             <a href="<?= url('dashboard') ?>" class="btn-primary">
@@ -352,6 +478,55 @@ $user = $stmt->fetch();
         <?php endif; ?>
 
      
+    </div>
+
+    <!-- Mobile Navigation Menu -->
+    <div class="mobile-nav-menu" id="mobileNavMenu">
+        <div class="mobile-nav-links">
+            <?php if ($role === 'student'): ?>
+                <a href="<?= url('dashboard') ?>" class="btn-primary">
+                    <i class="fas fa-chart-bar"></i>
+                    الترتيب
+                </a>
+                <a href="<?= url('questions') ?>" class="btn-primary relative">
+                    <i class="fas fa-question-circle"></i>
+                    الأسئلة
+                    <?php if ($notification_count > 0): ?>
+                        <span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center animate-pulse">
+                            <?= $notification_count ?>
+                        </span>
+                    <?php endif; ?>
+                </a>
+                <a href="<?= url('profile') ?>" class="btn-primary active">
+                    <i class="fas fa-user"></i>
+                    حسابي
+                </a>
+            <?php endif; ?>
+
+            <?php if ($role === 'admin'): ?>
+                <a href="<?= url('admin') ?>" class="btn-primary">
+                    <i class="fas fa-users"></i>
+                    المجموعات
+                </a>
+                <a href="<?= url('admin.questions') ?>" class="btn-primary">
+                    <i class="fas fa-question-circle"></i>
+                    الأسئلة
+                </a>
+                <a href="<?= url('admin.invitations') ?>" class="btn-primary relative">
+                    <i class="fas fa-envelope"></i>
+                    الدعوات
+                    <?php if ($invitation_count > 0): ?>
+                        <span class="absolute -top-2 -right-2 bg-orange-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center animate-pulse">
+                            <?= $invitation_count ?>
+                        </span>
+                    <?php endif; ?>
+                </a>
+                <a href="<?= url('profile') ?>" class="btn-primary active">
+                    <i class="fas fa-user"></i>
+                    حسابي
+                </a>
+            <?php endif; ?>
+        </div>
     </div>
   </nav>
 
@@ -477,6 +652,144 @@ $user = $stmt->fetch();
 
 </div>
 
+<script>
+function toggleMobileMenu() {
+    const mobileMenu = document.getElementById('mobileNavMenu');
+    mobileMenu.classList.toggle('active');
+}
+
+// Close mobile menu when clicking outside
+document.addEventListener('click', function(event) {
+    const mobileMenu = document.getElementById('mobileNavMenu');
+    const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+    
+    if (!mobileMenu.contains(event.target) && !mobileMenuBtn.contains(event.target)) {
+        mobileMenu.classList.remove('active');
+    }
+});
+</script>
+
+<style>
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .desktop-nav {
+                display: none;
+            }
+            
+            .mobile-menu-btn {
+                display: block;
+            }
+            
+            .container {
+                padding: 8px;
+            }
+            
+            .nav-glass {
+                padding: 12px 16px;
+            }
+            
+            .profile-container {
+                width: 120px;
+                height: 120px;
+            }
+            
+            .card {
+                padding: 12px;
+                margin-bottom: 12px;
+            }
+
+            /* Make text smaller on mobile */
+            .text-4xl {
+                font-size: 1.5rem; /* 24px instead of 36px */
+            }
+
+            .text-3xl {
+                font-size: 1.25rem; /* 20px instead of 30px */
+            }
+
+            .text-2xl {
+                font-size: 1.125rem; /* 18px instead of 24px */
+            }
+
+            .text-xl {
+                font-size: 1rem; /* 16px instead of 20px */
+            }
+
+            /* Form elements */
+            .form-group {
+                margin-bottom: 12px;
+            }
+
+            .form-group label {
+                font-size: 0.875rem;
+                margin-bottom: 4px;
+            }
+
+            .form-group input,
+            .form-group textarea {
+                padding: 10px 12px;
+                font-size: 0.875rem;
+            }
+
+            /* Buttons */
+            .btn-primary {
+                padding: 10px 16px;
+                font-size: 0.875rem;
+                margin-bottom: 8px;
+            }
+
+            /* Reduce margins and padding globally */
+            .mb-8 { margin-bottom: 16px; }
+            .mb-6 { margin-bottom: 12px; }
+            .mb-4 { margin-bottom: 8px; }
+            .mb-3 { margin-bottom: 6px; }
+            .mb-2 { margin-bottom: 4px; }
+            .mb-1 { margin-bottom: 2px; }
+
+            .p-6 { padding: 12px; }
+            .p-4 { padding: 8px; }
+            .p-3 { padding: 6px; }
+            .p-2 { padding: 4px; }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 4px;
+            }
+            
+            .nav-glass {
+                padding: 8px 12px;
+            }
+
+            .profile-container {
+                width: 100px;
+                height: 100px;
+            }
+
+            .card {
+                padding: 8px;
+            }
+
+            .text-4xl {
+                font-size: 1.25rem; /* 20px */
+            }
+
+            .btn-primary {
+                padding: 8px 12px;
+                font-size: 0.8rem;
+            }
+        }
+
+@media (min-width: 769px) {
+    .mobile-menu-btn {
+        display: none;
+    }
+    
+    .mobile-nav-menu {
+        display: none !important;
+    }
+}
+</style>
 
 </body>
 </html>
