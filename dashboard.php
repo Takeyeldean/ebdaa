@@ -562,7 +562,7 @@ foreach ($students as $student) {
                 </span>
               <?php endif; ?>
             </a>
-            <a href="profile" class="btn-primary">
+            <a href="<?= url('profile') ?>" class="btn-primary">
               <i class="fas fa-user"></i>
               حسابي
             </a>
@@ -597,12 +597,12 @@ foreach ($students as $student) {
        </div>
     <?php endif; ?> 
 
-    <!-- Chart Container -->
+    <!-- Chart Container -->  
     <div class="mt-12 flex justify-center relative">
       <!-- Character behind chart -->
       <div class="character-behind absolute left-8 top-0 z-0">
         <div class="character-bubble bg-white bg-opacity-90 rounded-2xl p-4 shadow-lg mb-4 max-w-xs">
-          <p class="text-sm font-bold text-blue-600 text-center mb-1">عمو <?= htmlspecialchars($group_emoji) ?></p>
+          <p class="text-sm font-bold text-blue-600 text-center mb-1">المعلم <?= htmlspecialchars($group_emoji) ?></p>
           <?php if (!empty($group_message)): ?>
             <p class="text-sm text-gray-800 text-center"><?= htmlspecialchars($group_message) ?></p>
           <?php else: ?>

@@ -2,10 +2,11 @@
 session_start(); 
 error_reporting(E_ALL);
 require_once 'includes/db.php';
+require_once 'includes/url_helper.php';
 
 // ✅ لو المستخدم مش مسجل دخول
 if (!isset($_SESSION['user'])) {
-    header("Location: index.php");
+    header("Location: " . url('login'));
     exit();
 }
 
@@ -111,6 +112,6 @@ if ($error) {
 } elseif ($success) {
     $_SESSION['success'] = $success;
 }
-header("Location: profile.php");
+header("Location: " . url('profile'));
 exit;
     

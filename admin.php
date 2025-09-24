@@ -390,7 +390,16 @@ $groups = $stmt->fetchAll();
                     <i class="fas fa-cogs"></i>
                     إدارة المجموعة
                 </a>
-                <a href="<?= url('dashboard.group', ['id' => $group['id']]) ?>" class="btn-info">
+                <?php 
+                $dashboard_url = '';
+                try {
+                    $dashboard_url = url('dashboard.group', ['id' => $group['id']]);
+                } catch (Exception $e) {
+                    error_log("Error generating dashboard URL: " . $e->getMessage());
+                    $dashboard_url = '#';
+                }
+                ?>
+                <a href="<?= $dashboard_url ?>" class="btn-info">
                     <i class="fas fa-chart-bar"></i>
                     عرض الدرجات
                 </a>

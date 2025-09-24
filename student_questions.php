@@ -14,6 +14,7 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'student') {
 }
 
 $student_id = $_SESSION['user']['id'];
+error_log("Current student ID: " . $student_id);
 
 // Mark all notifications as read when student visits questions page
 $stmt = $conn->prepare("UPDATE notifications SET is_read = 1 WHERE student_id = ?");
@@ -34,16 +35,84 @@ if (!$group_id) {
 // Handle answer submission
 error_log("Request method: " . $_SERVER['REQUEST_METHOD'] . ", POST data: " . print_r($_POST, true));
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_answer'])) {
-    error_log("Form submitted - question_id: " . ($_POST['question_id'] ?? 'not set') . ", answer_text: " . ($_POST['answer_text'] ?? 'not set'));
+    error_log("Form submitted - question_id: " . ($_POST['question_id'] ?? 'not set') . ", answer_text: " . ($_POST['answer_text'] ?? 'not set') . ", selected_option_id: " . ($_POST['selected_option_id'] ?? 'not set') . ", submit_answer: " . ($_POST['submit_answer'] ?? 'not set'));
     $question_id = intval($_POST['question_id']);
-    $answer_text = trim($_POST['answer_text']);
+    $answer_text = trim($_POST['answer_text'] ?? '');
+    $selected_option_id = intval($_POST['selected_option_id'] ?? 0);
     
-    if ($question_id > 0 && !empty($answer_text)) {
+    if ($question_id > 0) {
         try {
-            // Always insert new answer (students can have multiple answers per question)
-            $stmt = $conn->prepare("INSERT INTO answers (question_id, student_id, answer_text) VALUES (?, ?, ?)");
-            $stmt->execute([$question_id, $student_id, $answer_text]);
-            $_SESSION['success'] = "تم إرسال إجابتك بنجاح!";
+            // Get question type
+            $stmt = $conn->prepare("SELECT question_type, points FROM questions WHERE id = ?");
+            $stmt->execute([$question_id]);
+            $question = $stmt->fetch();
+            
+            if (!$question) {
+                $_SESSION['error'] = "السؤال غير موجود";
+                header("Location: " . url('questions'));
+                exit();
+            }
+            
+            if ($question['question_type'] === 'mcq') {
+                // Handle MCQ answer
+                error_log("MCQ question detected - selected_option_id: " . $selected_option_id);
+                error_log("Question data: " . print_r($question, true));
+                if ($selected_option_id > 0) {
+                    // Check if student already answered this MCQ question
+                    $stmt = $conn->prepare("SELECT id FROM student_mcq_answers WHERE student_id = ? AND question_id = ?");
+                    $stmt->execute([$student_id, $question_id]);
+                    
+                    if ($stmt->fetch()) {
+                        $_SESSION['error'] = "لقد أجبت على هذا السؤال من قبل ولا يمكنك تغيير إجابتك";
+                    } else {
+                        // Get the selected option details
+                        $stmt = $conn->prepare("SELECT is_correct FROM question_options WHERE id = ? AND question_id = ?");
+                        $stmt->execute([$selected_option_id, $question_id]);
+                        $option = $stmt->fetch();
+                        
+                        if ($option) {
+                            $is_correct = $option['is_correct'];
+                            $points_earned = $is_correct ? $question['points'] : 0;
+                            
+                            // Insert MCQ answer
+                            error_log("Inserting MCQ answer - student_id: $student_id, question_id: $question_id, selected_option_id: $selected_option_id, is_correct: $is_correct, points_earned: $points_earned");
+                            $stmt = $conn->prepare("INSERT INTO student_mcq_answers (student_id, question_id, selected_option_id, is_correct, points_earned) VALUES (?, ?, ?, ?, ?)");
+                            $stmt->execute([$student_id, $question_id, $selected_option_id, $is_correct, $points_earned]);
+                            error_log("MCQ answer inserted successfully");
+                            
+                            // Verify the answer was inserted
+                            $stmt = $conn->prepare("SELECT * FROM student_mcq_answers WHERE student_id = ? AND question_id = ?");
+                            $stmt->execute([$student_id, $question_id]);
+                            $inserted_answer = $stmt->fetch();
+                            error_log("Verified inserted answer: " . print_r($inserted_answer, true));
+                            
+                            // Update student's total degree if answer is correct
+                            if ($is_correct && $points_earned > 0) {
+                                $stmt = $conn->prepare("UPDATE students SET degree = degree + ? WHERE id = ?");
+                                $stmt->execute([$points_earned, $student_id]);
+                            }
+                            
+                            $_SESSION['success'] = $is_correct ? 
+                                "🎉 إجابة صحيحة! لقد حصلت على {$points_earned} نقاط" : 
+                                "❌ إجابة خاطئة. حاول مرة أخرى في السؤال التالي";
+                        } else {
+                            $_SESSION['error'] = "الخيار المحدد غير صحيح";
+                        }
+                    }
+                } else {
+                    $_SESSION['error'] = "يرجى اختيار إجابة للسؤال";
+                }
+            } else {
+                // Handle text answer
+                if (!empty($answer_text)) {
+                    // Always insert new answer (students can have multiple answers per question)
+                    $stmt = $conn->prepare("INSERT INTO answers (question_id, student_id, answer_text) VALUES (?, ?, ?)");
+                    $stmt->execute([$question_id, $student_id, $answer_text]);
+                    $_SESSION['success'] = "تم إرسال إجابتك بنجاح!";
+                } else {
+                    $_SESSION['error'] = "يرجى كتابة إجابة للسؤال";
+                }
+            }
         } catch (PDOException $e) {
             $_SESSION['error'] = "حدث خطأ في إرسال الإجابة: " . $e->getMessage();
         }
@@ -52,7 +121,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_answer'])) {
         header("Location: " . url('questions'));
         exit();
     } else {
-        $_SESSION['error'] = "يرجى كتابة إجابة";
+        $_SESSION['error'] = "معرف السؤال غير صحيح";
     }
 }
 
@@ -125,6 +194,48 @@ $questions = $conn->prepare("
 ");
 $questions->execute([$group_id]);
 $questions = $questions->fetchAll();
+
+// Get MCQ options for all questions
+$mcq_options_by_question = [];
+if (!empty($questions)) {
+    $question_ids = array_column($questions, 'id');
+    $placeholders = str_repeat('?,', count($question_ids) - 1) . '?';
+    $stmt = $conn->prepare("
+        SELECT qo.*, qo.question_id
+        FROM question_options qo
+        WHERE qo.question_id IN ($placeholders)
+        ORDER BY qo.question_id, qo.option_order
+    ");
+    $stmt->execute($question_ids);
+    $mcq_options = $stmt->fetchAll();
+    
+    // Group options by question ID
+    foreach ($mcq_options as $option) {
+        $mcq_options_by_question[$option['question_id']][] = $option;
+    }
+}
+
+// Get student's MCQ answers to check if they already answered
+$student_mcq_answers = [];
+if (!empty($questions)) {
+    $question_ids = array_column($questions, 'id');
+    $placeholders = str_repeat('?,', count($question_ids) - 1) . '?';
+    $stmt = $conn->prepare("
+        SELECT question_id, selected_option_id, is_correct, points_earned
+        FROM student_mcq_answers
+        WHERE student_id = ? AND question_id IN ($placeholders)
+    ");
+    $stmt->execute(array_merge([$student_id], $question_ids));
+    $mcq_answers = $stmt->fetchAll();
+    
+    // Group answers by question ID
+    foreach ($mcq_answers as $answer) {
+        $student_mcq_answers[$answer['question_id']] = $answer;
+    }
+    
+    // Debug: Log MCQ answers count
+    error_log("Found " . count($mcq_answers) . " MCQ answers for student $student_id");
+}
 
 // Get read status for questions (try to create table if it doesn't exist)
 try {
@@ -723,8 +834,16 @@ foreach ($all_answers as $answer) {
                 <?php foreach ($questions as $question): ?>
                     <?php 
                     $is_read = in_array($question['id'], $read_questions);
-                    $is_answered = isset($my_answers_by_question[$question['id']]);
+                    // Check if answered (either text answer or MCQ answer)
+                    $has_text_answer = isset($my_answers_by_question[$question['id']]);
+                    $has_mcq_answer = isset($student_mcq_answers[$question['id']]);
+                    $is_answered = $has_text_answer || $has_mcq_answer;
                     $card_class = 'question-card';
+                    
+                    // Debug: Log answer status for MCQ questions only
+                    if ($question['question_type'] === 'mcq') {
+                        error_log("MCQ Question {$question['id']}: has_mcq_answer=$has_mcq_answer, is_answered=$is_answered");
+                    }
                     
                     if (!$is_read) {
                         $card_class .= ' unread';
@@ -737,6 +856,14 @@ foreach ($all_answers as $answer) {
                             <div class="flex-1">
                                 <h3 class="question-title text-balance">
                                     <?= htmlspecialchars($question['question_text']) ?>
+                                    <?php if ($question['question_type'] === 'mcq'): ?>
+                                        <div class="mt-2">
+                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                <i class="fas fa-list-ul mr-1"></i>
+                                                MCQ (<?= $question['points'] ?> نقاط)
+                                            </span>
+                                        </div>
+                                    <?php endif; ?>
                                 </h3>
                                 <div class="question-meta">
                                     <div class="meta-item">
@@ -763,22 +890,82 @@ foreach ($all_answers as $answer) {
                     <div class="question-content p-6 hidden" id="content-<?= $question['id'] ?>">
                         <!-- Answer Form -->
                         <div class="answer-form">
-                            <h4 class="section-title">
-                                <i class="fas fa-plus-circle"></i>
-                                إضافة إجابة جديدة
-                            </h4>
-                            <form method="post">
-                                <input type="hidden" name="question_id" value="<?= $question['id'] ?>">
-                                <textarea name="answer_text" rows="4" required 
-                                    class="form-textarea"
-                                    placeholder="اكتب إجابتك هنا..."></textarea>
-                                <div class="mt-4 text-right">
-                                    <button type="submit" name="submit_answer" class="btn-primary px-6 py-3">
-                                        <i class="fas fa-paper-plane"></i>
-                                        إرسال الإجابة
-                                    </button>
-                                </div>
-                            </form>
+                            <?php if ($question['question_type'] === 'mcq'): ?>
+                                <!-- MCQ Answer Form -->
+                                <?php if (isset($student_mcq_answers[$question['id']])): ?>
+                                    <!-- Already answered MCQ -->
+                                    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                                        <h4 class="section-title text-green-800">
+                                            <i class="fas fa-check-circle"></i>
+                                            لقد أجبت على هذا السؤال
+                                        </h4>
+                                        <p class="text-green-700">
+                                            <?php 
+                                            $answer = $student_mcq_answers[$question['id']];
+                                            $selected_option = null;
+                                            foreach ($mcq_options_by_question[$question['id']] as $option) {
+                                                if ($option['id'] == $answer['selected_option_id']) {
+                                                    $selected_option = $option;
+                                                    break;
+                                                }
+                                            }
+                                            ?>
+                                            إجابتك: <strong><?= htmlspecialchars($selected_option['option_text']) ?></strong>
+                                            <?php if ($answer['is_correct']): ?>
+                                                <span class="text-green-600">✅ (صحيحة - <?= $answer['points_earned'] ?> نقاط)</span>
+                                            <?php else: ?>
+                                                <span class="text-red-600">❌ (خاطئة)</span>
+                                            <?php endif; ?>
+                                        </p>
+                                    </div>
+                                <?php else: ?>
+                                    <!-- MCQ Options -->
+                                    <h4 class="section-title">
+                                        <i class="fas fa-list-ul"></i>
+                                        اختر الإجابة الصحيحة
+                                    </h4>
+                                    <form method="post" id="mcq-form-<?= $question['id'] ?>">
+                                        <input type="hidden" name="question_id" value="<?= $question['id'] ?>">
+                                        <input type="hidden" name="submit_answer" value="1">
+                                        <div class="space-y-3">
+                                            <?php if (isset($mcq_options_by_question[$question['id']])): ?>
+                                                <?php foreach ($mcq_options_by_question[$question['id']] as $option): ?>
+                                                    <label class="flex items-center space-x-3 space-x-reverse p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                                        <input type="radio" name="selected_option_id" value="<?= $option['id'] ?>" class="w-4 h-4 text-blue-600">
+                                                        <span class="flex-1 text-gray-700"><?= htmlspecialchars($option['option_text']) ?></span>
+                                                    </label>
+                                                <?php endforeach; ?>
+                                            <?php else: ?>
+                                                <p class="text-gray-500">لا توجد خيارات متاحة لهذا السؤال</p>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="mt-4 text-right">
+                                            <button type="button" onclick="confirmMcqAnswer(<?= $question['id'] ?>)" class="btn-primary px-6 py-3">
+                                                <i class="fas fa-paper-plane"></i>
+                                                إرسال الإجابة
+                                            </button>
+                                        </div>
+                                    </form>
+                                <?php endif; ?>
+                            <?php else: ?>
+                                <!-- Text Answer Form -->
+                                <h4 class="section-title">
+                                    <i class="fas fa-plus-circle"></i>
+                                    إضافة إجابة جديدة
+                                </h4>
+                                <form method="post">
+                                    <input type="hidden" name="question_id" value="<?= $question['id'] ?>">
+                                    <textarea name="answer_text" rows="4" required 
+                                        class="form-textarea"
+                                        placeholder="اكتب إجابتك هنا..."></textarea>
+                                    <div class="mt-4 text-right">
+                                        <button type="submit" name="submit_answer" class="btn-primary px-6 py-3">
+                                            <i class="fas fa-paper-plane"></i>
+                                            إرسال الإجابة
+                                        </button>
+                                    </div>
+                                </form>
+                            <?php endif; ?>
                         </div>
 
                         <!-- My Answers -->
@@ -882,6 +1069,29 @@ foreach ($all_answers as $answer) {
         </div>
     </div>
 
+    <!-- MCQ Confirmation Modal -->
+    <div id="mcq-confirmation-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div class="text-center">
+                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 mb-4">
+                    <i class="fas fa-exclamation-triangle text-yellow-600 text-xl"></i>
+                </div>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">تأكيد الإجابة</h3>
+                <p class="text-sm text-gray-500 mb-6">
+                    هل أنت متأكد من إجابتك؟ لا يمكنك تغيير إجابتك بعد الإرسال.
+                </p>
+                <div class="flex space-x-3 space-x-reverse">
+                    <button type="button" onclick="closeMcqModal()" class="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition">
+                        إلغاء
+                    </button>
+                    <button type="button" onclick="submitMcqAnswer()" class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                        تأكيد الإرسال
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         function toggleQuestion(questionId) {
             const questionCard = document.querySelector(`[onclick="toggleQuestion(${questionId})"]`);
@@ -929,10 +1139,10 @@ foreach ($all_answers as $answer) {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Remove unanswered class and update styling
+                    // Remove unread and unanswered classes and update styling
                     const questionCard = document.querySelector(`[onclick="toggleQuestion(${questionId})"]`);
                     if (questionCard) {
-                        questionCard.classList.remove('unanswered');
+                        questionCard.classList.remove('unread', 'unanswered');
                         // Remove the "جديد" badge
                         const badge = questionCard.querySelector('::after');
                         if (badge) {
@@ -955,6 +1165,50 @@ foreach ($all_answers as $answer) {
             document.getElementById('answer-text-' + answerId).style.display = 'block';
             document.getElementById('edit-form-' + answerId).classList.add('hidden');
         }
+
+        // MCQ Confirmation Functions
+        let currentMcqQuestionId = null;
+
+        function confirmMcqAnswer(questionId) {
+            const form = document.getElementById('mcq-form-' + questionId);
+            const selectedOption = form.querySelector('input[name="selected_option_id"]:checked');
+            
+            if (!selectedOption) {
+                alert('يرجى اختيار إجابة قبل الإرسال');
+                return;
+            }
+            
+            currentMcqQuestionId = questionId;
+            document.getElementById('mcq-confirmation-modal').classList.remove('hidden');
+        }
+
+        function closeMcqModal() {
+            document.getElementById('mcq-confirmation-modal').classList.add('hidden');
+            currentMcqQuestionId = null;
+        }
+
+        function submitMcqAnswer() {
+            if (currentMcqQuestionId) {
+                const form = document.getElementById('mcq-form-' + currentMcqQuestionId);
+                // Ensure submit_answer field is present
+                if (!form.querySelector('input[name="submit_answer"]')) {
+                    const submitInput = document.createElement('input');
+                    submitInput.type = 'hidden';
+                    submitInput.name = 'submit_answer';
+                    submitInput.value = '1';
+                    form.appendChild(submitInput);
+                }
+                form.submit();
+            }
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('mcq-confirmation-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeMcqModal();
+            }
+        });
+
     </script>
 </body>
 </html>

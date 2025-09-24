@@ -3,6 +3,7 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 session_start();
 require_once 'includes/db.php';
+require_once 'includes/url_helper.php';
 // username
 // تأكد أن اللي فاتح Admin
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
@@ -21,21 +22,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_student'])) {
     // التحقق من الحقول الفارغة
     if (empty($name) || empty($username) || empty($password) || empty($confirm_password)) {
         $_SESSION['error'] = "⚠️ كل الحقول مطلوبة.";
-        header("Location: manage_group.php?group_id=$group_id");
+        header("Location: " . url('admin.group', ['id' => $group_id]));
         exit;
     }
 
     // التحقق من تطابق كلمة المرور مع التأكيد
     if ($password !== $confirm_password) {
         $_SESSION['error'] = "⚠️ كلمة المرور وتأكيدها غير متطابقين.";
-        header("Location: manage_group.php?group_id=$group_id");
+        header("Location: " . url('admin.group', ['id' => $group_id]));
         exit;
     }
 
     // التحقق من صحة اسم المستخدم (إنجليزي فقط)
     if (!preg_match('/^[a-zA-Z0-9_]+$/', $username)) {
         $_SESSION['error'] = "❌ اسم المستخدم يجب أن يحتوي على أحرف إنجليزية وأرقام فقط (مثال: ahmed123 أو student_01)";
-        header("Location: manage_group.php?group_id=$group_id");
+        header("Location: " . url('admin.group', ['id' => $group_id]));
         exit;
     }
 
@@ -46,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_student'])) {
 
         if ($checkusername->rowCount() > 0) {
             $_SESSION['error'] = "⚠️ البريد الإلكتروني مستخدم من قبل.";
-            header("Location: manage_group.php?group_id=$group_id");
+            header("Location: " . url('admin.group', ['id' => $group_id]));
             exit;
         }
 
@@ -56,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_student'])) {
 
         if ($checkName->rowCount() > 0) {
             $_SESSION['error'] = "⚠️ الاسم مستخدم من قبل في هذه المجموعة. اختر اسم آخر.";
-            header("Location: manage_group.php?group_id=$group_id");
+            header("Location: " . url('admin.group', ['id' => $group_id]));
             exit;
         }
 
@@ -69,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_student'])) {
         $update->execute([$group_id]);
 
         $_SESSION['success'] = "✅ تم إضافة الطالب بنجاح";
-        header("Location: manage_group.php?group_id=$group_id");
+        header("Location: " . url('admin.group', ['id' => $group_id]));
         exit;
 
     } catch (PDOException $e) {
@@ -84,7 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_student'])) {
             $_SESSION['error'] = "❌ حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.";
         }
         
-        header("Location: manage_group.php?group_id=$group_id");
+        header("Location: " . url('admin.group', ['id' => $group_id]));
         exit;
     }
 }

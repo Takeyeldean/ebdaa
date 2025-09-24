@@ -13,7 +13,7 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $group_id = isset($_POST['group_id']) ? intval($_POST['group_id']) : 0;
+    $group_id = isset($_POST['group_id']) ? intval($_POST['group_id']) : (isset($_GET['id']) ? intval($_GET['id']) : 0);
     $message = isset($_POST['message']) ? trim($_POST['message']) : '';
     $emoji = isset($_POST['emoji']) ? trim($_POST['emoji']) : '🤖';
     

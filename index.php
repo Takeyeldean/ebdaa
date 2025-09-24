@@ -308,9 +308,9 @@ if (isset($_SESSION['user'])) {
         <div class="form-group">
           <i class="fas fa-user-shield"></i>
           <select name="role" required>
-            <option value="">🎯 اختر دورك: طالب أم مشرف؟</option>
+            <option value="">🎯 اختر دورك: طالب أم معلم</option>
             <option value="student">🎓 طالب</option>
-            <option value="admin">👨‍🏫 مشرف</option>
+            <option value="admin">👨‍🏫 معلم</option>
           </select>
         </div>
         

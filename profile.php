@@ -365,7 +365,7 @@ $user = $stmt->fetch();
         <?php else: ?>
             <img src="/ebdaa/uploads/default.png" alt="صورة الملف الشخصي">
         <?php endif; ?>
-        <form action="upload_image.php" method="POST" enctype="multipart/form-data" class="upload-btn">
+        <form action="<?= url('profile.image') ?>" method="POST" enctype="multipart/form-data" class="upload-btn">
             <label>
                 <input type="file" name="profile_image" accept="image/*" onchange="this.form.submit()">
                 <i class="fas fa-camera"></i>
@@ -405,7 +405,7 @@ $user = $stmt->fetch();
             <p class="text-gray-600">دعنا نحدث اسمك واسم المستخدم</p>
         </div>
         
-        <form method="POST" action="update_info.php">
+        <form method="POST" action="<?= url('profile.update') ?>">
             <input type="hidden" name="update_info">
             <div class="mb-6">
                 <label class="form-label">
@@ -436,7 +436,7 @@ $user = $stmt->fetch();
             <p class="text-gray-600">لحماية حسابك، تأكد من استخدام كلمة مرور قوية</p>
         </div>
         
-        <form method="POST" action="update_info.php">
+        <form method="POST" action="<?= url('profile.update') ?>">
             <input type="hidden" name="update_pass">
             <div class="mb-6">
                 <label class="form-label">

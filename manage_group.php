@@ -5,12 +5,13 @@ if (session_status() === PHP_SESSION_NONE) {
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 require_once "includes/db.php";
+require_once "includes/url_helper.php";
 // username
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
     die("❌ غير مسموح لك بالدخول");
 }
 
-$group_id = isset($_GET['group_id']) ? intval($_GET['group_id']) : 0;
+$group_id = isset($_GET['id']) ? intval($_GET['id']) : (isset($_GET['group_id']) ? intval($_GET['group_id']) : 0);
 if ($group_id == 0) die("Group not found!");
 
 $stmt = $conn->prepare("SELECT * FROM students WHERE group_id = ?");
@@ -181,15 +182,15 @@ $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
     </span>
 
     <div class="space-x-2 space-x-reverse">
-      <a href="admin.php" class="btn-primary active">
+      <a href="<?= url('admin') ?>" class="btn-primary active">
         <i class="fas fa-users"></i>
         المجموعات
       </a>
-      <a href="admin_questions.php" class="btn-primary">
+      <a href="<?= url('admin.questions') ?>" class="btn-primary">
         <i class="fas fa-question-circle"></i>
         الأسئلة
       </a>
-      <a href="admin_invitations.php" class="btn-primary relative">
+      <a href="<?= url('admin.invitations') ?>" class="btn-primary relative">
         <i class="fas fa-envelope"></i>
         الدعوات
         <?php
@@ -208,7 +209,7 @@ $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
           </span>
         <?php endif; ?>
       </a>
-      <a href="profile.php" class="btn-primary">
+      <a href="<?= url('profile') ?>" class="btn-primary">
         <i class="fas fa-user"></i>
         حسابي
       </a>
@@ -239,11 +240,11 @@ $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <td class="p-3 text-center space-x-1 space-x-reverse">
                   <!-- أزرار إضافة درجات -->
                   <?php foreach ([5,3,2,1] as $inc): ?>
-                    <a href="update_degree.php?id=<?= $student['id'] ?>&amount=<?= $inc ?>" class="inline-block bg-green-500 text-white px-3 py-1 rounded-lg hover:bg-green-700 transition">+<?= $inc ?></a>
+                    <a href="<?= url('profile.degree') ?>?id=<?= $student['id'] ?>&amount=<?= $inc ?>" class="inline-block bg-green-500 text-white px-3 py-1 rounded-lg hover:bg-green-700 transition">+<?= $inc ?></a>
                   <?php endforeach; ?>
 
                   <!-- إضافة قيمة مخصصة -->
-                  <form action="update_degree.php" method="get" class="inline-block mx-2">
+                  <form action="<?= url('profile.degree') ?>" method="get" class="inline-block mx-2">
                     <input type="hidden" name="id" value="<?= $student['id'] ?>">
                     <input type="number" name="amount" class="w-20 border rounded-lg px-2 py-1 focus:ring-2 focus:ring-blue-400" placeholder="0">
                     <button type="submit" class="bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 transition">إضافة</button>
@@ -251,7 +252,7 @@ $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                   <!-- أزرار خصم درجات -->
                   <?php foreach ([5,3,2,1] as $dec): ?>
-                    <a href="update_degree.php?id=<?= $student['id'] ?>&amount=-<?= $dec ?>" class="inline-block bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-700 transition">-<?= $dec ?></a>
+                    <a href="<?= url('profile.degree') ?>?id=<?= $student['id'] ?>&amount=-<?= $dec ?>" class="inline-block bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-700 transition">-<?= $dec ?></a>
                   <?php endforeach; ?>
                 </td>
                 <td class="p-3 text-center space-x-2 space-x-reverse">
@@ -289,37 +290,37 @@ $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
       $current_emoji = $group['emoji'] ?? '🤖';
       
       ?>
-      
-      <form method="post" action="update_group_message.php" class="space-y-4">
-        <input type="hidden" name="group_id" value="<?= $group_id ?>">
-        
-        <div>
-          <label class="block mb-2 font-medium text-gray-700">اكتب رسالة للمجموعة:</label>
-          <textarea name="message" rows="4" class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400 resize-none" placeholder="اكتب رسالة تحفيزية أو تعليمية للمجموعة..."><?= htmlspecialchars($current_message) ?></textarea>
-        </div>
-        
-        <div>
-          <label class="block mb-2 font-medium text-gray-700">اختر إيموجي للشخصية:</label>
-          <div class="emoji-selector grid grid-cols-8 gap-2 p-4 border rounded-lg bg-gray-50">
-            <?php
-            $emojis = ['🤖', '👨‍🏫', '👩‍🏫', '🎓', '⚡', '🔥', '💪', '🎯', '🏆', '⭐', '🚀', '💡', '🎮', '⚽', '🏀', '🎨', '🎵', '📚', '🔬', '🎪', '🎭', '👨‍💻', '👩‍💻', '🧑‍🎓', '👨‍🎓', '👩‍🎓', '🧑‍🏫', '👨‍🔬', '👩‍🔬', '🧑‍💼', '👨‍💼', '👩‍💼'];
-            foreach ($emojis as $emoji): ?>
-              <button type="button" class="emoji-btn text-2xl p-2 rounded-lg hover:bg-blue-200 transition <?= $emoji === $current_emoji ? 'bg-blue-300 border-2 border-blue-500' : 'bg-white border border-gray-300' ?>" data-emoji="<?= $emoji ?>">
-                <?= $emoji ?>
+          
+          <form method="post" action="<?= url('admin.group.message', ['id' => $group_id]) ?>" class="space-y-4">
+            <input type="hidden" name="group_id" value="<?= $group_id ?>">
+            
+            <div>
+              <label class="block mb-2 font-medium text-gray-700">اكتب رسالة للمجموعة:</label>
+              <textarea name="message" rows="4" class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-400 resize-none" placeholder="اكتب رسالة تحفيزية أو تعليمية للمجموعة..."><?= htmlspecialchars($current_message) ?></textarea>
+            </div>
+            
+            <div>
+              <label class="block mb-2 font-medium text-gray-700">اختر إيموجي للشخصية:</label>
+              <div class="emoji-selector grid grid-cols-8 gap-2 p-4 border rounded-lg bg-gray-50">
+                <?php
+                $emojis = ['🤖', '👨‍🏫', '👩‍🏫', '🎓', '⚡', '🔥', '💪', '🎯', '🏆', '⭐', '🚀', '💡', '🎮', '⚽', '🏀', '🎨', '🎵', '📚', '🔬', '🎪', '🎭', '👨‍💻', '👩‍💻', '🧑‍🎓', '👨‍🎓', '👩‍🎓', '🧑‍🏫', '👨‍🔬', '👩‍🔬', '🧑‍💼', '👨‍💼', '👩‍💼'];
+                foreach ($emojis as $emoji): ?>
+                  <button type="button" class="emoji-btn text-2xl p-2 rounded-lg hover:bg-blue-200 transition <?= $emoji === $current_emoji ? 'bg-blue-300 border-2 border-blue-500' : 'bg-white border border-gray-300' ?>" data-emoji="<?= $emoji ?>">
+                    <?= $emoji ?>
+                  </button>
+                <?php endforeach; ?>
+              </div>
+              <input type="hidden" name="emoji" id="selected_emoji" value="<?= htmlspecialchars($current_emoji) ?>">
+            </div>
+            
+            <div class="flex gap-3">
+              <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition shadow-md">
+                💾 حفظ الرسالة
               </button>
-            <?php endforeach; ?>
-          </div>
-          <input type="hidden" name="emoji" id="selected_emoji" value="<?= htmlspecialchars($current_emoji) ?>">
-        </div>
-        
-        <div class="flex gap-3">
-          <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition shadow-md">
-            💾 حفظ الرسالة
-          </button>
-         
-        </div>
-      </form>
-      
+            
+            </div>
+          </form>
+          
       <?php if (!empty($current_message)): ?>
         <div class="mt-4 p-4 bg-blue-50 rounded-lg border-r-4 border-blue-500">
           <h3 class="font-bold text-blue-800 mb-2">الرسالة الحالية:</h3>
@@ -344,7 +345,7 @@ $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </div>
       <?php endif; ?>
       
-      <form method="post" action="invite_admin.php" class="space-y-4">
+      <form method="post" action="<?= url('admin.group.invite', ['id' => $group_id]) ?>" class="space-y-4">
         <input type="hidden" name="group_id" value="<?= $group_id ?>">
         
         <div>
@@ -432,7 +433,7 @@ $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <p class="text-green-600 mb-4 font-semibold"><?= $_SESSION['success']; unset($_SESSION['success']); ?></p>
   <?php endif; ?>
 
-  <form method="post" action="add.php" class="space-y-5">
+  <form method="post" action="<?= url('admin.add-student') ?>" class="space-y-5">
     <input type="hidden" name="group_id" value="<?= $group_id ?>">
     
     <div>
@@ -537,7 +538,7 @@ $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
       <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
         <h3 class="text-2xl font-bold text-blue-800 mb-6">نقل الطالب</h3>
         
-        <form id="moveStudentForm" method="post" action="move_student.php">
+        <form id="moveStudentForm" method="post" action="">
           <input type="hidden" id="moveStudentId" name="student_id">
           <input type="hidden" name="current_group_id" value="<?= $group_id ?>">
           
@@ -659,6 +660,12 @@ function submitLeaveGroup() {
 function showMoveStudentModal(studentId, studentName) {
     document.getElementById('moveStudentId').value = studentId;
     document.getElementById('moveStudentName').textContent = studentName;
+    
+    // Set the correct action URL for the form
+    const form = document.getElementById('moveStudentForm');
+    const baseUrl = '<?= url("admin.group.student.move", ["id" => $group_id, "student_id" => "STUDENT_ID"]) ?>';
+    form.action = baseUrl.replace('STUDENT_ID', studentId);
+    
     document.getElementById('moveStudentModal').classList.remove('hidden');
 }
 
@@ -693,7 +700,10 @@ function submitDeleteStudent() {
         // Create a form to submit the delete request
         const form = document.createElement('form');
         form.method = 'POST';
-        form.action = 'delete_student.php';
+        
+        // Set the correct action URL using the URL helper
+        const baseUrl = '<?= url("admin.group.student.delete", ["id" => $group_id, "student_id" => "STUDENT_ID"]) ?>';
+        form.action = baseUrl.replace('STUDENT_ID', window.currentDeleteStudentId);
         
         const studentIdInput = document.createElement('input');
         studentIdInput.type = 'hidden';

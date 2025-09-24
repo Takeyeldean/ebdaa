@@ -3,9 +3,10 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 session_start();
 require_once 'includes/db.php';
+require_once 'includes/url_helper.php';
 
 if (!isset($_SESSION['user'])) {
-    header("Location: index.php");
+    header("Location: " . url('login'));
     exit();
 }
 // email
@@ -52,5 +53,5 @@ if (isset($_FILES['profile_image']) && $_FILES['profile_image']['error'] === 0) 
     $_SESSION['error'] = "لم يتم اختيار أي ملف أو حدث خطأ.";
 }
 
-header("Location: profile");
+header("Location: " . url('profile'));
 exit();

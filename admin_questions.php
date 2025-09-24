@@ -19,6 +19,8 @@ $admin_id = $_SESSION['user']['id'];
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_question'])) {
     $group_id = intval($_POST['group_id']);
     $question_text = trim($_POST['question_text']);
+    $question_type = $_POST['question_type'] ?? 'text';
+    $points = intval($_POST['points'] ?? 0);
     $is_public = isset($_POST['is_public']) ? 1 : 0;
     
     if ($group_id > 0 && !empty($question_text)) {
@@ -28,20 +30,64 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_question'])) {
             $stmt->execute([$group_id, $admin_id]);
             
             if ($stmt->fetch()) {
-                $stmt = $conn->prepare("INSERT INTO questions (group_id, admin_id, question_text, is_public) VALUES (?, ?, ?, ?)");
-                $stmt->execute([$group_id, $admin_id, $question_text, $is_public]);
+                // Start transaction
+                $conn->beginTransaction();
+                
+                // Insert the question
+                $stmt = $conn->prepare("INSERT INTO questions (group_id, admin_id, question_text, question_type, points, is_public) VALUES (?, ?, ?, ?, ?, ?)");
+                $stmt->execute([$group_id, $admin_id, $question_text, $question_type, $points, $is_public]);
                 $question_id = $conn->lastInsertId();
+                
+                // If it's an MCQ question, insert the options
+                if ($question_type === 'mcq' && isset($_POST['mcq_options'])) {
+                    $options = $_POST['mcq_options'];
+                    $correct_option = intval($_POST['correct_option'] ?? 0);
+                    
+                    // Validate MCQ options
+                    $valid_options = array_filter($options, function($option) {
+                        return !empty(trim($option));
+                    });
+                    
+                    if (count($valid_options) < 2) {
+                        throw new Exception("يجب أن يكون هناك على الأقل خياران للإجابة");
+                    }
+                    
+                    if ($correct_option < 0 || $correct_option >= count($valid_options)) {
+                        throw new Exception("يجب اختيار إجابة صحيحة من الخيارات المتاحة");
+                    }
+                    
+                    $option_index = 0;
+                    foreach ($options as $index => $option_text) {
+                        if (!empty(trim($option_text))) {
+                            $is_correct = ($option_index == $correct_option) ? 1 : 0;
+                            $stmt = $conn->prepare("INSERT INTO question_options (question_id, option_text, is_correct, option_order) VALUES (?, ?, ?, ?)");
+                            $stmt->execute([$question_id, trim($option_text), $is_correct, $option_index + 1]);
+                            $option_index++;
+                        }
+                    }
+                }
                 
                 // Create notifications for all students in this group
                 $stmt = $conn->prepare("INSERT INTO notifications (student_id, question_id) SELECT id, ? FROM students WHERE group_id = ?");
                 $stmt->execute([$question_id, $group_id]);
                 
+                // Commit transaction
+                $conn->commit();
+                
                 $_SESSION['success'] = "تم إنشاء السؤال بنجاح!";
+                
+                // Redirect to prevent form resubmission on page reload
+                header("Location: " . url('admin.questions'));
+                exit();
             } else {
                 $_SESSION['error'] = "ليس لديك صلاحية للوصول إلى هذه المجموعة";
             }
         } catch (PDOException $e) {
+            $conn->rollBack();
             $_SESSION['error'] = "حدث خطأ في إنشاء السؤال: " . $e->getMessage();
+        } catch (Exception $e) {
+            $conn->rollBack();
+            $_SESSION['error'] = "خطأ في التحقق من الخيارات: " . $e->getMessage();
         }
     } else {
         $_SESSION['error'] = "يرجى ملء جميع الحقول المطلوبة";
@@ -64,6 +110,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_question'])) {
                 $stmt = $conn->prepare("UPDATE questions SET question_text = ?, is_public = ? WHERE id = ? AND admin_id = ?");
                 $stmt->execute([$question_text, $is_public, $question_id, $admin_id]);
                 $_SESSION['success'] = "تم تحديث السؤال بنجاح!";
+                
+                // Redirect to prevent form resubmission on page reload
+                header("Location: " . url('admin.questions'));
+                exit();
             } else {
                 $_SESSION['error'] = "غير مسموح لك بتعديل هذا السؤال";
             }
@@ -89,6 +139,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_question'])) {
                 $stmt = $conn->prepare("DELETE FROM questions WHERE id = ? AND admin_id = ?");
                 $stmt->execute([$question_id, $admin_id]);
                 $_SESSION['success'] = "تم حذف السؤال بنجاح!";
+                
+                // Redirect to prevent form resubmission on page reload
+                header("Location: " . url('admin.questions'));
+                exit();
             } else {
                 $_SESSION['error'] = "غير مسموح لك بحذف هذا السؤال";
             }
@@ -133,6 +187,25 @@ foreach ($questions_by_group as $question) {
 // Get all question IDs for answers
 $all_question_ids = array_column($questions_by_group, 'id');
 $answers_by_question = [];
+$mcq_options_by_question = [];
+
+// Get MCQ options for all questions
+if (!empty($all_question_ids)) {
+    $placeholders = str_repeat('?,', count($all_question_ids) - 1) . '?';
+    $stmt = $conn->prepare("
+        SELECT qo.*, qo.question_id
+        FROM question_options qo
+        WHERE qo.question_id IN ($placeholders)
+        ORDER BY qo.question_id, qo.option_order
+    ");
+    $stmt->execute($all_question_ids);
+    $mcq_options = $stmt->fetchAll();
+    
+    // Group options by question ID
+    foreach ($mcq_options as $option) {
+        $mcq_options_by_question[$option['question_id']][] = $option;
+    }
+}
 
 if (!empty($all_question_ids)) {
     $placeholders = str_repeat('?,', count($all_question_ids) - 1) . '?';
@@ -435,6 +508,43 @@ if (!empty($all_question_ids)) {
             border: 1px solid rgba(220, 38, 38, 0.2);
         }
 
+        /* Dynamic MCQ Options Styling */
+        .mcq-option-row {
+            transition: all 0.3s ease;
+        }
+
+        .mcq-option-row:hover {
+            background-color: rgba(59, 130, 246, 0.05);
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+            margin: -0.5rem;
+        }
+
+        .mcq-option-row button {
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+        }
+
+        .mcq-option-row:hover button {
+            opacity: 1;
+        }
+
+        /* Pulse animation for radio buttons reminder */
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+            }
+            70% {
+                transform: scale(1.05);
+                box-shadow: 0 0 0 10px rgba(34, 197, 94, 0);
+            }
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+            }
+        }
+
         .group-section {
             margin-bottom: 3rem;
             background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
@@ -606,11 +716,61 @@ if (!empty($all_question_ids)) {
                 <div>
                     <label class="block text-lg font-semibold text-gray-700 mb-2">
                         <i class="fas fa-question-circle"></i>
+                        نوع السؤال:
+                    </label>
+                    <select name="question_type" id="question_type" required class="form-textarea" onchange="toggleQuestionType()">
+                        <option value="text">سؤال نصي</option>
+                        <option value="mcq">اختيار من متعدد </option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-lg font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-question-circle"></i>
                         نص السؤال:
                     </label>
                     <textarea name="question_text" rows="4" required 
                         class="form-textarea"
                         placeholder="اكتب سؤالك هنا..."></textarea>
+                </div>
+
+                <div id="points_section" class="hidden">
+                    <label class="block text-lg font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-star"></i>
+                        عدد النقاط:
+                    </label>
+                    <input type="number" name="points" min="1" max="100" value="5" 
+                        class="form-textarea" placeholder="عدد النقاط">
+                </div>
+
+                <div id="mcq_options_section" class="hidden">
+                    <label class="block text-lg font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-list"></i>
+                        خيارات الإجابة:
+                    </label>
+                    <div id="mcq_options_container" class="space-y-3">
+                        <div class="flex items-center space-x-3 space-x-reverse mcq-option-row">
+                            <input type="radio" name="correct_option" value="0" class="w-4 h-4 text-green-600">
+                            <input type="text" name="mcq_options[]" placeholder="الخيار الأول" class="form-textarea flex-1" required>
+                            <button type="button" onclick="removeMcqOption(this)" class="text-red-600 hover:text-red-800 p-1" title="حذف الخيار">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        <div class="flex items-center space-x-3 space-x-reverse mcq-option-row">
+                            <input type="radio" name="correct_option" value="1" class="w-4 h-4 text-green-600">
+                            <input type="text" name="mcq_options[]" placeholder="الخيار الثاني" class="form-textarea flex-1" required>
+                            <button type="button" onclick="removeMcqOption(this)" class="text-red-600 hover:text-red-800 p-1" title="حذف الخيار">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <button type="button" onclick="addMcqOption()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition text-sm">
+                            <i class="fas fa-plus"></i>
+                            إضافة خيار جديد
+                        </button>
+                    </div>
+                  
                 </div>
 
                 <div class="flex items-center space-x-4 space-x-reverse">
@@ -622,7 +782,7 @@ if (!empty($all_question_ids)) {
                 </div>
 
                 <div class="text-center">
-                    <button type="submit" name="create_question" class="btn-primary text-lg px-8 py-3">
+                    <button type="submit" name="create_question" class="btn-primary text-lg px-8 py-3" onclick="return validateMcqForm()">
                         <i class="fas fa-paper-plane"></i>
                         إرسال السؤال
                     </button>
@@ -669,6 +829,14 @@ if (!empty($all_question_ids)) {
                                 <div class="flex justify-between items-start mb-3">
                                     <h3 class="question-title text-balance flex-1" id="question-text-<?= $question['id'] ?>">
                                         <?= htmlspecialchars($question['question_text']) ?>
+                                        <?php if ($question['question_type'] === 'mcq'): ?>
+                                            <div class="mt-2">
+                                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                    <i class="fas fa-list-ul mr-1"></i>
+                                                    MCQ (<?= $question['points'] ?> نقاط)
+                                                </span>
+                                            </div>
+                                        <?php endif; ?>
                                     </h3>
                                     <div class="mr-4">
                                         <i class="fas fa-chevron-down chevron-icon" id="chevron-<?= $question['id'] ?>"></i>
@@ -717,6 +885,37 @@ if (!empty($all_question_ids)) {
 
                             <!-- Question Content (Collapsible) -->
                             <div class="question-content p-6 hidden" id="content-<?= $question['id'] ?>">
+                                <!-- MCQ Options Section -->
+                                <?php if ($question['question_type'] === 'mcq' && isset($mcq_options_by_question[$question['id']])): ?>
+                                    <div class="mb-6">
+                                        <h4 class="section-title mb-3">
+                                            <i class="fas fa-list-ul"></i>
+                                            خيارات الإجابة:
+                                        </h4>
+                                        <div class="space-y-2">
+                                            <?php foreach ($mcq_options_by_question[$question['id']] as $option): ?>
+                                                <div class="flex items-center space-x-3 space-x-reverse p-3 rounded-lg <?= $option['is_correct'] ? 'bg-green-50 border border-green-200' : 'bg-gray-50 border border-gray-200' ?>">
+                                                    <div class="flex-shrink-0">
+                                                        <?php if ($option['is_correct']): ?>
+                                                            <i class="fas fa-check-circle text-green-600"></i>
+                                                        <?php else: ?>
+                                                            <i class="fas fa-circle text-gray-400"></i>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                    <span class="flex-1 <?= $option['is_correct'] ? 'font-semibold text-green-800' : 'text-gray-700' ?>">
+                                                        <?= htmlspecialchars($option['option_text']) ?>
+                                                    </span>
+                                                    <?php if ($option['is_correct']): ?>
+                                                        <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                                                            الإجابة الصحيحة
+                                                        </span>
+                                                    <?php endif; ?>
+                                                </div>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
+                                
                                 <!-- Student Answers Section -->
                                 <div id="answers-<?= $question['id'] ?>" class="mt-4">
                                     <h4 class="section-title">
@@ -794,6 +993,162 @@ if (!empty($all_question_ids)) {
     </div>
 
     <script>
+        function toggleQuestionType() {
+            const questionType = document.getElementById('question_type').value;
+            const pointsSection = document.getElementById('points_section');
+            const mcqOptionsSection = document.getElementById('mcq_options_section');
+            
+            if (questionType === 'mcq') {
+                pointsSection.classList.remove('hidden');
+                mcqOptionsSection.classList.remove('hidden');
+                // Add visual reminder for correct answer selection
+                setTimeout(() => {
+                    highlightCorrectAnswerReminder();
+                }, 500);
+            } else {
+                pointsSection.classList.add('hidden');
+                mcqOptionsSection.classList.add('hidden');
+            }
+        }
+
+        function highlightCorrectAnswerReminder() {
+            const radioButtons = document.querySelectorAll('input[name="correct_option"]');
+            const hasSelected = document.querySelector('input[name="correct_option"]:checked');
+            
+            if (!hasSelected) {
+                // Add pulsing animation to radio buttons to draw attention
+                radioButtons.forEach(radio => {
+                    radio.style.animation = 'pulse 2s infinite';
+                });
+                
+                // Remove animation after 6 seconds
+                setTimeout(() => {
+                    radioButtons.forEach(radio => {
+                        radio.style.animation = '';
+                    });
+                }, 6000);
+            }
+        }
+
+        // Add event listeners to radio buttons to remove pulsing when selected
+        document.addEventListener('change', function(e) {
+            if (e.target.name === 'correct_option') {
+                // Remove pulsing animation from all radio buttons
+                const radioButtons = document.querySelectorAll('input[name="correct_option"]');
+                radioButtons.forEach(radio => {
+                    radio.style.animation = '';
+                });
+            }
+        });
+
+        function addMcqOption() {
+            const container = document.getElementById('mcq_options_container');
+            const optionCount = container.children.length;
+            const optionNumber = optionCount + 1;
+            
+            const optionRow = document.createElement('div');
+            optionRow.className = 'flex items-center space-x-3 space-x-reverse mcq-option-row';
+            optionRow.innerHTML = `
+                <input type="radio" name="correct_option" value="${optionCount}" class="w-4 h-4 text-green-600">
+                <input type="text" name="mcq_options[]" placeholder="الخيار ${getArabicNumber(optionNumber)}" class="form-textarea flex-1" required>
+                <button type="button" onclick="removeMcqOption(this)" class="text-red-600 hover:text-red-800 p-1" title="حذف الخيار">
+                    <i class="fas fa-trash"></i>
+                </button>
+            `;
+            
+            container.appendChild(optionRow);
+        }
+
+        function removeMcqOption(button) {
+            const container = document.getElementById('mcq_options_container');
+            if (container.children.length > 2) { // Minimum 2 options
+                const optionRow = button.closest('.mcq-option-row');
+                optionRow.remove();
+                updateMcqOptionValues();
+            } else {
+                alert('يجب أن يكون هناك على الأقل خياران');
+            }
+        }
+
+        function updateMcqOptionValues() {
+            const container = document.getElementById('mcq_options_container');
+            const radioButtons = container.querySelectorAll('input[name="correct_option"]');
+            radioButtons.forEach((radio, index) => {
+                radio.value = index;
+            });
+        }
+
+        function getArabicNumber(num) {
+            const arabicNumbers = ['الأول', 'الثاني', 'الثالث', 'الرابع', 'الخامس', 'السادس', 'السابع', 'الثامن', 'التاسع', 'العاشر'];
+            return arabicNumbers[num - 1] || `الخيار ${num}`;
+        }
+
+        function validateMcqForm() {
+            const questionType = document.getElementById('question_type').value;
+            
+            if (questionType === 'mcq') {
+                // Check if MCQ options section is visible
+                const mcqSection = document.getElementById('mcq_options_section');
+                if (!mcqSection.classList.contains('hidden')) {
+                    // Check if any correct answer is selected
+                    const correctOption = document.querySelector('input[name="correct_option"]:checked');
+                    if (!correctOption) {
+                        // Show error message
+                        showMcqValidationError('⚠️ يجب اختيار الإجابة الصحيحة قبل إرسال السؤال');
+                        return false;
+                    }
+                    
+                    // Check if all options have text
+                    const optionInputs = document.querySelectorAll('input[name="mcq_options[]"]');
+                    let emptyOptions = 0;
+                    optionInputs.forEach(input => {
+                        if (!input.value.trim()) {
+                            emptyOptions++;
+                        }
+                    });
+                    
+                    if (emptyOptions > 0) {
+                        showMcqValidationError(`⚠️ يجب ملء جميع الخيارات (${emptyOptions} خيار فارغ)`);
+                        return false;
+                    }
+                }
+            }
+            
+            return true;
+        }
+
+        function showMcqValidationError(message) {
+            // Remove any existing error messages
+            const existingError = document.querySelector('.mcq-validation-error');
+            if (existingError) {
+                existingError.remove();
+            }
+            
+            // Create error message element
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'mcq-validation-error bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4';
+            errorDiv.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            // Insert error message before the submit button
+            const submitButton = document.querySelector('button[name="create_question"]');
+            submitButton.parentNode.insertBefore(errorDiv, submitButton);
+            
+            // Scroll to error message
+            errorDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            // Auto-remove error after 5 seconds
+            setTimeout(() => {
+                if (errorDiv.parentNode) {
+                    errorDiv.remove();
+                }
+            }, 5000);
+        }
+
         function toggleQuestion(questionId) {
             const questionCard = document.querySelector(`[onclick="toggleQuestion(${questionId})"]`);
             const content = document.getElementById('content-' + questionId);

@@ -107,6 +107,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['group_id'])) {
 }
 
 // If not POST request, redirect to admin page
-header("Location: admin.php");
+header("Location: " . url('admin'));
 exit;
 ?>
