@@ -224,6 +224,27 @@ if (!empty($all_question_ids)) {
         $answers_by_question[$answer['question_id']][] = $answer;
     }
 }
+
+// Get MCQ answers for all questions
+$mcq_answers_by_question = [];
+if (!empty($all_question_ids)) {
+    $placeholders = str_repeat('?,', count($all_question_ids) - 1) . '?';
+    $stmt = $conn->prepare("
+        SELECT sma.*, s.name as student_name, s.id as student_id, qo.option_text as selected_option_text
+        FROM student_mcq_answers sma 
+        JOIN students s ON sma.student_id = s.id 
+        JOIN question_options qo ON sma.selected_option_id = qo.id
+        WHERE sma.question_id IN ($placeholders)
+        ORDER BY sma.answered_at DESC
+    ");
+    $stmt->execute($all_question_ids);
+    $all_mcq_answers = $stmt->fetchAll();
+    
+    // Group MCQ answers by question_id
+    foreach ($all_mcq_answers as $answer) {
+        $mcq_answers_by_question[$answer['question_id']][] = $answer;
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -773,7 +794,7 @@ if (!empty($all_question_ids)) {
                   
                 </div>
 
-                <div class="flex items-center space-x-4 space-x-reverse">
+                <div id="public_answers_section" class="flex items-center space-x-4 space-x-reverse">
                     <input type="checkbox" name="is_public" id="is_public" value="1" checked class="w-5 h-5 text-blue-600">
                     <label for="is_public" class="text-lg font-semibold text-gray-700">
                         <i class="fas fa-globe"></i>
@@ -918,39 +939,91 @@ if (!empty($all_question_ids)) {
                                 
                                 <!-- Student Answers Section -->
                                 <div id="answers-<?= $question['id'] ?>" class="mt-4">
-                                    <h4 class="section-title">
-                                        <i class="fas fa-comments"></i>
-                                        إجابات الطلاب (<?= isset($answers_by_question[$question['id']]) ? count($answers_by_question[$question['id']]) : 0 ?>)
-                                    </h4>
-                                    
-                                    <?php if (isset($answers_by_question[$question['id']]) && !empty($answers_by_question[$question['id']])): ?>
-                                        <div class="space-y-3 max-h-96 overflow-y-auto">
-                                            <?php foreach ($answers_by_question[$question['id']] as $answer): ?>
-                                                <div class="answer-card">
-                                                    <div class="flex justify-between items-start mb-2">
-                                                        <div class="flex items-center space-x-2 space-x-reverse">
-                                                            <span class="font-semibold text-gray-800">
-                                                                <i class="fas fa-user"></i>
-                                                                <?= htmlspecialchars($answer['student_name']) ?>
-                                                            </span>
+                                    <?php if ($question['question_type'] === 'mcq'): ?>
+                                        <!-- MCQ Answers -->
+                                        <h4 class="section-title">
+                                            <i class="fas fa-list-ul"></i>
+                                            إجابات الطلاب (<?= isset($mcq_answers_by_question[$question['id']]) ? count($mcq_answers_by_question[$question['id']]) : 0 ?>)
+                                        </h4>
+                                        
+                                        <?php if (isset($mcq_answers_by_question[$question['id']]) && !empty($mcq_answers_by_question[$question['id']])): ?>
+                                            <div class="space-y-3 max-h-96 overflow-y-auto">
+                                                <?php foreach ($mcq_answers_by_question[$question['id']] as $answer): ?>
+                                                    <div class="answer-card <?= $answer['is_correct'] ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50' ?>">
+                                                        <div class="flex justify-between items-start mb-2">
+                                                            <div class="flex items-center space-x-2 space-x-reverse">
+                                                                <span class="font-semibold text-gray-800">
+                                                                    <i class="fas fa-user"></i>
+                                                                    <?= htmlspecialchars($answer['student_name']) ?>
+                                                                </span>
+                                                                <span class="text-xs text-gray-500">
+                                                                    (ID: <?= $answer['student_id'] ?>)
+                                                                </span>
+                                                                <?php if ($answer['is_correct']): ?>
+                                                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                                        <i class="fas fa-check-circle mr-1"></i>
+                                                                        صحيح (<?= $answer['points_earned'] ?> نقاط)
+                                                                    </span>
+                                                                <?php else: ?>
+                                                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                                                        <i class="fas fa-times-circle mr-1"></i>
+                                                                        خاطئ
+                                                                    </span>
+                                                                <?php endif; ?>
+                                                            </div>
                                                             <span class="text-xs text-gray-500">
-                                                                (ID: <?= $answer['student_id'] ?>)
+                                                                <i class="fas fa-clock"></i>
+                                                                <?= date('Y-m-d H:i', strtotime($answer['answered_at'])) ?>
                                                             </span>
                                                         </div>
-                                                        <span class="text-xs text-gray-500">
-                                                            <i class="fas fa-clock"></i>
-                                                            <?= date('Y-m-d H:i', strtotime($answer['created_at'])) ?>
-                                                        </span>
+                                                        <div class="text-gray-700 text-sm">
+                                                            <strong>إجابته:</strong> <?= htmlspecialchars($answer['selected_option_text']) ?>
+                                                        </div>
                                                     </div>
-                                                    <p class="text-gray-700 text-sm"><?= htmlspecialchars($answer['answer_text']) ?></p>
-                                                </div>
-                                            <?php endforeach; ?>
-                                        </div>
+                                                <?php endforeach; ?>
+                                            </div>
+                                        <?php else: ?>
+                                            <div class="text-center text-gray-500 py-4">
+                                                <i class="fas fa-list-ul text-2xl mb-2"></i>
+                                                <p>لا توجد إجابات بعد</p>
+                                            </div>
+                                        <?php endif; ?>
                                     <?php else: ?>
-                                        <div class="text-center text-gray-500 py-4">
-                                            <i class="fas fa-comment-slash text-2xl mb-2"></i>
-                                            <p>لا توجد إجابات بعد</p>
-                                        </div>
+                                        <!-- Text Answers -->
+                                        <h4 class="section-title">
+                                            <i class="fas fa-comments"></i>
+                                            إجابات الطلاب (<?= isset($answers_by_question[$question['id']]) ? count($answers_by_question[$question['id']]) : 0 ?>)
+                                        </h4>
+                                        
+                                        <?php if (isset($answers_by_question[$question['id']]) && !empty($answers_by_question[$question['id']])): ?>
+                                            <div class="space-y-3 max-h-96 overflow-y-auto">
+                                                <?php foreach ($answers_by_question[$question['id']] as $answer): ?>
+                                                    <div class="answer-card">
+                                                        <div class="flex justify-between items-start mb-2">
+                                                            <div class="flex items-center space-x-2 space-x-reverse">
+                                                                <span class="font-semibold text-gray-800">
+                                                                    <i class="fas fa-user"></i>
+                                                                    <?= htmlspecialchars($answer['student_name']) ?>
+                                                                </span>
+                                                                <span class="text-xs text-gray-500">
+                                                                    (ID: <?= $answer['student_id'] ?>)
+                                                                </span>
+                                                            </div>
+                                                            <span class="text-xs text-gray-500">
+                                                                <i class="fas fa-clock"></i>
+                                                                <?= date('Y-m-d H:i', strtotime($answer['created_at'])) ?>
+                                                            </span>
+                                                        </div>
+                                                        <p class="text-gray-700 text-sm"><?= htmlspecialchars($answer['answer_text']) ?></p>
+                                                    </div>
+                                                <?php endforeach; ?>
+                                            </div>
+                                        <?php else: ?>
+                                            <div class="text-center text-gray-500 py-4">
+                                                <i class="fas fa-comment-slash text-2xl mb-2"></i>
+                                                <p>لا توجد إجابات بعد</p>
+                                            </div>
+                                        <?php endif; ?>
                                     <?php endif; ?>
                                 </div>
                             </div>
@@ -997,10 +1070,12 @@ if (!empty($all_question_ids)) {
             const questionType = document.getElementById('question_type').value;
             const pointsSection = document.getElementById('points_section');
             const mcqOptionsSection = document.getElementById('mcq_options_section');
+            const publicAnswersSection = document.getElementById('public_answers_section');
             
             if (questionType === 'mcq') {
                 pointsSection.classList.remove('hidden');
                 mcqOptionsSection.classList.remove('hidden');
+                publicAnswersSection.classList.add('hidden');
                 // Add visual reminder for correct answer selection
                 setTimeout(() => {
                     highlightCorrectAnswerReminder();
@@ -1008,6 +1083,7 @@ if (!empty($all_question_ids)) {
             } else {
                 pointsSection.classList.add('hidden');
                 mcqOptionsSection.classList.add('hidden');
+                publicAnswersSection.classList.remove('hidden');
             }
         }
 
