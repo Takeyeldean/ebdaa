@@ -366,6 +366,7 @@ $user = $stmt->fetch();
             <img src="/ebdaa/uploads/default.png" alt="صورة الملف الشخصي">
         <?php endif; ?>
         <form action="<?= url('profile.image') ?>" method="POST" enctype="multipart/form-data" class="upload-btn">
+            <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
             <label>
                 <input type="file" name="profile_image" accept="image/*" onchange="this.form.submit()">
                 <i class="fas fa-camera"></i>

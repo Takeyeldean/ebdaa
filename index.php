@@ -6,6 +6,11 @@ error_reporting(E_ALL);
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+
+// Generate CSRF token if not exists
+if (!isset($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
 if (isset($_SESSION['user'])) {
   header("Location: " . ($_SESSION['user']['role'] === 'admin' ? 'admin' : 'dashboard'));
   exit();
@@ -303,7 +308,24 @@ if (isset($_SESSION['user'])) {
       <h2>⚡ مرحباً بك في إبداع! ⚡</h2>
       <p class="welcome-text">دعنا نبدأ مغامرة التعلم الرائعة! 🚀</p>
       
+      <?php if (isset($_SESSION['error'])): ?>
+        <div class="error-message" style="background-color: #fee2e2; border: 1px solid #fca5a5; color: #dc2626; padding: 12px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-weight: 600;">
+          <i class="fas fa-exclamation-triangle"></i>
+          <?= htmlspecialchars($_SESSION['error']) ?>
+        </div>
+        <?php unset($_SESSION['error']); ?>
+      <?php endif; ?>
+      
+      <?php if (isset($_SESSION['success'])): ?>
+        <div class="success-message" style="background-color: #d1fae5; border: 1px solid #86efac; color: #059669; padding: 12px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-weight: 600;">
+          <i class="fas fa-check-circle"></i>
+          <?= htmlspecialchars($_SESSION['success']) ?>
+        </div>
+        <?php unset($_SESSION['success']); ?>
+      <?php endif; ?>
+      
       <form method="POST" action="login.php">
+        <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
         <!-- اختيار الدور -->
         <div class="form-group">
           <i class="fas fa-user-shield"></i>

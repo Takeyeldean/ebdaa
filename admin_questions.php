@@ -795,12 +795,12 @@ if (!empty($all_question_ids)) {
                 </div>
 
                 <div id="public_answers_section" class="flex items-center space-x-4 space-x-reverse">
-                    <input type="checkbox" name="is_public" id="is_public" value="1" checked class="w-5 h-5 text-blue-600">
-                    <label for="is_public" class="text-lg font-semibold text-gray-700">
-                        <i class="fas fa-globe"></i>
-                        إجابات عامة (يمكن للطلاب رؤية إجابات بعضهم البعض)
-                    </label>
-                </div>
+                        <input type="checkbox" name="is_public" id="is_public" value="1" checked class="w-5 h-5 text-blue-600">
+                        <label for="is_public" class="text-lg font-semibold text-gray-700">
+                            <i class="fas fa-globe"></i>
+                            إجابات عامة (يمكن للطلاب رؤية إجابات بعضهم البعض)
+                        </label>
+                    </div>
 
                 <div class="text-center">
                     <button type="submit" name="create_question" class="btn-primary text-lg px-8 py-3" onclick="return validateMcqForm()">

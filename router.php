@@ -9,6 +9,12 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+// Include security functions
+require_once __DIR__ . '/includes/security.php';
+
+// Set security headers
+setSecurityHeaders();
+
 // Get the requested URL path
 $request_uri = $_SERVER['REQUEST_URI'];
 $script_name = $_SERVER['SCRIPT_NAME'];
