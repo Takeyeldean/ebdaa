@@ -772,17 +772,6 @@ foreach ($all_answers as $answer) {
             }
         }
 
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
         .mobile-nav-links {
             display: flex;
             flex-direction: column;
@@ -1246,6 +1235,7 @@ foreach ($all_answers as $answer) {
 
         // Close mobile menu when clicking outside
         document.addEventListener('click', function(e) {
+            
             const mobileMenu = document.getElementById('mobile-nav-menu');
             const menuBtn = document.querySelector('.mobile-menu-btn');
             
