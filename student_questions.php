@@ -772,6 +772,17 @@ foreach ($all_answers as $answer) {
             }
         }
 
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         .mobile-nav-links {
             display: flex;
             flex-direction: column;
@@ -821,7 +832,7 @@ foreach ($all_answers as $answer) {
             }
             
             .nav-glass {
-                padding: 16px 20px;
+                padding: 12px 16px;
                 position: relative;
             }
             
@@ -831,6 +842,11 @@ foreach ($all_answers as $answer) {
             
             .mobile-menu-btn {
                 display: block;
+            }
+
+            /* Make text smaller on mobile */
+            .text-4xl {
+                font-size: 1.5rem; /* 24px instead of 36px */
             }
             
             .question-meta {
@@ -882,12 +898,26 @@ foreach ($all_answers as $answer) {
             margin-bottom: 8px;
             color: #4b5563;
         }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 4px;
+            }
+            
+            .nav-glass {
+                padding: 8px 12px;
+            }
+
+            .text-4xl {
+                font-size: 1.25rem; /* 20px */
+            }
+        }
     </style>
 </head>
 <body>
    
-   <nav class="nav-glass px-6 py-4 flex justify-between items-center">
-    <span class="text-4xl font-bold" style="background: linear-gradient(45deg, #1e40af, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+   <nav class="nav-glass px-6 py-4 flex justify-between items-center relative">
+      <span class="text-4xl font-bold" style="background: linear-gradient(45deg, #1e40af, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
       ⚡ إبداع
     </span>
     

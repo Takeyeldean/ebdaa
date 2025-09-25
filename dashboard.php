@@ -269,85 +269,122 @@ foreach ($students as $student) {
             z-index: 10000;
         }
 
-        /* ========================================
-           MOBILE MENU STYLES - Responsive Navigation
-           ======================================== */
-        
-        /* Mobile Menu Container - Hidden by default, shows when hamburger is clicked */
-        .mobile-menu {
-            display: none;                    /* Hidden by default */
-            position: absolute;               /* Positioned below navbar */
-            top: 100%;                       /* Starts right below navbar */
-            left: 0;                         /* Full width from left */
-            right: 0;                        /* Full width to right */
-            background: rgba(255, 255, 255, 0.98);  /* Semi-transparent white background */
-            backdrop-filter: blur(20px);     /* Glass effect with blur */
-            border-radius: 0 0 25px 25px;    /* Rounded bottom corners */
-            box-shadow: 0 8px 32px rgba(0,0,0,0.2); /* Drop shadow */
-            transform: translateY(-10px);     /* Slightly above final position */
-            opacity: 0;                      /* Invisible by default */
-            transition: all 0.3s ease;       /* Smooth animation */
-            z-index: 9999;                   /* Above other elements */
+        /* Mobile hamburger menu */
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #1e40af;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 10001;
         }
 
-        /* Mobile Menu Active State - Shows when menu is opened */
-        .mobile-menu.active {
-            display: block;                  /* Show the menu */
-            transform: translateY(0);        /* Move to final position */
-            opacity: 1;                      /* Make visible */
+        .mobile-menu-btn:hover {
+            background: rgba(30, 64, 175, 0.1);
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.2);
         }
 
-        /* Individual Mobile Menu Items - Each navigation link */
-        .mobile-menu-item {
-            display: block;                  /* Stack vertically */
-            padding: 12px 20px;              /* Comfortable touch target */
-            color: #1e40af;                  /* Blue text color */
-            text-decoration: none;           /* Remove underline */
-            font-weight: 600;                /* Semi-bold text */
-            border-bottom: 1px solid rgba(30, 64, 175, 0.1); /* Subtle separator */
-            transition: all 0.3s ease;       /* Smooth hover effect */
+        .mobile-menu-btn:active {
+            transform: scale(0.95);
         }
 
-        /* Mobile Menu Item Hover Effect - Interactive feedback */
-        .mobile-menu-item:hover {
-            background: rgba(30, 64, 175, 0.1);  /* Light blue background */
-            padding-right: 30px;             /* Slide text to the right */
+        .mobile-nav-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            border-radius: 0 0 25px 25px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+            padding: 20px;
+            z-index: 9999;
         }
 
-        /* Remove border from last menu item */
-        .mobile-menu-item:last-child {
-            border-bottom: none;
+        .mobile-nav-menu.active {
+            display: block;
+            animation: slideDown 0.3s ease-out;
         }
 
-        /* Hamburger Menu Button - Three lines icon */
-        .hamburger {
-            display: none;                   /* Hidden on desktop */
-            flex-direction: column;          /* Stack lines vertically */
-            cursor: pointer;                 /* Show it's clickable */
-            padding: 5px;                    /* Touch-friendly padding */
+        .mobile-nav-menu.active .mobile-nav-links .btn-primary {
+            animation: fadeInUp 0.4s ease-out;
+            animation-fill-mode: both;
         }
 
-        /* Individual Hamburger Lines */
-        .hamburger span {
-            width: 25px;                     /* Line width */
-            height: 3px;                     /* Line thickness */
-            background: #1e40af;             /* Blue color */
-            margin: 3px 0;                   /* Space between lines */
-            transition: 0.3s;                /* Smooth animation */
-            border-radius: 2px;              /* Slightly rounded */
+        .mobile-nav-menu.active .mobile-nav-links .btn-primary:nth-child(1) { animation-delay: 0.1s; }
+        .mobile-nav-menu.active .mobile-nav-links .btn-primary:nth-child(2) { animation-delay: 0.2s; }
+        .mobile-nav-menu.active .mobile-nav-links .btn-primary:nth-child(3) { animation-delay: 0.3s; }
+        .mobile-nav-menu.active .mobile-nav-links .btn-primary:nth-child(4) { animation-delay: 0.4s; }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
-        /* Hamburger Animation - Transform to X when active */
-        .hamburger.active span:nth-child(1) {
-            transform: rotate(-45deg) translate(-5px, 6px);  /* Top line becomes part of X */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
-        .hamburger.active span:nth-child(2) {
-            opacity: 0;                      /* Middle line disappears */
+        .mobile-nav-links {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
         }
 
-        .hamburger.active span:nth-child(3) {
-            transform: rotate(45deg) translate(-5px, -6px);  /* Bottom line becomes part of X */
+        .mobile-nav-links .btn-primary {
+            justify-content: center !important;
+            width: 100% !important;
+            padding: 16px 24px !important;
+            font-size: 1rem !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            position: relative !important;
+            overflow: hidden !important;
+        }
+
+        .mobile-nav-links .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .mobile-nav-links .btn-primary:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 0 8px 25px rgba(30, 64, 175, 0.3) !important;
+            background: linear-gradient(45deg, #1e3a8a, #2563eb) !important;
+        }
+
+        .mobile-nav-links .btn-primary:hover::before {
+            left: 100% !important;
+        }
+
+        .mobile-nav-links .btn-primary:active {
+            transform: translateY(0) !important;
+            box-shadow: 0 4px 15px rgba(30, 64, 175, 0.2) !important;
         }
 
         /* ========================================
@@ -373,8 +410,13 @@ foreach ($students as $student) {
                 display: none;                  /* Hide desktop navigation */
             }
 
-            .hamburger {
-                display: flex;                  /* Show hamburger menu button */
+            .mobile-menu-btn {
+                display: block;
+            }
+
+            /* Make text smaller on mobile */
+            .text-4xl {
+                font-size: 1.5rem; /* 24px instead of 36px */
             }
 
             /* ========================================
@@ -614,8 +656,12 @@ foreach ($students as $student) {
                 display: flex;                  /* Show desktop navigation */
             }
 
-            .hamburger {
-                display: none;                  /* Hide hamburger menu */
+            .mobile-menu-btn {
+                display: none;
+            }
+            
+            .mobile-nav-menu {
+                display: none !important;
             }
         }
 
@@ -924,33 +970,25 @@ foreach ($students as $student) {
         <?php endif; ?>
     </div>
 
-    <!-- ========================================
-         MOBILE HAMBURGER MENU BUTTON
-         ======================================== -->
-    <!-- Three-line hamburger icon that transforms to X when clicked -->
-    <div class="hamburger" onclick="toggleMobileMenu()">
-        <span></span>  <!-- Top line -->
-        <span></span>  <!-- Middle line -->
-        <span></span>  <!-- Bottom line -->
-    </div>
+    <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+        <i class="fas fa-bars" id="mobile-menu-icon"></i>
+    </button>
 
-    <!-- ========================================
-         MOBILE DROPDOWN MENU
-         ======================================== -->
-    <!-- Hidden by default, shows when hamburger is clicked -->
-    <div class="mobile-menu" id="mobileMenu">
+    <!-- Mobile Navigation Menu -->
+    <div class="mobile-nav-menu" id="mobile-nav-menu">
+        <div class="mobile-nav-links">
         
         <!-- ========================================
              STUDENT MOBILE NAVIGATION
              ======================================== -->
         <?php if ($role === 'student'): ?>
             <!-- Dashboard/Ranking Link -->
-            <a href="<?= url('dashboard') ?>" class="mobile-menu-item">
+            <a href="<?= url('dashboard') ?>" class="btn-primary active">
               <i class="fas fa-chart-bar"></i> الترتيب
             </a>
             
             <!-- Questions Link with Notification Badge -->
-            <a href="<?= url('questions') ?>" class="mobile-menu-item">
+            <a href="<?= url('questions') ?>" class="btn-primary">
               <i class="fas fa-question-circle"></i> الأسئلة
               <?php if ($notification_count > 0): ?>
                 <span style="color: #ef4444; font-weight: bold;">(<?= $notification_count ?>)</span>
@@ -958,7 +996,7 @@ foreach ($students as $student) {
             </a>
             
             <!-- Profile Link -->
-            <a href="<?= url('profile') ?>" class="mobile-menu-item">
+            <a href="<?= url('profile') ?>" class="btn-primary">
               <i class="fas fa-user"></i> حسابي
             </a>
         <?php endif; ?> 
@@ -968,17 +1006,17 @@ foreach ($students as $student) {
              ======================================== -->
         <?php if ($role === 'admin'): ?>
             <!-- Groups Link -->
-            <a href="<?= url('admin') ?>" class="mobile-menu-item">
+            <a href="<?= url('admin') ?>" class="btn-primary">
               <i class="fas fa-users"></i> المجموعات
             </a>
             
             <!-- Questions Link -->
-            <a href="<?= url('admin.questions') ?>" class="mobile-menu-item">
+            <a href="<?= url('admin.questions') ?>" class="btn-primary">
               <i class="fas fa-question-circle"></i> الأسئلة
             </a>
             
             <!-- Invitations Link with Notification Badge -->
-            <a href="<?= url('admin.invitations') ?>" class="mobile-menu-item">
+            <a href="<?= url('admin.invitations') ?>" class="btn-primary">
               <i class="fas fa-envelope"></i> الدعوات
               <?php if ($invitation_count > 0): ?>
                 <span style="color: #f97316; font-weight: bold;">(<?= $invitation_count ?>)</span>
@@ -986,10 +1024,11 @@ foreach ($students as $student) {
             </a>
             
             <!-- Profile Link -->
-            <a href="<?= url('profile') ?>" class="mobile-menu-item">
+            <a href="<?= url('profile') ?>" class="btn-primary">
               <i class="fas fa-user"></i> حسابي
             </a>
         <?php endif; ?>
+        </div>
     </div>
   </nav>
 
@@ -1080,29 +1119,31 @@ foreach ($students as $student) {
       MOBILE MENU TOGGLE FUNCTION
       ======================================== */
    function toggleMobileMenu() {
-     // Get references to mobile menu and hamburger button
-     const mobileMenu = document.getElementById('mobileMenu');
-     const hamburger = document.querySelector('.hamburger');
+     const mobileMenu = document.getElementById('mobile-nav-menu');
+     const menuIcon = document.getElementById('mobile-menu-icon');
      
-     // Toggle 'active' class on both elements
-     // This shows/hides the menu and animates the hamburger to X
-     mobileMenu.classList.toggle('active');
-     hamburger.classList.toggle('active');
+     if (mobileMenu.classList.contains('active')) {
+         mobileMenu.classList.remove('active');
+         menuIcon.classList.remove('fa-times');
+         menuIcon.classList.add('fa-bars');
+     } else {
+         mobileMenu.classList.add('active');
+         menuIcon.classList.remove('fa-bars');
+         menuIcon.classList.add('fa-times');
+     }
    }
 
    /* ========================================
       CLOSE MOBILE MENU WHEN CLICKING OUTSIDE
       ======================================== */
-   document.addEventListener('click', function(event) {
-     // Get references to mobile menu, hamburger, and navbar
-     const mobileMenu = document.getElementById('mobileMenu');
-     const hamburger = document.querySelector('.hamburger');
-     const nav = document.querySelector('.nav-glass');
+   document.addEventListener('click', function(e) {
+     const mobileMenu = document.getElementById('mobile-nav-menu');
+     const menuBtn = document.querySelector('.mobile-menu-btn');
      
-     // If click is outside the navbar, close the mobile menu
-     if (!nav.contains(event.target)) {
-       mobileMenu.classList.remove('active');  // Hide mobile menu
-       hamburger.classList.remove('active');   // Reset hamburger to lines
+     if (!mobileMenu.contains(e.target) && !menuBtn.contains(e.target)) {
+         mobileMenu.classList.remove('active');
+         document.getElementById('mobile-menu-icon').classList.remove('fa-times');
+         document.getElementById('mobile-menu-icon').classList.add('fa-bars');
      }
    });
 
