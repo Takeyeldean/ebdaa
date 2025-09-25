@@ -253,6 +253,74 @@ $user = $stmt->fetch();
             font-size: 24px;
         }
 
+        /* Photo Viewer Modal */
+        .photo-modal {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(10px);
+        }
+
+        .photo-modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .photo-modal-content {
+            max-width: 90%;
+            max-height: 90%;
+            position: relative;
+            animation: zoomIn 0.3s ease-out;
+        }
+
+        .photo-modal img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .photo-modal-close {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            color: white;
+            font-size: 30px;
+            font-weight: bold;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .photo-modal-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes zoomIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
         .upload-btn:hover {
             transform: scale(1.1);
             box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
@@ -538,9 +606,9 @@ $user = $stmt->fetch();
     <?php if ($role === 'student'): ?>
     <div class="profile-container floating">
         <?php if (!empty($user['profile_image'])): ?>
-            <img src="/ebdaa/uploads/<?= htmlspecialchars($user['profile_image']) ?>" alt="صورة الملف الشخصي">
+            <img src="/ebdaa/uploads/<?= htmlspecialchars($user['profile_image']) ?>" alt="صورة الملف الشخصي" onclick="openPhotoModal(this.src)" style="cursor: pointer;">
         <?php else: ?>
-            <img src="/ebdaa/uploads/default.png" alt="صورة الملف الشخصي">
+            <img src="/ebdaa/uploads/default.png" alt="صورة الملف الشخصي" onclick="openPhotoModal(this.src)" style="cursor: pointer;">
         <?php endif; ?>
         <form action="<?= url('profile.image') ?>" method="POST" enctype="multipart/form-data" class="upload-btn">
             <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
@@ -654,7 +722,36 @@ $user = $stmt->fetch();
 
 </div>
 
+<!-- Photo Viewer Modal -->
+<div class="photo-modal" id="photoModal" onclick="closePhotoModal()">
+    <div class="photo-modal-content" onclick="event.stopPropagation()">
+        <span class="photo-modal-close" onclick="closePhotoModal()">&times;</span>
+        <img id="modalImage" src="" alt="صورة الملف الشخصي">
+    </div>
+</div>
+
 <script>
+    // Photo Modal Functions
+    function openPhotoModal(imageSrc) {
+        const modal = document.getElementById('photoModal');
+        const modalImage = document.getElementById('modalImage');
+        modalImage.src = imageSrc;
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden'; // Prevent background scrolling
+    }
+
+    function closePhotoModal() {
+        const modal = document.getElementById('photoModal');
+        modal.classList.remove('active');
+        document.body.style.overflow = 'auto'; // Restore scrolling
+    }
+
+    // Close modal with Escape key
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            closePhotoModal();
+        }
+    });
     
  function toggleMobileMenu() {
             const mobileMenu = document.getElementById('mobile-nav-menu');
@@ -728,6 +825,19 @@ $user = $stmt->fetch();
 
             .upload-btn i.fas.fa-camera {
                 font-size: 18px;
+            }
+
+            /* Photo modal responsive */
+            .photo-modal-content {
+                max-width: 95%;
+                max-height: 95%;
+            }
+
+            .photo-modal-close {
+                top: -35px;
+                font-size: 25px;
+                width: 35px;
+                height: 35px;
             }
 
             .text-3xl {
@@ -810,6 +920,19 @@ $user = $stmt->fetch();
 
             .upload-btn i.fas.fa-camera {
                 font-size: 16px;
+            }
+
+            /* Photo modal responsive - small mobile */
+            .photo-modal-content {
+                max-width: 98%;
+                max-height: 98%;
+            }
+
+            .photo-modal-close {
+                top: -30px;
+                font-size: 20px;
+                width: 30px;
+                height: 30px;
             }
 
             .btn-primary {
