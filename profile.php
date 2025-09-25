@@ -2,7 +2,7 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+session_start();
 }
 require_once 'includes/db.php';
 require_once 'includes/url_helper.php';
@@ -248,6 +248,11 @@ $user = $stmt->fetch();
             transition: all 0.3s ease;
         }
 
+        /* Responsive camera icon */
+        .upload-btn i.fas.fa-camera {
+            font-size: 24px;
+        }
+
         .upload-btn:hover {
             transform: scale(1.1);
             box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
@@ -436,7 +441,7 @@ $user = $stmt->fetch();
               <i class="fas fa-user"></i>
               حسابي
             </a>
-        <?php endif; ?> 
+        <?php endif; ?>
 
         <?php if ($role === 'admin'): ?>
             <a href="<?= url('admin') ?>" class="btn-primary">
@@ -522,8 +527,8 @@ $user = $stmt->fetch();
                     <i class="fas fa-user"></i>
                     حسابي
                 </a>
-            <?php endif; ?>
-        </div>
+        <?php endif; ?>
+      </div>
     </div>
   </nav>
 
@@ -714,6 +719,17 @@ $user = $stmt->fetch();
                 font-size: 1.5rem; /* 24px instead of 36px */
             }
 
+            /* Responsive camera icon - smaller on mobile */
+            .upload-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+            }
+
+            .upload-btn i.fas.fa-camera {
+                font-size: 18px;
+            }
+
             .text-3xl {
                 font-size: 1.25rem; /* 20px instead of 30px */
             }
@@ -783,6 +799,17 @@ $user = $stmt->fetch();
 
             .text-4xl {
                 font-size: 1.25rem; /* 20px */
+            }
+
+            /* Responsive camera icon - even smaller on small mobile */
+            .upload-btn {
+                width: 35px;
+                height: 35px;
+                font-size: 16px;
+            }
+
+            .upload-btn i.fas.fa-camera {
+                font-size: 16px;
             }
 
             .btn-primary {
