@@ -130,8 +130,8 @@ if ($user_role === 'student') {
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
   
   <!-- Load optimized CSS asynchronously -->
-  <link rel="preload" href="/assets/css/optimized.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link rel="stylesheet" href="/assets/css/optimized.css"></noscript>
+  <link rel="preload" href="assets/css/optimized.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="assets/css/optimized.css"></noscript>
 </head>
 <body>
   <!-- Navigation -->
@@ -329,7 +329,7 @@ if ($user_role === 'student') {
   </script>
   
   <!-- Load optimized JavaScript asynchronously -->
-  <script src="/assets/js/optimized.js" async></script>
+  <script src="assets/js/optimized.js" async></script>
   
   <!-- Service Worker Registration -->
   <script>

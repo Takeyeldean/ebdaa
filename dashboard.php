@@ -1,4 +1,4 @@
-  <?php
+<?php
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 if (session_status() === PHP_SESSION_NONE) {
@@ -104,8 +104,8 @@ foreach ($students as $student) {
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
   
   <!-- Load optimized CSS asynchronously -->
-  <link rel="preload" href="/assets/css/optimized.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link rel="stylesheet" href="/assets/css/optimized.css"></noscript>
+  <link rel="preload" href="assets/css/optimized.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="assets/css/optimized.css"></noscript>
   <style>
 
     * {
@@ -269,129 +269,353 @@ foreach ($students as $student) {
             z-index: 10000;
         }
 
-        /* Mobile responsiveness */
+        /* ========================================
+           MOBILE MENU STYLES - Responsive Navigation
+           ======================================== */
+        
+        /* Mobile Menu Container - Hidden by default, shows when hamburger is clicked */
+        .mobile-menu {
+            display: none;                    /* Hidden by default */
+            position: absolute;               /* Positioned below navbar */
+            top: 100%;                       /* Starts right below navbar */
+            left: 0;                         /* Full width from left */
+            right: 0;                        /* Full width to right */
+            background: rgba(255, 255, 255, 0.98);  /* Semi-transparent white background */
+            backdrop-filter: blur(20px);     /* Glass effect with blur */
+            border-radius: 0 0 25px 25px;    /* Rounded bottom corners */
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2); /* Drop shadow */
+            transform: translateY(-10px);     /* Slightly above final position */
+            opacity: 0;                      /* Invisible by default */
+            transition: all 0.3s ease;       /* Smooth animation */
+            z-index: 9999;                   /* Above other elements */
+        }
+
+        /* Mobile Menu Active State - Shows when menu is opened */
+        .mobile-menu.active {
+            display: block;                  /* Show the menu */
+            transform: translateY(0);        /* Move to final position */
+            opacity: 1;                      /* Make visible */
+        }
+
+        /* Individual Mobile Menu Items - Each navigation link */
+        .mobile-menu-item {
+            display: block;                  /* Stack vertically */
+            padding: 12px 20px;              /* Comfortable touch target */
+            color: #1e40af;                  /* Blue text color */
+            text-decoration: none;           /* Remove underline */
+            font-weight: 600;                /* Semi-bold text */
+            border-bottom: 1px solid rgba(30, 64, 175, 0.1); /* Subtle separator */
+            transition: all 0.3s ease;       /* Smooth hover effect */
+        }
+
+        /* Mobile Menu Item Hover Effect - Interactive feedback */
+        .mobile-menu-item:hover {
+            background: rgba(30, 64, 175, 0.1);  /* Light blue background */
+            padding-right: 30px;             /* Slide text to the right */
+        }
+
+        /* Remove border from last menu item */
+        .mobile-menu-item:last-child {
+            border-bottom: none;
+        }
+
+        /* Hamburger Menu Button - Three lines icon */
+        .hamburger {
+            display: none;                   /* Hidden on desktop */
+            flex-direction: column;          /* Stack lines vertically */
+            cursor: pointer;                 /* Show it's clickable */
+            padding: 5px;                    /* Touch-friendly padding */
+        }
+
+        /* Individual Hamburger Lines */
+        .hamburger span {
+            width: 25px;                     /* Line width */
+            height: 3px;                     /* Line thickness */
+            background: #1e40af;             /* Blue color */
+            margin: 3px 0;                   /* Space between lines */
+            transition: 0.3s;                /* Smooth animation */
+            border-radius: 2px;              /* Slightly rounded */
+        }
+
+        /* Hamburger Animation - Transform to X when active */
+        .hamburger.active span:nth-child(1) {
+            transform: rotate(-45deg) translate(-5px, 6px);  /* Top line becomes part of X */
+        }
+
+        .hamburger.active span:nth-child(2) {
+            opacity: 0;                      /* Middle line disappears */
+        }
+
+        .hamburger.active span:nth-child(3) {
+            transform: rotate(45deg) translate(-5px, -6px);  /* Bottom line becomes part of X */
+        }
+
+        /* ========================================
+           MOBILE RESPONSIVE STYLES - Tablet & Mobile (768px and below)
+           ======================================== */
         @media (max-width: 768px) {
+            
+            /* ========================================
+               LAYOUT ADJUSTMENTS - Reduce spacing for mobile
+               ======================================== */
             .container {
-                padding: 8px;
+                padding: 8px !important;        /* Reduce container padding for more content space */
             }
             
             .nav-glass {
-                padding: 12px 16px;
+                padding: 12px 16px !important;  /* Smaller navbar padding */
             }
 
-            /* Make text smaller on mobile */
+            /* ========================================
+               NAVIGATION SWITCH - Desktop to Mobile Menu
+               ======================================== */
+            .desktop-nav {
+                display: none;                  /* Hide desktop navigation */
+            }
+
+            .hamburger {
+                display: flex;                  /* Show hamburger menu button */
+            }
+
+            /* ========================================
+               TYPOGRAPHY SCALING - Make text readable on small screens
+               ======================================== */
+            .text-5xl {
+                font-size: 1.5rem !important;   /* 24px instead of 48px - Main headings */
+            }
+
             .text-4xl {
-                font-size: 1.5rem; /* 24px instead of 36px */
+                font-size: 1.25rem !important;  /* 20px instead of 36px - Sub headings */
             }
 
             .text-3xl {
-                font-size: 1.25rem; /* 20px instead of 30px */
+                font-size: 1.125rem !important; /* 18px instead of 30px - Section titles */
             }
 
             .text-2xl {
-                font-size: 1.125rem; /* 18px instead of 24px */
+                font-size: 1rem !important;     /* 16px instead of 24px - Card titles */
             }
 
             .text-xl {
-                font-size: 1rem; /* 16px instead of 20px */
+                font-size: 0.875rem !important; /* 14px instead of 20px - Body text */
             }
 
-            /* Card adjustments */
+            .text-6xl {
+                font-size: 1.75rem !important;  /* 28px instead of 60px - Large headings */
+            }
+
+            /* ========================================
+               CARD LAYOUT OPTIMIZATION - Reduce padding for mobile
+               ======================================== */
             .card {
-                padding: 12px;
-                margin-bottom: 12px;
+                padding: 8px !important;        /* Smaller card padding */
+                margin-bottom: 8px !important;  /* Reduce card spacing */
             }
 
-            /* Welcome card */
             .welcome-card {
-                padding: 16px;
-                margin-bottom: 16px;
+                padding: 8px !important;       /* Welcome card padding */
+                margin-bottom: 22px !important; /* Welcome card spacing */
             }
 
-            /* Chart container */
+            /* ========================================
+               CHART CONTAINER - Optimize for mobile viewing
+               ======================================== */
             .chart-container {
-                padding: 12px;
-                margin-bottom: 16px;
+                padding: 8px !important;        /* Reduce chart padding */
+                margin-bottom: 12px !important; /* Reduce chart spacing */
+                height: 300px !important;       /* Fixed height for mobile */
+                margin-left: 0 !important;      /* Remove left margin */
             }
 
-            /* Character positioning */
-            .character {
-                position: relative;
-                top: auto;
-                right: auto;
-                margin-top: 16px;
-                text-align: center;
+            /* ========================================
+               CHARACTER POSITIONING - Move character above chart on mobile
+               ======================================== */
+            .character-above {
+                position: relative !important;  /* Change from absolute to relative */
+                top: auto !important;          /* Reset top position */
+                left: auto !important;         /* Reset left position */
+                right: auto !important;        /* Reset right position */
+                margin-bottom: 16px !important; /* Add bottom margin */
+                text-align: center !important;  /* Center the character */
+                z-index: 10 !important;        /* Ensure it's above other elements */
             }
 
-            /* Reduce margins and padding globally */
-            .mb-8 { margin-bottom: 16px; }
-            .mb-6 { margin-bottom: 12px; }
-            .mb-4 { margin-bottom: 8px; }
-            .mb-3 { margin-bottom: 6px; }
-            .mb-2 { margin-bottom: 4px; }
-            .mb-1 { margin-bottom: 2px; }
+            .character-behind {
+                display: none !important;      /* Hide character behind chart */
+            }
 
-            .p-6 { padding: 12px; }
-            .p-4 { padding: 8px; }
-            .p-3 { padding: 6px; }
-            .p-2 { padding: 4px; }
+            /* ========================================
+               SPACING OPTIMIZATION - Reduce margins and padding globally
+               ======================================== */
+            /* Bottom margins - Reduce vertical spacing */
+            .mb-8 { margin-bottom: 12px !important; }  /* Large bottom margin */
+            .mb-6 { margin-bottom: 8px !important; }   /* Medium bottom margin */
+            .mb-4 { margin-bottom: 6px !important; }   /* Small bottom margin */
+            .mb-3 { margin-bottom: 4px !important; }   /* Extra small bottom margin */
+            .mb-2 { margin-bottom: 3px !important; }   /* Tiny bottom margin */
+            .mb-1 { margin-bottom: 2px !important; }   /* Minimal bottom margin */
 
-            /* Button improvements */
+            /* Top margins - Reduce vertical spacing */
+            .mt-8 { margin-top: 12px !important; }     /* Large top margin */
+            .mt-12 { margin-top: 16px !important; }    /* Extra large top margin */
+
+            /* Padding - Reduce internal spacing */
+            .p-8 { padding: 8px !important; }          /* Large padding */
+            .p-6 { padding: 6px !important; }          /* Medium padding */
+            .p-4 { padding: 4px !important; }          /* Small padding */
+            .p-3 { padding: 3px !important; }          /* Extra small padding */
+            .p-2 { padding: 2px !important; }          /* Tiny padding */
+
+            /* ========================================
+               BUTTON OPTIMIZATION - Touch-friendly buttons
+               ======================================== */
             .btn-primary {
-                padding: 10px 16px;
-                font-size: 0.875rem;
-                margin-bottom: 8px;
+                padding: 8px 12px !important;  /* Smaller button padding */
+                font-size: 0.75rem !important; /* Smaller button text */
+                margin-bottom: 6px !important; /* Reduce button spacing */
             }
 
-            /* Profile image */
+            /* ========================================
+               PROFILE IMAGE - Optimize for mobile
+               ======================================== */
             .profile-image {
-                width: 60px;
-                height: 60px;
+              margin-top: 20px !important;
+                width: 120px !important;        /* Smaller profile image */
+                height: 120px !important;       /* Maintain aspect ratio */
             }
 
-            /* Chart responsive */
+            /* ========================================
+               CHART RESPONSIVE - Optimize chart size
+               ======================================== */
             .chart-wrapper {
-                height: 300px;
+                height: 250px !important;      /* Smaller chart height */
+            }
+
+            /* ========================================
+               CHARACTER BUBBLE - Optimize character speech bubble
+               ======================================== */
+            .character-bubble {
+              margin-top: 20px;
+                max-width: 200px !important;   /* Limit bubble width */
+                padding: 8px !important;       /* Reduce bubble padding */
+                margin-bottom: 8px !important; /* Reduce bubble spacing */
+            }
+
+            .character-emoji {
+                font-size: 4rem !important;    /* Smaller emoji size */
+            }
+
+            /* ========================================
+               HORIZONTAL SPACING - Reduce horizontal gaps
+               ======================================== */
+            .space-x-4 > * + * {
+                margin-right: 8px !important;  /* Reduce large horizontal spacing */
+            }
+
+            .space-x-2 > * + * {
+                margin-right: 4px !important;  /* Reduce small horizontal spacing */
             }
         }
 
+        /* ========================================
+           SMALL MOBILE RESPONSIVE STYLES - Small phones (480px and below)
+           ======================================== */
         @media (max-width: 480px) {
+            
+            /* ========================================
+               EXTREME SPACING REDUCTION - Minimal padding for small screens
+               ======================================== */
             .container {
-                padding: 4px;
+                padding: 4px !important;         /* Minimal container padding */
             }
             
             .nav-glass {
-                padding: 8px 12px;
+                padding: 8px 12px !important;   /* Minimal navbar padding */
+            }
+
+            /* ========================================
+               ULTRA-SMALL TYPOGRAPHY - Even smaller text for tiny screens
+               ======================================== */
+            .text-5xl {
+                font-size: 1.25rem !important;  /* 20px - Very small main headings */
             }
 
             .text-4xl {
-                font-size: 1.25rem; /* 20px */
+                font-size: 1.125rem !important; /* 18px - Very small sub headings */
             }
 
+            .text-6xl {
+                font-size: 1.5rem !important;   /* 24px - Very small large headings */
+            }
+
+            /* ========================================
+               MINIMAL CARD SPACING - Ultra-compact cards
+               ======================================== */
             .card {
-                padding: 8px;
+                padding: 6px !important;         /* Minimal card padding */
             }
 
             .welcome-card {
-                padding: 12px;
+                padding: 8px !important;         /* Minimal welcome card padding */
             }
 
+            /* ========================================
+               COMPACT CHART - Smaller chart for tiny screens
+               ======================================== */
             .chart-container {
-                padding: 8px;
+                padding: 0px !important;         /* Minimal chart padding */
+                height: 300px !important;        /* Smaller chart height */
             }
 
+            /* ========================================
+               TINY BUTTONS - Ultra-small touch targets
+               ======================================== */
             .btn-primary {
-                padding: 8px 12px;
-                font-size: 0.8rem;
+                padding: 6px 10px !important;   /* Minimal button padding */
+                font-size: 0.7rem !important;   /* Very small button text */
             }
 
+            /* ========================================
+               MINI PROFILE IMAGE - Very small profile picture
+               ======================================== */
             .profile-image {
-                width: 50px;
-                height: 50px;
+              margin-top: 30px;
+                width: 120px !important;          /* Very small profile image */
+                height: 120px !important;         /* Maintain aspect ratio */
             }
 
+            /* ========================================
+               COMPACT CHART WRAPPER - Smaller chart container
+               ======================================== */
             .chart-wrapper {
-                height: 250px;
+                height: 450px !important;        /* Very small chart height */
+            }
+
+            /* ========================================
+               MINI CHARACTER BUBBLE - Smaller speech bubble
+               ======================================== */
+            .character-bubble {
+              margin-top: 20px;
+                max-width: 180px !important;     /* Very small bubble width */
+                padding: 0px !important;         /* Minimal bubble padding */
+            }
+
+            .character-emoji {
+
+                font-size: 3.5rem !important;    /* Very small emoji */
+            }
+        }
+
+        /* ========================================
+           DESKTOP STYLES - Large screens (769px and above)
+           ======================================== */
+        @media (min-width: 769px) {
+            .desktop-nav {
+                display: flex;                  /* Show desktop navigation */
+            }
+
+            .hamburger {
+                display: none;                  /* Hide hamburger menu */
             }
         }
 
@@ -633,11 +857,13 @@ foreach ($students as $student) {
    </div>
 
   <!-- Navbar -->
-  <nav class="nav-glass px-6 py-4 flex justify-between items-center">
+  <nav class="nav-glass px-6 py-4 flex justify-between items-center relative">
     <span class="text-4xl font-bold" style="background: linear-gradient(45deg, #1e40af, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
       ⚡ إبداع
     </span>
-    <div class="space-x-2 space-x-reverse">
+    
+    <!-- Desktop Navigation -->
+    <div class="desktop-nav space-x-2 space-x-reverse">
         <?php if ($role === 'student'): ?>
             <a href="<?= url('dashboard') ?>" class="btn-primary active">
               <i class="fas fa-chart-bar"></i>
@@ -697,6 +923,74 @@ foreach ($students as $student) {
             </a>
         <?php endif; ?>
     </div>
+
+    <!-- ========================================
+         MOBILE HAMBURGER MENU BUTTON
+         ======================================== -->
+    <!-- Three-line hamburger icon that transforms to X when clicked -->
+    <div class="hamburger" onclick="toggleMobileMenu()">
+        <span></span>  <!-- Top line -->
+        <span></span>  <!-- Middle line -->
+        <span></span>  <!-- Bottom line -->
+    </div>
+
+    <!-- ========================================
+         MOBILE DROPDOWN MENU
+         ======================================== -->
+    <!-- Hidden by default, shows when hamburger is clicked -->
+    <div class="mobile-menu" id="mobileMenu">
+        
+        <!-- ========================================
+             STUDENT MOBILE NAVIGATION
+             ======================================== -->
+        <?php if ($role === 'student'): ?>
+            <!-- Dashboard/Ranking Link -->
+            <a href="<?= url('dashboard') ?>" class="mobile-menu-item">
+              <i class="fas fa-chart-bar"></i> الترتيب
+            </a>
+            
+            <!-- Questions Link with Notification Badge -->
+            <a href="<?= url('questions') ?>" class="mobile-menu-item">
+              <i class="fas fa-question-circle"></i> الأسئلة
+              <?php if ($notification_count > 0): ?>
+                <span style="color: #ef4444; font-weight: bold;">(<?= $notification_count ?>)</span>
+              <?php endif; ?>
+            </a>
+            
+            <!-- Profile Link -->
+            <a href="<?= url('profile') ?>" class="mobile-menu-item">
+              <i class="fas fa-user"></i> حسابي
+            </a>
+        <?php endif; ?> 
+
+        <!-- ========================================
+             ADMIN MOBILE NAVIGATION
+             ======================================== -->
+        <?php if ($role === 'admin'): ?>
+            <!-- Groups Link -->
+            <a href="<?= url('admin') ?>" class="mobile-menu-item">
+              <i class="fas fa-users"></i> المجموعات
+            </a>
+            
+            <!-- Questions Link -->
+            <a href="<?= url('admin.questions') ?>" class="mobile-menu-item">
+              <i class="fas fa-question-circle"></i> الأسئلة
+            </a>
+            
+            <!-- Invitations Link with Notification Badge -->
+            <a href="<?= url('admin.invitations') ?>" class="mobile-menu-item">
+              <i class="fas fa-envelope"></i> الدعوات
+              <?php if ($invitation_count > 0): ?>
+                <span style="color: #f97316; font-weight: bold;">(<?= $invitation_count ?>)</span>
+              <?php endif; ?>
+            </a>
+            
+            <!-- Profile Link -->
+            <a href="<?= url('profile') ?>" class="mobile-menu-item">
+              <i class="fas fa-user"></i> حسابي
+            </a>
+        <?php endif; ?>
+    </div>
   </nav>
 
   <div class="container mx-auto p-8 relative z-10">
@@ -726,29 +1020,120 @@ foreach ($students as $student) {
        </div>
     <?php endif; ?> 
 
-    <!-- Chart Container -->  
+    <!-- ========================================
+         CHARACTER ABOVE CHART (MOBILE ONLY)
+         ======================================== -->
+    <!-- This character appears above the chart on mobile devices -->
+    <!-- Hidden by default, shown by JavaScript when screen width <= 768px -->
+    <div class="character-above hidden">
+      <!-- Character speech bubble with group message -->
+      <div class="character-bubble bg-white bg-opacity-90 rounded-2xl p-4 shadow-lg mb-4 max-w-xs mx-auto">
+        <p class="text-sm font-bold text-blue-600 text-center mb-1">المعلم <?= htmlspecialchars($group_emoji) ?></p>
+        <?php if (!empty($group_message)): ?>
+          <!-- Show custom group message if available -->
+          <p class="text-sm text-gray-800 text-center"><?= htmlspecialchars($group_message) ?></p>
+        <?php else: ?>
+          <!-- Default motivational message -->
+          <p class="text-lg font-bold text-gray-800 text-center">أنا أتابع تقدمكم! 🔥</p>
+          <p class="text-sm text-gray-600 text-center">استمروا في التميز! ⚡</p>
+        <?php endif; ?>
+      </div>
+      <!-- Character emoji (large size) -->
+      <div class="character-emoji text-8xl text-center"><?= htmlspecialchars($group_emoji) ?></div>
+    </div>
+
+    <!-- ========================================
+         CHART CONTAINER WITH RESPONSIVE CHARACTER
+         ======================================== -->
     <div class="mt-12 flex justify-center relative">
-      <!-- Character behind chart -->
-      <div class="character-behind absolute left-8 top-0 z-0">
+      
+      <!-- ========================================
+           CHARACTER BEHIND CHART (DESKTOP ONLY)
+           ======================================== -->
+      <!-- This character appears behind the chart on desktop -->
+      <!-- Hidden on mobile, shown by JavaScript when screen width > 768px -->
+      <div class="character-behind absolute left-0 top-0 z-0">
+        <!-- Character speech bubble with group message -->
         <div class="character-bubble bg-white bg-opacity-90 rounded-2xl p-4 shadow-lg mb-4 max-w-xs">
           <p class="text-sm font-bold text-blue-600 text-center mb-1">المعلم <?= htmlspecialchars($group_emoji) ?></p>
           <?php if (!empty($group_message)): ?>
+            <!-- Show custom group message if available -->
             <p class="text-sm text-gray-800 text-center"><?= htmlspecialchars($group_message) ?></p>
           <?php else: ?>
+            <!-- Default motivational message -->
             <p class="text-lg font-bold text-gray-800 text-center">أنا أتابع تقدمكم! 🔥</p>
             <p class="text-sm text-gray-600 text-center">استمروا في التميز! ⚡</p>
           <?php endif; ?>
         </div>
+        <!-- Character emoji (large size) -->
         <div class="character-emoji text-8xl"><?= htmlspecialchars($group_emoji) ?></div>
       </div>
       
-    
-     </div>
       <div class="chart-container p-8 w-full max-w-6xl relative h-[500px] floating z-10 ml-24">
         <canvas id="gpaChart"></canvas>
       </div>
-  </div>  
+    </div>  
+  </div>
+
  <script>
+   /* ========================================
+      MOBILE MENU TOGGLE FUNCTION
+      ======================================== */
+   function toggleMobileMenu() {
+     // Get references to mobile menu and hamburger button
+     const mobileMenu = document.getElementById('mobileMenu');
+     const hamburger = document.querySelector('.hamburger');
+     
+     // Toggle 'active' class on both elements
+     // This shows/hides the menu and animates the hamburger to X
+     mobileMenu.classList.toggle('active');
+     hamburger.classList.toggle('active');
+   }
+
+   /* ========================================
+      CLOSE MOBILE MENU WHEN CLICKING OUTSIDE
+      ======================================== */
+   document.addEventListener('click', function(event) {
+     // Get references to mobile menu, hamburger, and navbar
+     const mobileMenu = document.getElementById('mobileMenu');
+     const hamburger = document.querySelector('.hamburger');
+     const nav = document.querySelector('.nav-glass');
+     
+     // If click is outside the navbar, close the mobile menu
+     if (!nav.contains(event.target)) {
+       mobileMenu.classList.remove('active');  // Hide mobile menu
+       hamburger.classList.remove('active');   // Reset hamburger to lines
+     }
+   });
+
+   /* ========================================
+      RESPONSIVE CHARACTER POSITIONING
+      ======================================== */
+   function handleResponsiveCharacter() {
+     // Get references to character elements
+     const characterAbove = document.querySelector('.character-above');
+     const characterBehind = document.querySelector('.character-behind');
+     
+     // Check if screen width is mobile size (768px or less)
+     if (window.innerWidth <= 768) {
+       // Mobile: Show character above chart, hide character behind chart
+       characterAbove.classList.remove('hidden');
+       characterBehind.style.display = 'none';
+     } else {
+       // Desktop: Hide character above chart, show character behind chart
+       characterAbove.classList.add('hidden');
+       characterBehind.style.display = 'block';
+     }
+   }
+
+   /* ========================================
+      EVENT LISTENERS - Initialize responsive behavior
+      ======================================== */
+   // Call function when page loads
+   window.addEventListener('load', handleResponsiveCharacter);
+   // Call function when window is resized (e.g., rotating device)
+   window.addEventListener('resize', handleResponsiveCharacter);
+
    // Create floating galaxy particles
    function createGalaxyParticles() {
      const container = document.getElementById('particles-container');
@@ -808,7 +1193,6 @@ foreach ($students as $student) {
   // 🥇🥈🥉 الميداليات والرموز التعبيرية للأولاد
   const medalEmojis = ["🥇", "🥈", "🥉"];
   const topTitles = ["البطل الذهبي", "البطل الفضي", "البطل البرونزي"];
- const funEmojis = ["⚡", "🔥", "⚽", "🏆", "🎮", "🚀", "💪", "🎯", "🏅", "⭐"];
 
   // ألوان متدرجة لكل الأعمدة
   function createGradient(color1, color2) {
@@ -899,8 +1283,8 @@ foreach ($students as $student) {
        meta.data.forEach((bar, index) => {
          if (loadedImages[index]) {
            const x = bar.x;
-           const y = bar.y - 20; // Position above the bar
-           const imageSize = 70; // Size of the profile image
+           const y = bar.y ; // Position above the bar
+           const imageSize = window.innerWidth <= 900 ? 30 : 70; // Smaller on mobile, bigger on desktop
            
            // Gaming glow effect
            ctx.save();
@@ -956,7 +1340,7 @@ foreach ($students as $student) {
           data: data,
           backgroundColor: barColors,
           borderRadius: 20,
-          borderWidth: 3,
+          borderWidth: 2,
           borderColor: '#ffffff',
           hoverBorderWidth: 5,
           hoverBorderColor: '#FFD700'
@@ -969,7 +1353,7 @@ foreach ($students as $student) {
         duration: 2500,
         easing: 'easeOutBounce',
         delay: (context) => {
-          return context.dataIndex * 200;
+          return context.dataIndex * 400;
         }
       },
       interaction: {
@@ -987,9 +1371,9 @@ foreach ($students as $student) {
              },
              ticks: {
                color: '#00ffff',
-               font: { size: 16, weight: 'bold' },
+               font: { size: window.innerWidth <= 768 ? 12 : 16, weight: 'bold' },
                callback: function(value) {
-                 return value + ' ⚡';
+                 return value ;
                },
                padding: 10
              }
@@ -1001,27 +1385,36 @@ foreach ($students as $student) {
              ticks: {
                color: '#ffffff',
                font: function(context) {
+                 const baseSize = window.innerWidth <= 768 ? 10 : 14;
+                 const largeSize = window.innerWidth <= 768 ? 12 : 18;
                  return { 
-                   size: context.index < 3 ? 18 : 14, 
+                   size: context.index < 3 ? largeSize : baseSize, 
                    weight: 'bold'
                  };
                },
                maxRotation: 45,
                minRotation: 0,
-               padding: 15
+               padding: 0
              }
            }
          },
       plugins: {
          title: {
            display: true,
-           text: '⚡ سباق الأبطال الملحمي - من سيفوز بالمركز الأول؟ 🏆',
-           font: { size: 32, weight: 'bold', family: 'Cairo' },
+           text: '⚡ سباق الأبطال الملحمي 🏆',
+           font: { 
+             size: window.innerWidth <= 768 ? 16 : 32, 
+             weight: 'bold', 
+             family: 'Cairo' 
+           },
            color: '#00ffff',
-           padding: 30
+           padding: window.innerWidth <= 768 ? 15 : 30
          },
         legend: { 
           display: false 
+        },
+        datalabels: {
+          display: false  // Completely disable datalabels
         },  
          tooltip: {
            backgroundColor: 'rgba(0, 0, 0, 0.9)',
@@ -1030,25 +1423,26 @@ foreach ($students as $student) {
            borderColor: '#ff006e',
            borderWidth: 3,
            cornerRadius: 15,
-           titleFont: { size: 18, weight: 'bold' },
-           bodyFont: { size: 16, weight: 'bold' },
+           titleFont: { size: window.innerWidth <= 768 ? 14 : 18, weight: 'bold' },
+           bodyFont: { size: window.innerWidth <= 768 ? 12 : 16, weight: 'bold' },
            callbacks: {
              title: function(context) {
                const index = context[0].dataIndex;
-               const titles = ['🥇 البطل الذهبي', '🥈 البطل الفضي', '🥉 البطل البرونزي'];
+               const titles = [' البطل الذهبي', ' البطل الفضي', ' البطل البرونزي'];
                if (index < 3) {
-                 return titles[index];
+                 return titles[index] + context[0].label;
                }
-               return '⚡ ' + context[0].label;
+               return  context[0].label;
              },
              label: function(context) {
-               return '💪 النقاط: ' + context.parsed.y + ' ⚡';
+               return '💪 النقاط: ' + context.parsed.y ;
              }
            }
          },
-        datalabels: {
-          display: false
-        }
+    
+
+        
+
       }
     },
     plugins: [ChartDataLabels, profileImagePlugin]
@@ -1066,22 +1460,24 @@ foreach ($students as $student) {
 </script>
 
 <!-- Load optimized JavaScript -->
-<script src="/assets/js/simple-optimized.js"></script>
+<script src="assets/js/simple-optimized.js"></script>
 
 <!-- Service Worker Registration -->
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function() {
-      navigator.serviceWorker.register('/sw.js')
+      navigator.serviceWorker.register('sw.js')
         .then(function(registration) {
           console.log('SW registered: ', registration);
         })
         .catch(function(registrationError) {
           console.log('SW registration failed: ', registrationError);
         });
-    });
+      });
   }
 </script>
 
 </body>
 </html>
+
+
