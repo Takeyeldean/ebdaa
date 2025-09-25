@@ -59,7 +59,7 @@ $user = $stmt->fetch();
         }
 
         .floating {
-            animation: floating 3s ease-in-out infinite;
+            /* animation: floating 3s ease-in-out infinite; */
         }
 
         @keyframes floating {
@@ -68,7 +68,7 @@ $user = $stmt->fetch();
         }
 
         .bounce-in {
-            animation: bounceIn 0.8s ease-out;
+            /* animation: bounceIn 0.8s ease-out; */
         }
 
         @keyframes bounceIn {
@@ -129,18 +129,18 @@ $user = $stmt->fetch();
 
         .mobile-nav-menu.active {
             display: block;
-            animation: slideDown 0.3s ease-out;
+             animation: slideDown 0.3s ease-out; 
         }
 
         .mobile-nav-menu.active .mobile-nav-links .btn-primary {
-            animation: fadeInUp 0.4s ease-out;
-            animation-fill-mode: both;
+             animation: fadeInUp 0.4s ease-out;
+            animation-fill-mode: both; 
         }
 
-        .mobile-nav-menu.active .mobile-nav-links .btn-primary:nth-child(1) { animation-delay: 0.1s; }
+     .mobile-nav-menu.active .mobile-nav-links .btn-primary:nth-child(1) { animation-delay: 0.1s; }
         .mobile-nav-menu.active .mobile-nav-links .btn-primary:nth-child(2) { animation-delay: 0.2s; }
         .mobile-nav-menu.active .mobile-nav-links .btn-primary:nth-child(3) { animation-delay: 0.3s; }
-        .mobile-nav-menu.active .mobile-nav-links .btn-primary:nth-child(4) { animation-delay: 0.4s; }
+        .mobile-nav-menu.active .mobile-nav-links .btn-primary:nth-child(4) { animation-delay: 0.4s; } 
 
         @keyframes slideDown {
             from {
@@ -225,7 +225,7 @@ $user = $stmt->fetch();
         }
 
         .profile-container img:hover {
-            transform: scale(1.05);
+            /* transform: scale(1.05); */
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
         }
 
@@ -322,7 +322,7 @@ $user = $stmt->fetch();
         }
 
         .upload-btn:hover {
-            transform: scale(1.1);
+            /* transform: scale(1.1); */
             box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
         }
 
@@ -386,6 +386,7 @@ $user = $stmt->fetch();
             display: inline-flex;
             align-items: center;
             gap: 8px;
+            margin-bottom: 10px;
         }
 
         .btn-danger:hover {
@@ -623,7 +624,7 @@ $user = $stmt->fetch();
     <!-- Welcome Section -->
     <div class="text-center mb-8 bounce-in">
         <h2 class="text-5xl font-bold mb-4 text-white">
-            حسابي الشخصي ⚡
+            حسابي الشخصي
         </h2>
         <p class="text-xl text-white">دعنا نحدث معلوماتك! 🚀</p>
     </div>
@@ -802,8 +803,9 @@ $user = $stmt->fetch();
             }
             
             .profile-container {
-                width: 120px;
-                height: 120px;
+                margin-top: 20px;
+                width: 160px;
+                height: 160px;
             }
             
             .card {
@@ -899,8 +901,9 @@ $user = $stmt->fetch();
             }
 
             .profile-container {
-                width: 100px;
-                height: 100px;
+                margin-top: 20px;
+                width: 150px;
+                height: 150px;
             }
 
             .card {
