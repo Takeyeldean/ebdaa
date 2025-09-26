@@ -813,9 +813,9 @@ $user = $stmt->fetch();
                 margin-bottom: 12px;
             }
 
+            font-size: 1.5rem; /*24px instead of 36px */
             /* Make text smaller on mobile */
             .text-4xl {
-                font-size: 1.5rem; /* 24px instead of 36px */
             }
 
             /* Responsive camera icon - smaller on mobile */

@@ -144,47 +144,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 </head>
 <body>
 
-  <!-- Navbar -->
-  <nav class="nav-glass px-6 py-4 flex justify-between items-center">
-    
-    <span class="text-4xl font-bold" style="background: linear-gradient(45deg, #1e40af, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
-      ⚡ إبداع
-    </span>
-
-    <div class="space-x-2 space-x-reverse">
-      <a href="<?= url('admin') ?>" class="btn-primary active">
-        <i class="fas fa-users"></i>
-        المجموعات
-      </a>
-      <a href="<?= url('admin.questions') ?>" class="btn-primary">
-        <i class="fas fa-question-circle"></i>
-        الأسئلة
-      </a>
-      <a href="<?= url('admin.invitations') ?>" class="btn-primary relative">
-        <i class="fas fa-envelope"></i>
-        الدعوات
-        <?php
-        // Get pending invitations count
-        $admin_username = $_SESSION['user']['username'] ?? '';
-        if (!empty($admin_username)) {
-            $stmt = $conn->prepare("SELECT COUNT(*) as count FROM admin_invitations WHERE invited_username = ? AND status = 'pending'");
-            $stmt->execute([$admin_username]);
-            $invitation_count = $stmt->fetch()['count'];
-        } else {
-            $invitation_count = 0;
-        }
-        if ($invitation_count > 0): ?>
-          <span class="absolute -top-2 -right-2 bg-orange-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center animate-pulse">
-            <?= $invitation_count ?>
-          </span>
-        <?php endif; ?>
-      </a>
-      <a href="<?= url('profile') ?>" class="btn-primary">
-        <i class="fas fa-user"></i>
-        حسابي
-      </a>
-    </div>
-  </nav>
 
   <div class="flex items-center justify-center min-h-screen p-6">
     <div class="bg-white shadow-lg rounded-xl p-6 w-full max-w-md">

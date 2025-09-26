@@ -534,7 +534,7 @@ $groups = $stmt->fetchAll();
 
     <!-- Mobile menu button -->
     <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
-      <i class="fas fa-bars"></i>
+      <i class="fas fa-bars" id="mobile-menu-icon"></i>
     </button>
 
     <div class="space-x-2 space-x-reverse desktop-nav">
@@ -572,7 +572,7 @@ $groups = $stmt->fetchAll();
     </div>
 
     <!-- Mobile Navigation Menu -->
-    <div class="mobile-nav-menu" id="mobileNavMenu">
+    <div class="mobile-nav-menu" id="mobile-nav-menu">
         <div class="mobile-nav-links">
             <a href="<?= url('admin') ?>" class="btn-primary active">
                 <i class="fas fa-users"></i>
@@ -691,17 +691,29 @@ $groups = $stmt->fetchAll();
 
 <script>
 function toggleMobileMenu() {
-    const mobileMenu = document.getElementById('mobileNavMenu');
-    mobileMenu.classList.toggle('active');
+    const mobileMenu = document.getElementById('mobile-nav-menu');
+    const menuIcon = document.getElementById('mobile-menu-icon');
+    
+    if (mobileMenu.classList.contains('active')) {
+        mobileMenu.classList.remove('active');
+        menuIcon.classList.remove('fa-times');
+        menuIcon.classList.add('fa-bars');
+    } else {
+        mobileMenu.classList.add('active');
+        menuIcon.classList.remove('fa-bars');
+        menuIcon.classList.add('fa-times');
+    }
 }
 
 // Close mobile menu when clicking outside
-document.addEventListener('click', function(event) {
-    const mobileMenu = document.getElementById('mobileNavMenu');
-    const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+document.addEventListener('click', function(e) {
+    const mobileMenu = document.getElementById('mobile-nav-menu');
+    const menuBtn = document.querySelector('.mobile-menu-btn');
     
-    if (!mobileMenu.contains(event.target) && !mobileMenuBtn.contains(event.target)) {
+    if (!mobileMenu.contains(e.target) && !menuBtn.contains(e.target)) {
         mobileMenu.classList.remove('active');
+        document.getElementById('mobile-menu-icon').classList.remove('fa-times');
+        document.getElementById('mobile-menu-icon').classList.add('fa-bars');
     }
 });
 </script>
