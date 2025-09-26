@@ -32,25 +32,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = "❌ اسم المستخدم يجب أن يحتوي على أحرف إنجليزية وأرقام فقط (مثال: ahmed123 أو student_01)";
         } else {
             if ($role == 'student') {
-                // ✅ تحقق من username مكرر
+                // ✅ تحقق من username مكرر في جدول الطلاب
                 $stmt = $conn->prepare("SELECT id FROM students WHERE username = ? AND id != ?");
                 $stmt->execute([$username, $userId]);
                 if ($stmt->rowCount() > 0) {
-                    $error = "⚠️ اسم المستخدم مستخدم بالفعل.";
+                    $error = "⚠️ اسم المستخدم مستخدم بالفعل .";
                 } else {
-                    // ✅ تحقق من الاسم داخل نفس المجموعة
-                    $stmt = $conn->prepare("SELECT id FROM students WHERE name = ? AND group_id = (SELECT group_id FROM students WHERE id = ?) AND id != ?");
-                    $stmt->execute([$name, $userId, $userId]);
+                    // ✅ تحقق من username مكرر في جدول الأدمن
+                    $stmt = $conn->prepare("SELECT id FROM admins WHERE username = ?");
+                    $stmt->execute([$username]);
                     if ($stmt->rowCount() > 0) {
-                        $error = "⚠️ الاسم مستخدم بالفعل داخل نفس المجموعة.";
+                        $error = "⚠️ اسم المستخدم مستخدم بالفعل .";
+                    } else {
+                        // ✅ تحقق من الاسم داخل نفس المجموعة
+                        $stmt = $conn->prepare("SELECT id FROM students WHERE name = ? AND group_id = (SELECT group_id FROM students WHERE id = ?) AND id != ?");
+                        $stmt->execute([$name, $userId, $userId]);
+                        if ($stmt->rowCount() > 0) {
+                            $error = "⚠️ الاسم مستخدم بالفعل داخل نفس المجموعة.";
+                        }
                     }
                 }
             } else {
-                // ✅ الأدمن: الاسم و اليوزرنيم لازم يكونوا فريدين
-                $stmt = $conn->prepare("SELECT id FROM admins WHERE (name = ? OR username = ?) AND id != ?");
-                $stmt->execute([$name, $username, $userId]);
+                // ✅ الأدمن: تحقق من username مكرر في جدول الطلاب
+                $stmt = $conn->prepare("SELECT id FROM students WHERE username = ?");
+                $stmt->execute([$username]);
                 if ($stmt->rowCount() > 0) {
-                    $error = "⚠️ الاسم أو اسم المستخدم مستخدم من قبل.";
+                    $error = "⚠️ اسم المستخدم مستخدم بالفعل .";
+                } else {
+                    // ✅ الأدمن: تحقق من الاسم و اليوزرنيم 
+                    $stmt = $conn->prepare("SELECT id FROM admins WHERE (name = ? OR username = ?) AND id != ?");
+                    $stmt->execute([$name, $username, $userId]);
+                    if ($stmt->rowCount() > 0) {
+                        $error = "⚠️ الاسم أو اسم المستخدم مستخدم من قبل .";
+                    }
                 }
             }
         }

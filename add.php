@@ -41,12 +41,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_student'])) {
     }
 
     try {
-        // تحقق هل الإيميل موجود قبل كده
-        $checkusername = $conn->prepare("SELECT id FROM students WHERE username = ?");
-        $checkusername->execute([$username]);
+        // تحقق هل اسم المستخدم موجود في جدول الطلاب
+        $checkStudentUsername = $conn->prepare("SELECT id FROM students WHERE username = ?");
+        $checkStudentUsername->execute([$username]);
 
-        if ($checkusername->rowCount() > 0) {
-            $_SESSION['error'] = "⚠️ اسم المستخدم مستخدم من قبل.";
+        if ($checkStudentUsername->rowCount() > 0) {
+            $_SESSION['error'] = "⚠️ اسم المستخدم مستخدم من قبل .";
+            header("Location: " . url('admin.group', ['id' => $group_id]));
+            exit;
+        }
+
+        // تحقق هل اسم المستخدم موجود في جدول الأدمن
+        $checkAdminUsername = $conn->prepare("SELECT id FROM admins WHERE username = ?");
+        $checkAdminUsername->execute([$username]);
+
+        if ($checkAdminUsername->rowCount() > 0) {
+            $_SESSION['error'] = "⚠️ اسم المستخدم مستخدم من قبل .";
             header("Location: " . url('admin.group', ['id' => $group_id]));
             exit;
         }
