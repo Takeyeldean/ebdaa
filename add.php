@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_student'])) {
         $checkusername->execute([$username]);
 
         if ($checkusername->rowCount() > 0) {
-            $_SESSION['error'] = "⚠️ البريد الإلكتروني مستخدم من قبل.";
+            $_SESSION['error'] = "⚠️ اسم المستخدم مستخدم من قبل.";
             header("Location: " . url('admin.group', ['id' => $group_id]));
             exit;
         }

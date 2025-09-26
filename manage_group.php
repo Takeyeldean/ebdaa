@@ -8,7 +8,8 @@ require_once "includes/db.php";
 require_once "includes/url_helper.php";
 // username
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
-    die("❌ غير مسموح لك بالدخول");
+    header("Location: login");
+    exit();
 }
 
 $group_id = isset($_GET['id']) ? intval($_GET['id']) : (isset($_GET['group_id']) ? intval($_GET['group_id']) : 0);

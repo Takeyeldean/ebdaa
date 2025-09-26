@@ -7,7 +7,7 @@ require_once "includes/db.php";
 // email
 // التأكد أن الأدمن مسجل دخول
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
-    header("Location: index.php");
+    header("Location: login");
     exit();
 }
 

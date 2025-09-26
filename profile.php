@@ -9,7 +9,7 @@ require_once 'includes/url_helper.php';
 // username
 // Redirect if not logged in
 if (!isset($_SESSION['user'])) {
-    header("Location: index.php");
+    header("Location: login");
     exit();
 }
 

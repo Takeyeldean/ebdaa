@@ -30,16 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['student_id']) && isse
             exit;
         }
         
-        // Check if the admin has permission to manage the target group
-        $stmt = $conn->prepare("SELECT COUNT(*) FROM group_admins WHERE group_id = ? AND admin_id = ?");
-        $stmt->execute([$new_group_id, $admin_id]);
-        $can_manage_target = $stmt->fetchColumn();
         
-        if (!$can_manage_target) {
-            $_SESSION['error'] = "❌ ليس لديك صلاحية لإدارة المجموعة الهدف";
-            header("Location: " . adminGroupUrl($current_group_id));
-            exit;
-        }
         
         // Check if student exists and is in the current group
         $stmt = $conn->prepare("SELECT name FROM students WHERE id = ? AND group_id = ?");
