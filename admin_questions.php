@@ -1037,6 +1037,24 @@ if (!empty($all_question_ids)) {
             margin-bottom: 1rem;
             opacity: 0.5;
         }
+
+        /* Delete Question Confirmation Modal */
+        .modal-content {
+            margin: 8px !important;
+            padding: 12px !important;
+            max-height: 85vh !important;
+            overflow-y: auto;
+        }
+
+        .modal-button {
+            transition: all 0.3s ease;
+            transform: translateY(0);
+        }
+        
+        .modal-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
     </style>
 </head>
 <body>
@@ -1319,12 +1337,9 @@ if (!empty($all_question_ids)) {
                                             <i class="fas fa-edit"></i>
                                         </button>
                                         <!-- Delete Button -->
-                                        <form method="post" class="inline" onsubmit="return confirm('هل أنت متأكد من حذف هذا السؤال؟ سيتم حذف جميع الإجابات المرتبطة به.')">
-                                            <input type="hidden" name="question_id" value="<?= $question['id'] ?>">
-                                            <button type="submit" name="delete_question" class="text-red-600 hover:text-red-800 text-sm p-2" onclick="event.stopPropagation();">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </form>
+                                        <button type="button" class="text-red-600 hover:text-red-800 text-sm p-2" onclick="event.stopPropagation(); showDeleteQuestionModal(<?= $question['id'] ?>, '<?= htmlspecialchars($question['question_text'], ENT_QUOTES) ?>')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -1855,8 +1870,75 @@ if (!empty($all_question_ids)) {
             }
         });
 
+        // Delete Question Modal Functions
+        let currentDeleteQuestionId = null;
+
+        function showDeleteQuestionModal(questionId, questionText) {
+            currentDeleteQuestionId = questionId;
+            
+            // Create a more detailed message
+            const message = `هل أنت متأكد من حذف السؤال التالي؟<br><br><strong>"${questionText}"</strong><br><br>سيتم حذف جميع الإجابات المرتبطة به.`;
+            
+            // Show the custom modal
+            document.getElementById('deleteQuestionMessage').innerHTML = message;
+            document.getElementById('deleteQuestionModal').classList.remove('hidden');
+        }
+
+        function closeDeleteQuestionModal() {
+            document.getElementById('deleteQuestionModal').classList.add('hidden');
+            currentDeleteQuestionId = null;
+        }
+
+        function submitDeleteQuestion() {
+            if (currentDeleteQuestionId) {
+                // Create a form and submit it
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.style.display = 'none';
+                
+                const questionIdInput = document.createElement('input');
+                questionIdInput.type = 'hidden';
+                questionIdInput.name = 'question_id';
+                questionIdInput.value = currentDeleteQuestionId;
+                
+                const deleteInput = document.createElement('input');
+                deleteInput.type = 'hidden';
+                deleteInput.name = 'delete_question';
+                deleteInput.value = '1';
+                
+                form.appendChild(questionIdInput);
+                form.appendChild(deleteInput);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
 
     </script>
+
+    <!-- Delete Question Confirmation Modal -->
+    <div id="deleteQuestionModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center" onclick="closeDeleteQuestionModal()" style="z-index: 9999;">
+        <div class="bg-white rounded-2xl p-8 max-w-lg w-full mx-4 modal-content" onclick="event.stopPropagation()">
+            <div class="text-center">
+                <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-4">
+                    <i class="fas fa-trash-alt text-red-600 text-2xl"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-900 mb-4">تأكيد حذف السؤال</h3>
+                <p id="deleteQuestionMessage" class="text-gray-600 mb-6">هل أنت متأكد من حذف هذا السؤال؟ سيتم حذف جميع الإجابات المرتبطة به.</p>
+                
+                <div class="flex gap-4 justify-center">
+                    <button onclick="closeDeleteQuestionModal()" class="modal-button bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-8 rounded-lg">
+                        <i class="fas fa-times"></i>
+                        إلغاء
+                    </button>
+                    <button onclick="submitDeleteQuestion()" class="modal-button bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg">
+                        <i class="fas fa-trash-alt"></i>
+                        تأكيد الحذف
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>
 <?php
