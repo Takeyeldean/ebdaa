@@ -263,7 +263,7 @@
 ### **📊 Data Integrity**
 
 #### **Database Operations**
-- [ ] Data is saved correctly
+- [ ] Data is saved correctly 
 - [ ] Data is retrieved correctly
 - [ ] Data is updated correctly
 - [ ] Data is deleted correctly
@@ -342,7 +342,8 @@ Once all items in this checklist are completed and checked off, your website is 
 **Good luck with your deployment! 🎉**
 
 
-**Notes to edit in future**
+
+## **Notes to edit in future**
 - message after any action in manage group show just on add student form
 - add option change group name
 - add a notification for admin when other admin move a student to his group
