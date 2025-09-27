@@ -955,13 +955,11 @@ foreach ($all_answers as $answer) {
               <i class="fas fa-chart-bar"></i>
               الترتيب
             </a>
-            <a href="<?= url('questions') ?>" class="btn-primary active relative">
+            <a href="<?= url('questions') ?>" class="btn-primary active">
               <i class="fas fa-question-circle"></i>
               الأسئلة
               <?php if ($notification_count > 0): ?>
-                <span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center animate-pulse">
-                  <?= $notification_count ?>
-                </span>
+                <span style="color: #ef4444; font-weight: bold;">(<?= $notification_count ?>)</span>
               <?php endif; ?>
             </a>
             <a href="<?= url('profile') ?>" class="btn-primary">
